@@ -6,6 +6,7 @@ import { towingErrors, photoError, cleanPassport, TOWING_MAX_PHOTOS, RESCUE_PHON
 import { submitTowingRequest } from "@/lib/towing.functions";
 import { THAI_REGIONS, townsForRegion } from "@/lib/thai-regions";
 import { loadMyProfile } from "@/lib/profile";
+import { capitalizeFormDetails, capitalizeFormValue } from "@/lib/form-capitals";
 
 export const Route = createFileRoute("/towing")({
   head: () => ({
@@ -38,7 +39,9 @@ async function compress(file: File): Promise<File> {
     const scale = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
     const c = document.createElement("canvas");
     c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
-    c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
+    const ctx = c.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bmp, 0, 0, c.width, c.height);
     const blob = await new Promise<Blob | null>((r) => c.toBlob(r, "image/jpeg", 0.75));
     return blob && blob.size < file.size ? new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }) : file;
   } catch { return file; }
@@ -55,17 +58,17 @@ function TowingPage() {
   const [gpsBusy, setGpsBusy] = useState(false);
   const [done, setDone] = useState<{ ref: string; photoNote?: string | undefined } | null>(null);
   const [limited, setLimited] = useState<string | null>(null);
-  const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: capitalizeFormValue(k, v) }));
 
   useEffect(() => {
     loadMyProfile().then((p) => {
       if (!p) return;
       setForm((f) => ({
         ...f,
-        name: f.name || p.full_name || "",
+        name: f.name || capitalizeFormValue("name", p.full_name || ""),
         phone: f.phone || p.phone || "",
-        plate_number: f.plate_number || p.motorcycle_plate || "",
-        motorcycle_model: f.motorcycle_model || [p.motorcycle_make, p.motorcycle_model].filter(Boolean).join(" "),
+        plate_number: f.plate_number || capitalizeFormValue("plate_number", p.motorcycle_plate || ""),
+        motorcycle_model: f.motorcycle_model || capitalizeFormValue("motorcycle_model", [p.motorcycle_make, p.motorcycle_model].filter(Boolean).join(" ")),
       }));
     }).catch(() => {});
   }, []);
@@ -100,7 +103,7 @@ function TowingPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (busy) return;
-    const payload = { ...form, passport_number: cleanPassport(form.passport_number), pickup_lat: coords?.lat ?? null, pickup_lng: coords?.lng ?? null };
+    const payload = { ...capitalizeFormDetails(form), passport_number: cleanPassport(form.passport_number), pickup_lat: coords?.lat ?? null, pickup_lng: coords?.lng ?? null };
     const errs = towingErrors(payload);
     setErrors(errs);
     const first = ORDER.find((k) => errs[k]);
@@ -136,7 +139,7 @@ function TowingPage() {
   const text = (k: keyof Form, label: string, ph: string, type = "text") => (
     <div className="space-y-1.5">
       <Label k={k}>{label} *</Label>
-      <input id={`tow-${k}`} type={type} value={form[k]} placeholder={ph} onChange={(e) => set(k, e.target.value as never)} aria-invalid={!!errors[k]} className={`${field} ${inv(k)}`} />
+      <input id={`tow-${k}`} type={type} autoCapitalize={type === "text" ? "characters" : "none"} value={form[k]} placeholder={ph} onChange={(e) => set(k, e.target.value as never)} aria-invalid={!!errors[k]} className={`${field} ${inv(k)}`} />
       {err(k)}
     </div>
   );
@@ -158,7 +161,7 @@ function TowingPage() {
       <>
         <div className="space-y-1.5">
           <Label k={rk}>{title} region *</Label>
-          <select id={`tow-${rk}`} value={form[rk]} onChange={(e) => setForm((f) => ({ ...f, [rk]: e.target.value, [tk]: "" }))} aria-invalid={!!errors[rk]} className={`${field} ${inv(rk)}`}>
+          <select id={`tow-${rk}`} value={form[rk]} onChange={(e) => setForm((f) => ({ ...f, [rk]: e.target.value, [tk]: "" }))} aria-invalid={!!errors[rk]} className={`${field} uppercase ${inv(rk)}`}>
             <option value="">Select region…</option>
             {THAI_REGIONS.map((g) => <option key={g.group} value={g.group}>{g.group}</option>)}
           </select>
@@ -166,7 +169,7 @@ function TowingPage() {
         </div>
         <div className="space-y-1.5">
           <Label k={tk}>{title} town *</Label>
-          <select id={`tow-${tk}`} disabled={!form[rk]} value={form[tk]} onChange={(e) => set(tk, e.target.value)} aria-invalid={!!errors[tk]} className={`${field} disabled:opacity-50 ${inv(tk)}`}>
+          <select id={`tow-${tk}`} disabled={!form[rk]} value={form[tk]} onChange={(e) => set(tk, e.target.value)} aria-invalid={!!errors[tk]} className={`${field} uppercase disabled:opacity-50 ${inv(tk)}`}>
             <option value="">{form[rk] ? "Select town…" : "Select a region first"}</option>
             {townsForRegion(form[rk]).map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
@@ -214,7 +217,7 @@ function TowingPage() {
             {place("pickup", "Breakdown")}
             <div className="space-y-1.5 sm:col-span-2">
               <Label k="breakdown_location">Exact spot / landmark *</Label>
-              <textarea id="tow-breakdown_location" rows={2} value={form.breakdown_location} placeholder="KM 42 Route 12, near PTT station" onChange={(e) => set("breakdown_location", e.target.value)} aria-invalid={!!errors["breakdown_location"]} className={`${field} ${inv("breakdown_location")}`} />
+              <textarea id="tow-breakdown_location" rows={2} autoCapitalize="characters" value={form.breakdown_location} placeholder="KM 42 Route 12, near PTT station" onChange={(e) => set("breakdown_location", e.target.value)} aria-invalid={!!errors["breakdown_location"]} className={`${field} ${inv("breakdown_location")}`} />
               {err("breakdown_location")}
             </div>
             <div className="space-y-1.5 sm:col-span-2">
@@ -235,7 +238,7 @@ function TowingPage() {
             {place("destination", "Destination")}
             <div className="space-y-1.5 sm:col-span-2">
               <Label k="destination">Destination address *</Label>
-              <textarea id="tow-destination" rows={2} value={form.destination} placeholder="Workshop / hotel address" onChange={(e) => set("destination", e.target.value)} aria-invalid={!!errors["destination"]} className={`${field} ${inv("destination")}`} />
+              <textarea id="tow-destination" rows={2} autoCapitalize="characters" value={form.destination} placeholder="Workshop / hotel address" onChange={(e) => set("destination", e.target.value)} aria-invalid={!!errors["destination"]} className={`${field} ${inv("destination")}`} />
               {err("destination")}
             </div>
           </div>

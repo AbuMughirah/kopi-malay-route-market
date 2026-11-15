@@ -1,5 +1,5 @@
 # Major update (Nov 9)
-- [ ] Capitalize customer form details safely, preserve emails/passwords/links, and rename Northern & Touring to Northern; verify dropdowns and prefills.
+- [x] Capitalize customer form details safely, preserve emails/passwords/links, and rename Northern & Touring to Northern; verified towing, checkout and authenticated profile controls, phone fit and 218 tests; no real submissions.
 - [x] Fix refund write-off stock-state validation and finish KM-11764 using saved receipt #0024 and manually restored inventory; authenticated details show Refunded / Restored and recovery history, with no duplicate refund.
 - [x] Clear the owner's test PIN lockout and verify awaited PIN security alerts through the authenticated five-attempt flow; Telegram delivery confirmed.
 - [x] Prepare managed email sending and Owner PIN code template for the configured domain; delivery awaits DNS verification and the Owner PIN feature remains a separate next step.

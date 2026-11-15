@@ -16,6 +16,7 @@ import { destinationPrice, eastMalaysiaSurcharge, formatMoney, formatParcelWeigh
 import { stickerBundle } from "@/lib/sticker-bundle";
 import { PlacePicker } from "@/components/PlacePicker";
 import { loadMyProfile } from "@/lib/profile";
+import { capitalizeFormDetails, capitalizeFormValue } from "@/lib/form-capitals";
 
 export const Route = createFileRoute("/checkout/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(productsQuery),
@@ -58,9 +59,10 @@ function Checkout() {
     name: key,
     required: true,
     "aria-invalid": Boolean(visibleError(key)),
+    autoCapitalize: key === "email" ? "none" : "characters",
     "aria-describedby": visibleError(key) ? `checkout-${key}-error` : undefined,
     onBlur: () => setTouched((prev) => ({ ...prev, [key]: true })),
-    className: `${field} scroll-mt-28 ${visibleError(key) ? "border-destructive ring-1 ring-destructive focus:ring-destructive" : ""}`,
+    className: `${field} ${key === "country" ? "uppercase" : ""} scroll-mt-28 ${visibleError(key) ? "border-destructive ring-1 ring-destructive focus:ring-destructive" : ""}`,
   });
   const errorPrompt = (key: CheckoutField) => visibleError(key) ? <p id={`checkout-${key}-error`} role="alert" className="text-sm text-destructive">{visibleError(key)}</p> : null;
   const currency = country === "Thailand" ? "thb" : "myr";
@@ -106,7 +108,7 @@ function Checkout() {
     let live = true;
     loadMyProfile().then((prof) => {
       if (!live || !prof) return;
-      const saved = profileToCheckout(prof);
+      const saved = capitalizeFormDetails(profileToCheckout(prof));
       setF((prev) => {
         if (prev.name || prev.phone || prev.address || prev.city || prev.state || prev.postcode) return prev; // never overwrite typing
         setCountry(saved.country);
@@ -116,7 +118,7 @@ function Checkout() {
     return () => { live = false; };
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF((prev) => ({ ...prev, [k]: e.target.value }));
+  const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF((prev) => ({ ...prev, [k]: capitalizeFormValue(k, e.target.value) }));
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,7 +139,7 @@ function Checkout() {
     setBusy(true);
     try {
       const fd = new FormData();
-      fd.append("payload", JSON.stringify({ ...f, country, ref, promoCode: promo?.code, items: items.map((i) => ({ productId: i.productId, variant: i.variant, quantity: i.quantity })) }));
+      fd.append("payload", JSON.stringify({ ...capitalizeFormDetails(f), country, ref, promoCode: promo?.code, items: items.map((i) => ({ productId: i.productId, variant: i.variant, quantity: i.quantity })) }));
       fd.append("receipt", receipt);
       const res = await create({ data: fd });
       await navigate({ to: "/order-success", search: { ref: res.ref, t: res.token } });
@@ -186,7 +188,7 @@ function Checkout() {
               <div className="space-y-1.5"><label htmlFor="checkout-city" className="text-sm font-medium">City *</label>
                 <input {...inputProps("city")} autoComplete="address-level2" maxLength={100} placeholder="City" value={f.city} onChange={set("city")} />{errorPrompt("city")}</div>
               <div className="space-y-1.5"><label htmlFor="checkout-state" className="text-sm font-medium">{country === "Malaysia" ? "State" : "Province / Region"} *</label>
-                {(() => { const { onBlur, ...props } = inputProps("state"); return <PlacePicker {...props} onBlur={onBlur} aria-label={country === "Malaysia" ? "State" : "Province"} placeholder={country === "Malaysia" ? "Type to search state" : "Type to search province"} value={f.state} options={country === "Malaysia" ? MY_STATES : TH_PROVINCES} onValueChange={(v) => setF((prev) => ({ ...prev, state: v }))} />; })()}{errorPrompt("state")}</div>
+                {(() => { const { onBlur, ...props } = inputProps("state"); return <PlacePicker uppercase {...props} onBlur={onBlur} aria-label={country === "Malaysia" ? "State" : "Province"} placeholder={country === "Malaysia" ? "Type to search state" : "Type to search province"} value={f.state} options={country === "Malaysia" ? MY_STATES : TH_PROVINCES} onValueChange={(v) => setF((prev) => ({ ...prev, state: v }))} />; })()}{errorPrompt("state")}</div>
               <div className="space-y-1.5"><label htmlFor="checkout-postcode" className="text-sm font-medium">Postcode *</label>
                 <input {...inputProps("postcode")} autoComplete="postal-code" maxLength={5} placeholder="Postcode" inputMode="numeric" value={f.postcode} onChange={set("postcode")} />{errorPrompt("postcode")}</div>
             </div>

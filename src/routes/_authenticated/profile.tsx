@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { customerStatus } from "@/lib/order-flow";
 import { formatMoney, MY_STATES, TH_PROVINCES } from "@/lib/shop";
 import { PlacePicker } from "@/components/PlacePicker";
+import { capitalizeFormDetails, capitalizeFormValue } from "@/lib/form-capitals";
 import { CONTACT_OPTIONS, EMPTY_PROFILE, loadMyProfile, type Profile } from "@/lib/profile";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -33,16 +34,16 @@ function ProfilePage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
-    loadMyProfile().then((r) => { if (r) setP(r); setLoading(false); });
+    loadMyProfile().then((r) => { if (r) setP(capitalizeFormDetails(r)); setLoading(false); });
     supabase.from("orders").select("id,order_number,created_at,status,currency,total_amount").order("created_at", { ascending: false }).limit(50)
       .then(({ data }) => setOrders((data ?? []).map((o) => ({ ...o, total_amount: Number(o.total_amount) }))));
   }, []);
 
-  const set = (k: keyof Profile) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setP({ ...p, [k]: e.target.value });
+  const set = (k: keyof Profile) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setP((prev) => ({ ...prev, [k]: capitalizeFormValue(k, e.target.value) }));
   const input = (k: keyof Profile, label: string, placeholder = "", type = "text") => (
     <div className="space-y-1.5">
       <label htmlFor={`pf-${k}`} className="text-sm font-medium">{label}</label>
-      <input id={`pf-${k}`} type={type} value={p[k]} placeholder={placeholder} maxLength={200} onChange={set(k)} className={field} />
+      <input id={`pf-${k}`} type={type} autoCapitalize={k === "contact_handle" ? "none" : "characters"} value={p[k]} placeholder={placeholder} maxLength={200} onChange={set(k)} className={field} />
     </div>
   );
 
@@ -51,7 +52,7 @@ function ProfilePage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     setBusy(true);
-    const trimmed = Object.fromEntries(Object.entries(p).map(([k, v]) => [k, v.trim()])) as Profile;
+    const trimmed = Object.fromEntries(Object.entries(capitalizeFormDetails(p)).map(([k, v]) => [k, v.trim()])) as Profile;
     const { error } = await supabase.from("profiles").upsert({ id: user.id, ...trimmed, updated_at: new Date().toISOString() });
     setBusy(false);
     if (error) toast.error(error.message); else toast.success("Profile saved");
@@ -71,7 +72,7 @@ function ProfilePage() {
             {input("phone", "Phone number", "+60 12-345 6789", "tel")}
             <div className="space-y-1.5">
               <label htmlFor="pf-preferred_contact" className="text-sm font-medium">Preferred contact</label>
-              <select id="pf-preferred_contact" value={p.preferred_contact} onChange={set("preferred_contact")} className={field}>
+              <select id="pf-preferred_contact" value={p.preferred_contact} onChange={set("preferred_contact")} className={`${field} uppercase`}>
                 {CONTACT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
@@ -82,18 +83,18 @@ function ProfilePage() {
           <h2 className="font-display text-lg font-bold uppercase">Default delivery address</h2>
           <div className="space-y-1.5">
             <label htmlFor="pf-address" className="text-sm font-medium">Address</label>
-            <textarea id="pf-address" rows={2} value={p.address} maxLength={300} onChange={set("address")} className={field} />
+            <textarea id="pf-address" rows={2} autoCapitalize="characters" value={p.address} maxLength={300} onChange={set("address")} className={field} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {input("city", "City")}
             <div className="space-y-1.5">
               <label htmlFor="pf-state" className="text-sm font-medium">{p.country === "thailand" ? "Province" : "State"}</label>
-              <PlacePicker id="pf-state" value={p.state} options={p.country === "thailand" ? TH_PROVINCES : MY_STATES} onValueChange={(v) => setP((prev) => ({ ...prev, state: v }))} placeholder={p.country === "thailand" ? "Type to search province" : "Type to search state"} className={field} />
+              <PlacePicker uppercase id="pf-state" value={p.state} options={p.country === "thailand" ? TH_PROVINCES : MY_STATES} onValueChange={(v) => setP((prev) => ({ ...prev, state: v }))} placeholder={p.country === "thailand" ? "Type to search province" : "Type to search state"} className={field} />
             </div>
             {input("postcode", "Postcode")}
             <div className="space-y-1.5">
               <label htmlFor="pf-country" className="text-sm font-medium">Country</label>
-              <select id="pf-country" value={p.country} onChange={(e) => setP({ ...p, country: e.target.value, state: "" })} className={field}>
+              <select id="pf-country" value={p.country} onChange={(e) => setP({ ...p, country: e.target.value, state: "" })} className={`${field} uppercase`}>
                 <option value="malaysia">Malaysia</option>
                 <option value="thailand">Thailand</option>
               </select>
