@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { PlacedBy } from "./roles";
 
+const CLOCK = /^([01]\d|2[0-3]):[0-5]\d$/;
 export const INCOME_SALES = ["verified", "shipped", "received", "completed"];
 export const IncomeFiltersSchema = z.object({
   from: z.string().date().optional(), to: z.string().date().optional(),
@@ -9,7 +10,12 @@ export const IncomeFiltersSchema = z.object({
   promo: z.string().max(120).default(""), sale: z.enum(["all", "sale", "regular"]).default("all"),
   pipeline: z.boolean().default(false), view: z.enum(["products", "categories", "promos", "time", "ledger"]).default("products"),
   period: z.enum(["day", "month", "year"]).default("month"),
-}).refine((f) => !f.from || !f.to || f.from <= f.to, { message: "Start date must be before end date" });
+  /** Daily clock window in Asia/Bangkok, "HH:MM"; start inclusive, end exclusive, may wrap past midnight. */
+  timeFrom: z.string().regex(CLOCK).optional(), timeTo: z.string().regex(CLOCK).optional(),
+  chart: z.enum(["hour", "day", "week", "month", "year"]).default("day"),
+}).refine((f) => !f.from || !f.to || f.from <= f.to, { message: "Start date must be before end date" })
+  .refine((f) => !f.timeFrom === !f.timeTo, { message: "Choose both a start and an end time" })
+  .refine((f) => !f.timeFrom || f.timeFrom !== f.timeTo, { message: "Start and end time must be different" });
 export type IncomeFilters = z.infer<typeof IncomeFiltersSchema>;
 export type IncomeItem = { id: string; product_id: string | null; product_name: string; selected_variant: string; quantity: number; unit_price: number; category: string; category_slug: string };
 export type IncomeOrder = { id: string; order_number: string; created_at: string; status: string; pre_claim_status: string | null; currency: string; subtotal: number; sale_discount: number; sticker_bundle_discount: number; discount_amount: number; shipping_fee: number; total_amount: number; promo_code: string | null; payment_method: string; placed_by: PlacedBy | null; items: IncomeItem[] };
@@ -17,6 +23,59 @@ export type Metric = { orders: number; units: number; gross: number; sale: numbe
 const empty = (): Metric => ({ orders: 0, units: 0, gross: 0, sale: 0, bundle: 0, promo: 0, merch: 0, shipping: 0, inflow: 0, refunds: 0, refundOrders: 0, pending: 0 });
 export const cents = (n: number) => Math.round(Number(n) * 100);
 export const bangkokDay = (iso: string) => new Date(new Date(iso).getTime() + 7 * 3600_000).toISOString().slice(0, 10);
+/** Minutes since local midnight in Asia/Bangkok (UTC+7, no daylight saving). */
+export const bangkokMinutes = (iso: string) => { const d = new Date(new Date(iso).getTime() + 7 * 3600_000); return d.getUTCHours() * 60 + d.getUTCMinutes(); };
+const clockMinutes = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+/** True when the order falls inside the daily clock window; a window like 22:00–02:00 wraps past midnight. */
+export function inClockWindow(iso: string, from?: string, to?: string) {
+  if (!from || !to) return true;
+  const m = bangkokMinutes(iso), a = clockMinutes(from), b = clockMinutes(to);
+  return a < b ? m >= a && m < b : m >= a || m < b;
+}
+export type ChartPeriod = "hour" | "day" | "week" | "month" | "year";
+const addDays = (day: string, n: number) => { const d = new Date(`${day}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const mondayOf = (day: string) => { const d = new Date(`${day}T00:00:00Z`); return addDays(day, -((d.getUTCDay() + 6) % 7)); };
+/** Chart bucket for an order: hour of day (00–23), day, Monday-start week, month or year, all in Bangkok time. */
+export function bucketKey(iso: string, period: ChartPeriod) {
+  const day = bangkokDay(iso);
+  if (period === "hour") return String(Math.floor(bangkokMinutes(iso) / 60)).padStart(2, "0");
+  if (period === "week") return mondayOf(day);
+  return period === "day" ? day : period === "month" ? day.slice(0, 7) : day.slice(0, 4);
+}
+export const MAX_BUCKETS = 750;
+/** Every bucket between two Bangkok days (inclusive), so quiet periods show as zero instead of disappearing. */
+export function bucketRange(period: ChartPeriod, first: string, last: string, hours?: { from?: string | undefined; to?: string | undefined }) {
+  if (period === "hour") {
+    const all = Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0"));
+    if (!hours?.from || !hours.to) return all;
+    return all.filter((h) => { const start = Number(h) * 60; return Array.from({ length: 60 }, (_, m) => start + m).some((m) => { const a = clockMinutes(hours.from!), b = clockMinutes(hours.to!); return a < b ? m >= a && m < b : m >= a || m < b; }); });
+  }
+  const keys: string[] = [];
+  const end = bucketKey(`${last}T12:00:00+07:00`, period);
+  let cursor = period === "week" ? mondayOf(first) : first;
+  while (keys.length < MAX_BUCKETS + 1) {
+    const key = bucketKey(`${cursor}T12:00:00+07:00`, period);
+    if (key > end) break;
+    if (keys.at(-1) !== key) keys.push(key);
+    if (period === "day") cursor = addDays(cursor, 1);
+    else if (period === "week") cursor = addDays(cursor, 7);
+    else if (period === "month") { const d = new Date(`${key}-01T00:00:00Z`); d.setUTCMonth(d.getUTCMonth() + 1); cursor = d.toISOString().slice(0, 10); }
+    else cursor = `${Number(key) + 1}-01-01`;
+  }
+  return keys;
+}
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+/** Short axis label and longer tooltip label for a bucket key. */
+export function bucketLabel(key: string, period: ChartPeriod): { short: string; long: string } {
+  if (period === "hour") return { short: `${key}:00`, long: `${key}:00 – ${key}:59` };
+  if (period === "year") return { short: key, long: key };
+  const [y, m, d] = key.split("-"), month = MONTHS[Number(m) - 1] ?? m;
+  if (period === "month") return { short: `${month} ${y?.slice(2)}`, long: `${month} ${y}` };
+  if (period === "week") { const end = addDays(key, 6), [, em, ed] = end.split("-"); return { short: `${Number(d)} ${month}`, long: `${Number(d)} ${month} – ${Number(ed)} ${MONTHS[Number(em) - 1]} ${end.slice(0, 4)}` }; }
+  return { short: `${Number(d)} ${month}`, long: `${Number(d)} ${month} ${y}` };
+}
+export type TrendPoint = { key: string; label: string; long: string; orders: number; units: number; gross: number; discounts: number; merch: number; shipping: number; inflow: number; refunds: number };
+export type TrendSeries = { key: string; label: string; units: number; net: number; points: number[] };
 export type DatePreset = "today" | "yesterday" | "week" | "month" | "last-month" | "year" | "all" | "custom";
 export function incomeDates(preset: DatePreset, now = new Date()): { from?: string; to?: string } {
   const day = bangkokDay(now.toISOString()), d = new Date(`${day}T00:00:00Z`);
@@ -55,6 +114,7 @@ export function buildIncomeReport(input: IncomeOrder[], f: IncomeFilters) {
   const eligible = input.filter((o) => {
     const day = bangkokDay(o.created_at);
     return ["myr", "thb"].includes(o.currency.toLowerCase()) && (!f.from || day >= f.from) && (!f.to || day <= f.to)
+      && inClockWindow(o.created_at, f.timeFrom, f.timeTo)
       && (f.currency === "all" || o.currency.toLowerCase() === f.currency)
       && (!f.category || o.items.some((i) => i.category_slug === f.category))
       && (!f.product || o.items.some((i) => `${i.product_name} ${i.selected_variant}`.toLowerCase().includes(f.product.toLowerCase())))
@@ -86,8 +146,42 @@ export function buildIncomeReport(input: IncomeOrder[], f: IncomeFilters) {
       groups.set(key, g);
     }
   }
+  const chart = buildTrend(rows, f, recognized);
   const breakdown = [...groups.values()].map((g) => ({ ...g, share: totals[g.currency].merch > 0 ? g.net / totals[g.currency].merch * 100 : 0 })).sort((a, b) => f.view === "time" ? b.label.localeCompare(a.label) : b.net - a.net || a.label.localeCompare(b.label));
-  return { totals, breakdown, ledger, warnings, selectedOrders: rows.length, categories: [...new Map(input.flatMap((o) => o.items.map((i) => [i.category_slug, i.category] as const))).entries()].sort((a, b) => a[1].localeCompare(b[1])), promos: [...new Set(input.map((o) => o.promo_code).filter((p): p is string => !!p))].sort() };
+  return { totals, breakdown, ledger, chart, warnings, selectedOrders: rows.length, categories: [...new Map(input.flatMap((o) => o.items.map((i) => [i.category_slug, i.category] as const))).entries()].sort((a, b) => a[1].localeCompare(b[1])), promos: [...new Set(input.map((o) => o.promo_code).filter((p): p is string => !!p))].sort() };
+}
+/** Chart series per currency; merchandise-only for items and categories, never mixing RM and THB. */
+function buildTrend(rows: IncomeOrder[], f: IncomeFilters, recognized: (o: IncomeOrder) => boolean) {
+  const period = f.chart, days = rows.map((o) => bangkokDay(o.created_at)).sort();
+  const first = f.from ?? days[0], last = f.to ?? days.at(-1);
+  const all = first && last ? bucketRange(period, first, last, { from: f.timeFrom, to: f.timeTo }) : [];
+  const truncated = all.length > MAX_BUCKETS, keys = truncated ? all.slice(-MAX_BUCKETS) : all;
+  const index = new Map(keys.map((k, i) => [k, i]));
+  const labels = keys.map((k) => bucketLabel(k, period));
+  const summary = { myr: [] as TrendPoint[], thb: [] as TrendPoint[] };
+  for (const c of ["myr", "thb"] as const) summary[c] = keys.map((key, i) => ({ key, label: labels[i]!.short, long: labels[i]!.long, orders: 0, units: 0, gross: 0, discounts: 0, merch: 0, shipping: 0, inflow: 0, refunds: 0 }));
+  const items = { myr: new Map<string, TrendSeries>(), thb: new Map<string, TrendSeries>() };
+  const categories = { myr: new Map<string, TrendSeries>(), thb: new Map<string, TrendSeries>() };
+  const add = (map: Map<string, TrendSeries>, key: string, label: string, at: number, units: number, net: number) => {
+    const s = map.get(key) ?? { key, label, units: 0, net: 0, points: keys.map(() => 0) };
+    s.units += units; s.net += net; s.points[at] = (s.points[at] ?? 0) + net; map.set(key, s);
+  };
+  for (const o of rows) {
+    const c = o.currency.toLowerCase() as "myr" | "thb", at = index.get(bucketKey(o.created_at, period));
+    if (at === undefined) continue;
+    const p = summary[c][at]!, paid = cents(o.total_amount), shipping = cents(o.shipping_fee);
+    if (o.status === "refunded") { p.refunds += paid; continue; }
+    if (!recognized(o)) continue;
+    const sale = cents(o.sale_discount), bundle = cents(o.sticker_bundle_discount), promo = cents(o.discount_amount);
+    p.orders++; p.units += o.items.reduce((s, i) => s + i.quantity, 0); p.gross += cents(o.subtotal) + sale; p.discounts += sale + bundle + promo;
+    p.merch += paid - shipping; p.shipping += shipping; p.inflow += paid;
+    for (const line of incomeLines(o)) {
+      add(items[c], line.product_id ?? line.product_name, line.product_name, at, line.quantity, line.net);
+      add(categories[c], line.category_slug || "uncategorised", line.category || "Uncategorised", at, line.quantity, line.net);
+    }
+  }
+  const ranked = (m: Map<string, TrendSeries>, limit?: number) => [...m.values()].sort((a, b) => b.net - a.net || a.label.localeCompare(b.label)).slice(0, limit);
+  return { period, truncated, summary, items: { myr: ranked(items.myr, 10), thb: ranked(items.thb, 10) }, categories: { myr: ranked(categories.myr), thb: ranked(categories.thb) } };
 }
 export type IncomeReport = ReturnType<typeof buildIncomeReport>;
 const csvCell = (v: unknown) => { let text = String(v ?? ""); if (typeof v !== "number" && /^[=+\-@\t\r]/.test(text)) text = `'${text}`; return `"${text.replace(/"/g, '""')}"`; };

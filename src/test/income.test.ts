@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { IncomeFiltersSchema, buildIncomeReport, incomeLines, incomeCsv, bangkokDay, incomeDates, allocate, type IncomeOrder } from "@/lib/income";
+import { IncomeFiltersSchema, buildIncomeReport, incomeLines, incomeCsv, bangkokDay, incomeDates, allocate, inClockWindow, bucketKey, bucketRange, type IncomeOrder } from "@/lib/income";
 import { assertOwnerCaller } from "@/lib/owner-gate.server";
 const filter = (patch = {}) => IncomeFiltersSchema.parse(patch);
 const item = { id: "i", product_id: "p", product_name: "Jersey", selected_variant: "M", quantity: 2, unit_price: 50, category: "Apparel", category_slug: "apparel" };
@@ -20,6 +20,19 @@ describe("Income accounting", () => {
   it("saved historical paid totals win and missing breakdown is flagged", () => { const r = buildIncomeReport([order({ subtotal: 0 })], filter()); expect(r.totals.myr.merch).toBe(9000); expect(r.warnings).toBe(1); });
   it("CSV mirrors selected view and neutralizes formula text", () => { const r = buildIncomeReport([order({ items: [{ ...item, product_name: "=HYPERLINK(bad)" }] })], filter()); expect(incomeCsv(r, "products")).toContain("'=HYPERLINK(bad)"); expect(incomeCsv(r, "ledger")).toContain('"105.00"'); });
   it("groups time by order date and category excludes shipping", () => { const r = buildIncomeReport([order()], filter({ view: "time", period: "year" })); expect(r.breakdown[0]?.label).toBe("2026"); expect(r.breakdown[0]?.net).toBe(9000); });
+});
+describe("Income clock-time filter (Asia/Bangkok)", () => {
+  // 2026-11-16 01:00Z is 08:00 Bangkok; 15:30Z is 22:30 Bangkok.
+  it("08:00 start is included and 22:00 end is excluded", () => { expect(inClockWindow("2026-11-16T01:00:00Z", "08:00", "22:00")).toBe(true); expect(inClockWindow("2026-11-16T00:59:00Z", "08:00", "22:00")).toBe(false); expect(inClockWindow("2026-11-16T15:00:00Z", "08:00", "22:00")).toBe(false); });
+  it("an overnight window wraps past midnight", () => { expect(inClockWindow("2026-11-16T15:30:00Z", "22:00", "02:00")).toBe(true); expect(inClockWindow("2026-11-16T18:30:00Z", "22:00", "02:00")).toBe(true); expect(inClockWindow("2026-11-16T05:00:00Z", "22:00", "02:00")).toBe(false); });
+  it("excludes orders outside the hours from every total", () => { const r = buildIncomeReport([order({ created_at: "2026-11-16T01:00:00Z" }), order({ id: "b", created_at: "2026-11-16T15:30:00Z" })], filter({ timeFrom: "08:00", timeTo: "22:00" })); expect(r.selectedOrders).toBe(1); expect(r.totals.myr.inflow).toBe(10500); expect(r.ledger).toHaveLength(1); });
+  it("requires both times and rejects identical times", () => { expect(() => filter({ timeFrom: "08:00" })).toThrow(); expect(() => filter({ timeFrom: "08:00", timeTo: "08:00" })).toThrow(); expect(() => filter({ timeFrom: "8:00", timeTo: "22:00" })).toThrow(); });
+});
+describe("Income charts", () => {
+  it("buckets by Bangkok hour, day, Monday week, month and year", () => { const iso = "2026-11-15T17:30:00Z"; expect(bucketKey(iso, "hour")).toBe("00"); expect(bucketKey(iso, "day")).toBe("2026-11-16"); expect(bucketKey(iso, "week")).toBe("2026-11-16"); expect(bucketKey("2026-11-15T10:00:00Z", "week")).toBe("2026-11-09"); expect(bucketKey(iso, "month")).toBe("2026-11"); expect(bucketKey(iso, "year")).toBe("2026"); });
+  it("fills quiet days with zero and spans month/year edges", () => { expect(bucketRange("day", "2026-12-30", "2027-01-02")).toEqual(["2026-12-30", "2026-12-31", "2027-01-01", "2027-01-02"]); expect(bucketRange("month", "2026-11-20", "2027-02-01")).toEqual(["2026-11", "2026-12", "2027-01", "2027-02"]); expect(bucketRange("hour", "2026-11-16", "2026-11-16", { from: "08:00", to: "11:00" })).toEqual(["08", "09", "10"]); });
+  it("chart totals match the summary cards and keep currencies apart", () => { const r = buildIncomeReport([order(), order({ id: "b", created_at: "2026-11-17T03:00:00Z" }), order({ id: "c", currency: "thb", total_amount: 510, subtotal: 505 }), order({ id: "d", status: "refunded" }), order({ id: "e", status: "pending_verification" })], filter({ from: "2026-11-16", to: "2026-11-18", chart: "day" })); const s = r.chart.summary.myr; expect(s.map((p) => p.key)).toEqual(["2026-11-16", "2026-11-17", "2026-11-18"]); expect(s.reduce((a, p) => a + p.inflow, 0)).toBe(r.totals.myr.inflow); expect(s.reduce((a, p) => a + p.merch, 0)).toBe(r.totals.myr.merch); expect(s[0]?.refunds).toBe(10500); expect(s[2]?.inflow).toBe(0); expect(r.chart.summary.thb.reduce((a, p) => a + p.inflow, 0)).toBe(51000); });
+  it("item and category series are merchandise only and sum to net merch", () => { const r = buildIncomeReport([order(), order({ id: "b" })], filter({ chart: "month" })); const items = r.chart.items.myr, cats = r.chart.categories.myr; expect(items[0]?.label).toBe("Jersey"); expect(items[0]?.units).toBe(4); expect(items.reduce((a, x) => a + x.net, 0)).toBe(r.totals.myr.merch); expect(cats[0]?.points.reduce((a, x) => a + x, 0)).toBe(18000); });
 });
 describe("Income owner gate", () => {
   it("rejects unauthenticated callers", async () => { await expect(assertOwnerCaller({})).rejects.toThrow(); });

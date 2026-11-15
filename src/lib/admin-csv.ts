@@ -1,3 +1,4 @@
+import { bangkokDay } from "./income";
 export type AdminOrderRow = {
   order_number: string;
   created_at: string;
@@ -54,7 +55,7 @@ export function filterOrders<T extends AdminOrderRow & { placed_by?: string | nu
     if (f.status && o.status !== f.status) return false;
     if (f.placed_by && o.placed_by !== f.placed_by) return false;
     if (f.currency && o.currency.toLowerCase() !== f.currency.toLowerCase()) return false;
-    const day = o.created_at.slice(0, 10);
+    const day = bangkokDay(o.created_at); // same Asia/Bangkok calendar day as Income
     if (f.from && day < f.from) return false;
     if (f.to && day > f.to) return false;
     if (!q) return true;

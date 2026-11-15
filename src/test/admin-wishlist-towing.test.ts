@@ -102,6 +102,12 @@ describe("order export phones and filters", () => {
     expect(filterOrders([order], { from: "2026-11-10" })).toHaveLength(0);
     expect(filterOrders([order], { q: "345 6789" })).toHaveLength(1);
   });
+  it("date filter uses the Bangkok calendar day, like Income", () => {
+    // 17:30 UTC on 9 Nov is 00:30 on 10 Nov in Bangkok.
+    const late = { ...order, created_at: "2026-11-09T17:30:00Z" };
+    expect(filterOrders([late], { from: "2026-11-10", to: "2026-11-10" })).toHaveLength(1);
+    expect(filterOrders([late], { to: "2026-11-09" })).toHaveLength(0);
+  });
   it("exports subtotal, bundle, promo, shipping and total columns", () => {
     const csv = ordersToCsv([{ ...order, subtotal: 80, sticker_bundle_discount: 1.5, discount_amount: 3.5, promo_code: "KM10", shipping_fee: 20 }]);
     expect(csv.split("\r\n")[1]).toContain("80.00,1.50,KM10,3.50,20.00,95.00,MYR");

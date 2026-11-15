@@ -39,3 +39,4 @@
 - Owner reversals go through `runReversal` (order-reverse.server.ts): role → PIN → claim → POS → one-transaction finish → best-effort alert; failures release the claim.
 - Admin role changes: `runSetAdminRole` → service-only `set_admin_role_audited` (role + append-only audit row, one transaction).
 - Role badges come from `src/lib/roles.ts` on the server; browser never derives roles.
+- Income/Orders dates and charts use Bangkok-time helpers in `src/lib/income.ts`.

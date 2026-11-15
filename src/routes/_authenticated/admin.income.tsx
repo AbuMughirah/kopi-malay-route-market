@@ -2,14 +2,17 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useTransition, useState } from "react";
-import { Download, RefreshCw, Search, X } from "lucide-react";
+import { Clock, Download, RefreshCw, Search, X } from "lucide-react";
+import { IncomeCharts } from "@/components/admin/IncomeCharts";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { checkIncomeOwner, getIncomeReport, exportIncomeCsv } from "@/lib/income.functions";
-import { IncomeFiltersSchema, incomeDates, type DatePreset, type IncomeFilters } from "@/lib/income";
+import { IncomeFiltersSchema, incomeDates, type ChartPeriod, type DatePreset, type IncomeFilters } from "@/lib/income";
 import { PLACED_LABEL } from "@/lib/roles";
 
-const defaultFilters = (): IncomeFilters => IncomeFiltersSchema.parse({ ...incomeDates("month") });
+/** Sensible chart grouping for each date preset; the owner can still change it. */
+const presetChart = (p: DatePreset): ChartPeriod => p === "today" || p === "yesterday" ? "hour" : p === "year" || p === "all" ? "month" : "day";
+const defaultFilters = (): IncomeFilters => IncomeFiltersSchema.parse({ ...incomeDates("month"), chart: "day" });
 const incomeOptions = (filters: IncomeFilters) => queryOptions({ queryKey: ["admin", "income", filters], queryFn: () => getIncomeReport({ data: filters }), staleTime: 30_000 });
 
 export const Route = createFileRoute("/_authenticated/admin/income")({
@@ -35,6 +38,14 @@ function IncomePage() {
   const [filters, setFilters] = useState(defaultFilters);
   const [preset, setPreset] = useState<DatePreset>("month");
   const [search, setSearch] = useState("");
+  const [customHours, setCustomHours] = useState(false);
+  const [hours, setHours] = useState({ from: "08:00", to: "22:00" });
+  const hoursError = customHours && (!hours.from || !hours.to) ? "Choose both times." : customHours && hours.from === hours.to ? "Start and end time must be different." : "";
+  const applyHours = (next: { from: string; to: string }, on = customHours) => {
+    setHours(next);
+    if (!on) return change({ timeFrom: undefined, timeTo: undefined });
+    if (next.from && next.to && next.from !== next.to) change({ timeFrom: next.from, timeTo: next.to });
+  };
   const [exporting, setExporting] = useState(false);
   const [updating, startTransition] = useTransition();
   const { data, refetch, isFetching } = useSuspenseQuery(incomeOptions(filters));
@@ -56,8 +67,19 @@ function IncomePage() {
       <div className="flex gap-2"><Button variant="outline" size="icon" aria-label="Refresh Income" title="Refresh Income" disabled={isFetching || updating} onClick={() => void refetch()}><RefreshCw className={isFetching || updating ? "animate-spin" : ""} /></Button><Button variant="outline" disabled={exporting || updating} onClick={download}><Download />{exporting ? "Exporting…" : "Download CSV"}</Button></div>
     </div>
     <div className="space-y-4 border-b pb-5">
-      <div className="flex flex-wrap gap-2" aria-label="Date presets">{presets.map(([key, label]) => <Button key={key} size="sm" variant={preset === key ? "default" : "outline"} aria-pressed={preset === key} onClick={() => { setPreset(key); if (key !== "custom") { const range = incomeDates(key); change({ from: range.from, to: range.to }); } }}>{label}</Button>)}</div>
+      <div className="flex flex-wrap gap-2" aria-label="Date presets">{presets.map(([key, label]) => <Button key={key} size="sm" variant={preset === key ? "default" : "outline"} aria-pressed={preset === key} onClick={() => { setPreset(key); if (key !== "custom") { const range = incomeDates(key); change({ from: range.from, to: range.to, chart: presetChart(key) }); } }}>{label}</Button>)}</div>
       {preset === "custom" && <div className="grid max-w-lg grid-cols-2 gap-3"><label className="space-y-1 text-xs font-semibold">From<input type="date" aria-label="From date" className={field} value={filters.from ?? ""} max={filters.to} onChange={(e) => change({ from: e.target.value || undefined })} /></label><label className="space-y-1 text-xs font-semibold">To<input type="date" aria-label="To date" className={field} value={filters.to ?? ""} min={filters.from} onChange={(e) => change({ to: e.target.value || undefined })} /></label></div>}
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Time of day"><span className="flex items-center gap-1 text-xs font-semibold"><Clock className="size-3.5" />Time of day</span>
+          <Button size="sm" variant={!customHours ? "default" : "outline"} aria-pressed={!customHours} onClick={() => { setCustomHours(false); applyHours(hours, false); }}>All day</Button>
+          <Button size="sm" variant={customHours ? "default" : "outline"} aria-pressed={customHours} onClick={() => { setCustomHours(true); applyHours(hours, true); }}>Custom hours</Button>
+        </div>
+        {customHours && <div className="grid max-w-lg grid-cols-2 gap-3">
+          <label className="space-y-1 text-xs font-semibold">From<input type="time" step={900} aria-label="From time" className={field} value={hours.from} onChange={(e) => applyHours({ ...hours, from: e.target.value })} /></label>
+          <label className="space-y-1 text-xs font-semibold">Up to<input type="time" step={900} aria-label="Up to time" className={field} value={hours.to} onChange={(e) => applyHours({ ...hours, to: e.target.value })} /></label>
+          <p className={`col-span-2 text-xs ${hoursError ? "text-destructive" : "text-muted-foreground"}`} role={hoursError ? "alert" : undefined}>{hoursError || `Only orders placed from ${hours.from} up to ${hours.to} each day (Bangkok time).${hours.from > hours.to ? " Runs past midnight." : ""}`}</p>
+        </div>}
+      </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <label className="space-y-1 text-xs font-semibold">Currency<select aria-label="Currency" className={field} value={filters.currency} onChange={(e) => change({ currency: e.target.value as IncomeFilters["currency"] })}><option value="all">RM + THB (separate)</option><option value="myr">RM only</option><option value="thb">THB only</option></select></label>
         <label className="space-y-1 text-xs font-semibold">Category<select aria-label="Category" className={field} value={filters.category} onChange={(e) => change({ category: e.target.value })}><option value="">All categories</option>{data.categories.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
@@ -66,9 +88,9 @@ function IncomePage() {
       </div>
       <form className="flex flex-wrap items-end gap-3" onSubmit={(e) => { e.preventDefault(); change({ product: search.trim() }); }}>
         <label className="min-w-0 flex-1 space-y-1 text-xs font-semibold">Item or size<div className="flex gap-2"><input aria-label="Item or size" className={field} placeholder="SEARCH ITEMS OR SIZE…" value={search} onChange={(e) => setSearch(e.target.value)} /><Button type="submit" variant="outline" size="icon" aria-label="Search items" title="Search items"><Search /></Button></div></label>
-        <Button type="button" variant="ghost" onClick={() => { startTransition(() => setFilters(defaultFilters())); setPreset("month"); setSearch(""); }}><X />Reset</Button>
+        <Button type="button" variant="ghost" onClick={() => { startTransition(() => setFilters(defaultFilters())); setPreset("month"); setSearch(""); setCustomHours(false); }}><X />Reset</Button>
       </form>
-      <p role="status" className="text-xs text-muted-foreground">{updating ? "Updating…" : `${filters.from ?? "First order"} — ${filters.to ?? "Latest order"} · Order date · ${data.selectedOrders} orders`}</p>
+      <p role="status" className="text-xs text-muted-foreground">{updating ? "Updating…" : `${filters.from ?? "First order"} — ${filters.to ?? "Latest order"}${filters.timeFrom ? ` · ${filters.timeFrom}–${filters.timeTo} only` : " · All day"} · Order date · ${data.selectedOrders} orders`}</p>
       {(filters.category || filters.product) && <p className="text-xs text-muted-foreground">Matching orders · Includes all items and shipping from those orders.</p>}
     </div>
     <div className="grid gap-4 lg:grid-cols-3">
@@ -78,7 +100,9 @@ function IncomePage() {
       {currencies.map((c) => { const t = data.totals[c], symbol = c === "myr" ? "RM" : "THB"; return <div key={c} className="space-y-1 text-sm"><h3 className="font-semibold">{symbol} · {t.orders} sales · {t.units} items</h3><p>Sale savings <span className="float-right tabular-nums">{fmt(t.sale)}</span></p><p>Bundle savings <span className="float-right tabular-nums">{fmt(t.bundle)}</span></p><p>Promo savings <span className="float-right tabular-nums">{fmt(t.promo)}</span></p></div>; })}
       {currencies.map((c) => <div key={`refund-${c}`} className="space-y-1 text-sm"><h3 className="font-semibold">{c === "myr" ? "RM" : "THB"} refunds</h3><p className="font-display text-xl tabular-nums">{fmt(data.totals[c].refunds)}</p><p className="text-xs text-muted-foreground">{data.totals[c].refundOrders} refunded orders · Excluded from income</p></div>)}
     </div>
+    <IncomeCharts chart={data.chart} currencies={[...currencies]} period={filters.chart} onPeriod={(chart) => change({ chart })} />
     <div className="space-y-4">
+      <h3 className="font-display text-lg font-semibold uppercase">Detailed breakdown</h3>
       <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex max-w-full gap-1 overflow-x-auto border-b" role="tablist" aria-label="Income views">{views.map(([key, label]) => <Button key={key} role="tab" aria-selected={filters.view === key} variant="ghost" className={`rounded-none border-b-2 ${filters.view === key ? "border-foreground font-semibold" : "border-transparent text-muted-foreground"}`} onClick={() => change({ view: key })}>{label}</Button>)}</div>{filters.view === "time" && <select className="h-9 rounded-md border bg-background px-3 text-sm" aria-label="Time grouping" value={filters.period} onChange={(e) => change({ period: e.target.value as IncomeFilters["period"] })}><option value="day">Daily</option><option value="month">Monthly</option><option value="year">Yearly</option></select>}</div>
       {filters.view === "ledger" && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={filters.pipeline} onChange={(e) => change({ pipeline: e.target.checked })} />Include pending & rejected orders</label>}
       {!data.selectedOrders ? <div className="border-y py-14 text-center"><h3 className="font-display text-lg font-semibold">No orders in this range</h3><p className="mt-1 text-sm text-muted-foreground">{preset === "all" ? "No matching confirmed or refunded orders." : "Choose All time or a different date range."}</p></div> : <div className="max-h-[560px] overflow-auto rounded-md border">
