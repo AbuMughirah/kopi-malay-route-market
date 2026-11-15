@@ -30,7 +30,7 @@
 - Admin access uses `user_roles` + `has_role`; every admin server function in `src/lib/admin.functions.ts` re-checks the role as the caller before using the service client, and the `/admin` route gate is only a UI convenience.
 - Designated Google admin enrollment runs in an Auth sign-in lifecycle trigger and requires a confirmed account plus a matching verified Google identity; role grants are idempotent and never trust user-editable metadata.
 - Wishlists live in localStorage for guests and `wishlist_items` for members, merged on sign-in via the shared `mergeWishlist` helper; the wishlist context lives in its own module like the cart.
-- Towing requests are inserted only through the public `submitTowingRequest` server function (honeypot + per-phone/global hourly count limits, photos stored privately by the server, shared schema/alert in `src/lib/towing.ts`); its Telegram alert uses the towing chat when configured, else the store chat.
+- Towing requests are inserted only through the public `submitTowingRequest` server function (honeypot, hourly limits, private photos, shared `towing.ts` schema); alerts prefer the towing chat.
 - Admin catalog edits never create Loyverse items; staff link products to existing Loyverse variants and stock stays read-only from Loyverse.
 - Order status changes only via `updateOrder` + `order-flow.ts`; service-only `transition_order_status` writes status and append-only history in one transaction.
 - App emails use the server-only managed send helper and registered React Email templates; feature handlers fix the recipient and template, while `/lovable/*` bypasses app guards and authenticates itself, avoiding public arbitrary-send endpoints or local delivery queues.
