@@ -221,12 +221,13 @@ function TowingPage() {
               {err("breakdown_location")}
             </div>
             <div className="space-y-1.5 sm:col-span-2">
-              <Label k="maps_link">Google Maps share link (optional)</Label>
-              <div className="flex gap-2">
-                <input id="tow-maps_link" type="url" inputMode="url" value={form.maps_link} placeholder="https://maps.app.goo.gl/…" onChange={(e) => set("maps_link", e.target.value)} aria-invalid={!!errors["maps_link"]} className={`${field} ${inv("maps_link")}`} />
-                <button type="button" onClick={detectGps} disabled={gpsBusy} className="shrink-0 rounded-md border px-3 text-sm font-medium disabled:opacity-50">{gpsBusy ? "Locating…" : "Detect GPS"}</button>
+              <span className="block text-sm font-medium">Your location (optional)</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <button type="button" onClick={detectGps} disabled={gpsBusy} className="rounded-md border px-3 py-2 text-sm font-medium disabled:opacity-50">{gpsBusy ? "Locating…" : coords ? "Update GPS location" : "Detect my GPS location"}</button>
+                {coords && <span className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-xs font-medium">✓ GPS location detected ({coords.lat}, {coords.lng}) <button type="button" className="underline" onClick={() => setCoords(null)}>remove</button></span>}
               </div>
-              {coords && <p className="text-xs text-muted-foreground">GPS pin: {coords.lat}, {coords.lng} <button type="button" className="underline" onClick={() => setCoords(null)}>remove</button></p>}
+              <Label k="maps_link">Or paste a Google Maps link manually</Label>
+              <input id="tow-maps_link" type="url" inputMode="url" value={form.maps_link} placeholder="https://maps.app.goo.gl/…" onChange={(e) => set("maps_link", e.target.value)} aria-invalid={!!errors["maps_link"]} className={`${field} ${inv("maps_link")}`} />
               {err("maps_link")}
             </div>
           </div>
