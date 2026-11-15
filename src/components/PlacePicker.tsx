@@ -9,7 +9,7 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange"> &
 };
 
 /** Type-to-search state/province picker; snaps to the closest spelling when the field is left. */
-export function PlacePicker({ value, options, onValueChange, onBlur, className, id, uppercase = false, ...rest }: Props) {
+export function PlacePicker({ value, options, onValueChange, onBlur, className, id, uppercase = false, placeholder, ...rest }: Props) {
   const [text, setText] = useState(value);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -21,6 +21,7 @@ export function PlacePicker({ value, options, onValueChange, onBlur, className, 
     <div className="relative">
       <input
         {...rest}
+        placeholder={uppercase ? placeholder?.toUpperCase() : placeholder}
         id={id}
         role="combobox"
         aria-expanded={open}

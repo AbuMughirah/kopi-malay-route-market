@@ -68,7 +68,7 @@ function ProfilePage() {
         <section className="space-y-4 rounded-lg border p-5">
           <h2 className="font-display text-lg font-bold uppercase">Personal &amp; contact</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            {input("full_name", "Full name", "Ahmad bin Ali")}
+            {input("full_name", "Full name", "AHMAD BIN ALI")}
             {input("phone", "Phone number", "+60 12-345 6789", "tel")}
             <div className="space-y-1.5">
               <label htmlFor="pf-preferred_contact" className="text-sm font-medium">Preferred contact</label>
@@ -86,12 +86,12 @@ function ProfilePage() {
             <textarea id="pf-address" rows={2} autoCapitalize="characters" value={p.address} maxLength={300} onChange={set("address")} className={field} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            {input("city", "City")}
+            {input("city", "City", "CHIANG MAI")}
             <div className="space-y-1.5">
               <label htmlFor="pf-state" className="text-sm font-medium">{p.country === "thailand" ? "Province" : "State"}</label>
               <PlacePicker uppercase id="pf-state" value={p.state} options={p.country === "thailand" ? TH_PROVINCES : MY_STATES} onValueChange={(v) => setP((prev) => ({ ...prev, state: v }))} placeholder={p.country === "thailand" ? "Type to search province" : "Type to search state"} className={field} />
             </div>
-            {input("postcode", "Postcode")}
+            {input("postcode", "Postcode", "50200")}
             <div className="space-y-1.5">
               <label htmlFor="pf-country" className="text-sm font-medium">Country</label>
               <select id="pf-country" value={p.country} onChange={(e) => setP({ ...p, country: e.target.value, state: "" })} className={`${field} uppercase`}>
@@ -104,7 +104,7 @@ function ProfilePage() {
         <section className="space-y-4 rounded-lg border p-5">
           <h2 className="font-display text-lg font-bold uppercase">Motorcycle garage</h2>
           <div className="grid gap-4 sm:grid-cols-3">
-            {input("motorcycle_make", "Make", "Honda")}
+            {input("motorcycle_make", "Make", "HONDA")}
             {input("motorcycle_model", "Model", "CB500X")}
             {input("motorcycle_plate", "Plate number", "WXY 1234")}
           </div>

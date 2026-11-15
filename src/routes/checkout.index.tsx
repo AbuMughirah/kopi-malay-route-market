@@ -181,16 +181,16 @@ function Checkout() {
             {errorPrompt("country")}
             {lines.some((line) => line.product?.category_slug === "jerseys-t-shirts") && country === "Malaysia" && <p className="text-sm text-muted-foreground">Shipped from Tak, Thailand across the border via Peninsular Malaysia.</p>}
             <div className="space-y-1.5"><label htmlFor="checkout-name" className="text-sm font-medium">Full name *</label>
-              <input {...inputProps("name")} autoComplete="name" maxLength={120} placeholder="Full name" value={f.name} onChange={set("name")} />{errorPrompt("name")}</div>
+              <input {...inputProps("name")} autoComplete="name" maxLength={120} placeholder="AHMAD BIN ALI" value={f.name} onChange={set("name")} />{errorPrompt("name")}</div>
             <div className="space-y-1.5"><label htmlFor="checkout-address" className="text-sm font-medium">Street address *</label>
-              <input {...inputProps("address")} autoComplete="street-address" maxLength={300} placeholder="Address" value={f.address} onChange={set("address")} />{errorPrompt("address")}</div>
+              <input {...inputProps("address")} autoComplete="street-address" maxLength={300} placeholder="ADDRESS" value={f.address} onChange={set("address")} />{errorPrompt("address")}</div>
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="space-y-1.5"><label htmlFor="checkout-city" className="text-sm font-medium">City *</label>
-                <input {...inputProps("city")} autoComplete="address-level2" maxLength={100} placeholder="City" value={f.city} onChange={set("city")} />{errorPrompt("city")}</div>
+                <input {...inputProps("city")} autoComplete="address-level2" maxLength={100} placeholder="CITY" value={f.city} onChange={set("city")} />{errorPrompt("city")}</div>
               <div className="space-y-1.5"><label htmlFor="checkout-state" className="text-sm font-medium">{country === "Malaysia" ? "State" : "Province / Region"} *</label>
                 {(() => { const { onBlur, ...props } = inputProps("state"); return <PlacePicker uppercase {...props} onBlur={onBlur} aria-label={country === "Malaysia" ? "State" : "Province"} placeholder={country === "Malaysia" ? "Type to search state" : "Type to search province"} value={f.state} options={country === "Malaysia" ? MY_STATES : TH_PROVINCES} onValueChange={(v) => setF((prev) => ({ ...prev, state: v }))} />; })()}{errorPrompt("state")}</div>
               <div className="space-y-1.5"><label htmlFor="checkout-postcode" className="text-sm font-medium">Postcode *</label>
-                <input {...inputProps("postcode")} autoComplete="postal-code" maxLength={5} placeholder="Postcode" inputMode="numeric" value={f.postcode} onChange={set("postcode")} />{errorPrompt("postcode")}</div>
+                <input {...inputProps("postcode")} autoComplete="postal-code" maxLength={5} placeholder="POSTCODE" inputMode="numeric" value={f.postcode} onChange={set("postcode")} />{errorPrompt("postcode")}</div>
             </div>
           </section>
           <section className="space-y-4 rounded-lg border bg-card p-5">
@@ -240,7 +240,7 @@ function Checkout() {
                 </div>
               ) : (
                 <div className="flex gap-2">
-                  <input id="promo" value={promoInput} onChange={(e) => setPromoInput(e.target.value.toUpperCase())} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void applyPromo(promoInput); } }} placeholder="Enter code" className={field} />
+                  <input id="promo" value={promoInput} onChange={(e) => setPromoInput(e.target.value.toUpperCase())} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void applyPromo(promoInput); } }} placeholder="ENTER CODE" className={field} />
                   <Button type="button" variant="outline" disabled={promoBusy || !promoInput.trim()} onClick={() => void applyPromo(promoInput)}>{promoBusy ? "…" : "Apply"}</Button>
                 </div>
               )}

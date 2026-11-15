@@ -194,7 +194,7 @@ function TowingPage() {
           {choice("rider_type", "Rider type", [["thai", "Thai local"], ["foreign", "Foreign rider"]])}
           <div className="grid gap-4 sm:grid-cols-2">
             {form.rider_type === "foreign" && <>
-              {text("nationality", "Nationality", "Malaysia")}
+              {text("nationality", "Nationality", "MALAYSIA")}
               <div className="space-y-1.5">
                 <Label k="passport_number">Passport number *</Label>
                 <input id="tow-passport_number" value={form.passport_number} placeholder="A12345678" autoComplete="off" data-lpignore="true" data-1p-ignore spellCheck={false} autoCapitalize="characters"
@@ -202,10 +202,10 @@ function TowingPage() {
                 {err("passport_number")}
               </div>
             </>}
-            {text("name", "Your name", "Ahmad bin Ali")}
+            {text("name", "Your name", "AHMAD BIN ALI")}
             {text("phone", "Phone number (reachable now)", "+66 81 234 5678", "tel")}
             {text("plate_number", "Motorcycle plate number", "WXY 1234")}
-            {text("motorcycle_model", "Motorcycle model", "Honda CB500X")}
+            {text("motorcycle_model", "Motorcycle model", "HONDA CB500X")}
           </div>
           {choice("urgency", "Urgency level", [["urgent", "Urgent"], ["not_urgent", "Not urgent"]])}
           {choice("rider_transport", "Rider transport", [["with_pickup", "Ride with pick-up"], ["own_transport", "Arrange own transport"]])}
@@ -217,7 +217,7 @@ function TowingPage() {
             {place("pickup", "Breakdown")}
             <div className="space-y-1.5 sm:col-span-2">
               <Label k="breakdown_location">Exact spot / landmark *</Label>
-              <textarea id="tow-breakdown_location" rows={2} autoCapitalize="characters" value={form.breakdown_location} placeholder="KM 42 Route 12, near PTT station" onChange={(e) => set("breakdown_location", e.target.value)} aria-invalid={!!errors["breakdown_location"]} className={`${field} ${inv("breakdown_location")}`} />
+              <textarea id="tow-breakdown_location" rows={2} autoCapitalize="characters" value={form.breakdown_location} placeholder="KM 42 ROUTE 12, NEAR PTT STATION" onChange={(e) => set("breakdown_location", e.target.value)} aria-invalid={!!errors["breakdown_location"]} className={`${field} ${inv("breakdown_location")}`} />
               {err("breakdown_location")}
             </div>
             <div className="space-y-1.5 sm:col-span-2">
@@ -238,7 +238,7 @@ function TowingPage() {
             {place("destination", "Destination")}
             <div className="space-y-1.5 sm:col-span-2">
               <Label k="destination">Destination address *</Label>
-              <textarea id="tow-destination" rows={2} autoCapitalize="characters" value={form.destination} placeholder="Workshop / hotel address" onChange={(e) => set("destination", e.target.value)} aria-invalid={!!errors["destination"]} className={`${field} ${inv("destination")}`} />
+              <textarea id="tow-destination" rows={2} autoCapitalize="characters" value={form.destination} placeholder="WORKSHOP / HOTEL ADDRESS" onChange={(e) => set("destination", e.target.value)} aria-invalid={!!errors["destination"]} className={`${field} ${inv("destination")}`} />
               {err("destination")}
             </div>
           </div>
