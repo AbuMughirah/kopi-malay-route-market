@@ -86,12 +86,12 @@ function ProfilePage() {
             <textarea id="pf-address" rows={2} autoCapitalize="characters" value={p.address} maxLength={300} onChange={set("address")} className={field} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            {input("city", "City", "CHIANG MAI")}
+            {input("city", "City")}
             <div className="space-y-1.5">
               <label htmlFor="pf-state" className="text-sm font-medium">{p.country === "thailand" ? "Province" : "State"}</label>
               <PlacePicker uppercase id="pf-state" value={p.state} options={p.country === "thailand" ? TH_PROVINCES : MY_STATES} onValueChange={(v) => setP((prev) => ({ ...prev, state: v }))} placeholder={p.country === "thailand" ? "Type to search province" : "Type to search state"} className={field} />
             </div>
-            {input("postcode", "Postcode", "50200")}
+            {input("postcode", "Postcode")}
             <div className="space-y-1.5">
               <label htmlFor="pf-country" className="text-sm font-medium">Country</label>
               <select id="pf-country" value={p.country} onChange={(e) => setP({ ...p, country: e.target.value, state: "" })} className={`${field} uppercase`}>
