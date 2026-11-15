@@ -2,9 +2,21 @@
 // Never throws: failures are logged with full detail so order/towing saves are never blocked.
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/telegram";
 
-type Ctx = { headers: Record<string, string>; chatId: string };
+type Ctx = { headers: Record<string, string>; chatId: string; baseUrl: string; direct?: boolean };
 
 async function resolveCtx(tag: string): Promise<Ctx | null> {
+  // A separately configured bot is used only for rescue notifications.
+  // Never fall back after a delivery error: it may already have delivered,
+  // and forwarding passports to the store chat would break separation.
+  const towingToken = tag === "towing" ? process.env["TELEGRAM_TOWING_BOT_TOKEN"]?.trim() : "";
+  if (towingToken) {
+    const chatId = process.env["TELEGRAM_TOWING_CHAT_ID"]?.trim();
+    if (!chatId) {
+      console.error("[telegram:towing] Dedicated bot chat is not configured; alert NOT delivered.");
+      return null;
+    }
+    return { baseUrl: `https://api.telegram.org/bot${towingToken}`, headers: { "Content-Type": "application/json" }, chatId, direct: true };
+  }
   const lovableKey = process.env["LOVABLE_API_KEY"];
   const tgKey = process.env["TELEGRAM_API_KEY"];
   if (!lovableKey || !tgKey) {
@@ -14,9 +26,9 @@ async function resolveCtx(tag: string): Promise<Ctx | null> {
   const headers = { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": tgKey, "Content-Type": "application/json" };
   // Towing alerts go to their own chat when configured, else fall back to the store chat.
   const towingChat = tag === "towing" ? process.env["TELEGRAM_TOWING_CHAT_ID"]?.trim() : "";
-  if (towingChat) return { headers, chatId: towingChat };
+  if (towingChat) return { headers, chatId: towingChat, baseUrl: GATEWAY_URL };
   const envChat = process.env["TELEGRAM_CHAT_ID"]?.trim();
-  if (envChat) return { headers, chatId: envChat };
+  if (envChat) return { headers, chatId: envChat, baseUrl: GATEWAY_URL };
   // Fallback: Telegram keeps updates only ~24h, so set TELEGRAM_CHAT_ID for reliability.
   const r = await fetch(`${GATEWAY_URL}/getUpdates`, { method: "POST", headers, body: "{}" });
   if (!r.ok) {
@@ -30,20 +42,20 @@ async function resolveCtx(tag: string): Promise<Ctx | null> {
     console.error(`[telegram:${tag}] No TELEGRAM_CHAT_ID set and no recent chat with the bot — alert NOT delivered. Message the bot, then save its chat ID.`);
     return null;
   }
-  return { headers, chatId: String(id) };
+  return { headers, chatId: String(id), baseUrl: GATEWAY_URL };
 }
 
 async function call(tag: string, ctx: Ctx, method: string, body: Record<string, unknown>): Promise<boolean> {
   try {
-    const res = await fetch(`${GATEWAY_URL}/${method}`, { method: "POST", headers: ctx.headers, body: JSON.stringify({ chat_id: ctx.chatId, ...body }) });
+    const res = await fetch(`${ctx.baseUrl}/${method}`, { method: "POST", headers: ctx.headers, body: JSON.stringify({ chat_id: ctx.chatId, ...body }) });
     const txt = await res.text();
-    if (!res.ok) { console.error(`[telegram:${tag}] ${method} failed [${res.status}]: ${txt}`); return false; }
+    if (!res.ok) { console.error(`[telegram:${tag}] ${method} failed [${res.status}]: ${ctx.direct ? "Dedicated bot delivery failed" : txt}`); return false; }
     const j = JSON.parse(txt) as { ok?: boolean; description?: string };
-    if (j.ok === false) { console.error(`[telegram:${tag}] ${method} rejected: ${j.description}`); return false; }
+    if (j.ok === false) { console.error(`[telegram:${tag}] ${method} rejected: ${ctx.direct ? "Dedicated bot delivery rejected" : j.description}`); return false; }
     console.log(`[telegram:${tag}] ${method} delivered`);
     return true;
   } catch (e) {
-    console.error(`[telegram:${tag}] ${method} network error`, e);
+    console.error(`[telegram:${tag}] ${method} network error`, ctx.direct ? "Dedicated bot connection failed" : e);
     return false;
   }
 }
