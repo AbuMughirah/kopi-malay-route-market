@@ -24,6 +24,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 const TABS = [
   { to: "/admin", label: "Orders", exact: true },
+  { to: "/admin/income", label: "Income" },
   { to: "/admin/products", label: "Products & Stock" },
   { to: "/admin/promos", label: "Promo Codes" },
   { to: "/admin/towing", label: "Towing Requests" },
@@ -36,7 +37,7 @@ function AdminLayout() {
   useEffect(() => {
     supabase.rpc("has_role", { _user_id: user.id, _role: "owner" }).then(({ data }) => setIsOwner(Boolean(data)));
   }, [user.id]);
-  const tabs = TABS.filter((t) => t.to !== "/admin/users" || isOwner);
+  const tabs = TABS.filter((t) => !["/admin/users", "/admin/income"].includes(t.to) || isOwner);
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-8">
       <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="font-display text-3xl font-bold uppercase">Admin dashboard</h1><OwnerPinButton /></div>

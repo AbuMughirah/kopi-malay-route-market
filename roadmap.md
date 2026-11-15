@@ -1,4 +1,5 @@
 # Major update (Nov 9)
+- [x] Owner-only Income: separate merchandise/shipping, dates/currencies/items/categories/promos/sale filters, breakdowns, ledger and CSV; 242 tests passed, authenticated real-order export and phone fit verified. Historical categories use current catalog; reports are order-date revenue, not profit or bank reconciliation.
 - [x] Capitalize customer form details safely, preserve emails/passwords/links, and rename Northern & Touring to Northern; verified towing, checkout and authenticated profile controls, phone fit and 218 tests; no real submissions.
 - [x] Fix refund write-off stock-state validation and finish KM-11764 using saved receipt #0024 and manually restored inventory; authenticated details show Refunded / Restored and recovery history, with no duplicate refund.
 - [x] Clear the owner's test PIN lockout and verify awaited PIN security alerts through the authenticated five-attempt flow; Telegram delivery confirmed.
