@@ -1,5 +1,5 @@
 export const THAI_REGIONS: { group: string; items: string[] }[] = [
-  { group: "Northern & Touring", items: ["Tak", "Mae Sot", "Mae Hong Son", "Pai", "Chiang Mai", "Chiang Rai", "Nan", "Lampang", "Lamphun", "Phrae", "Phayao", "Sukhothai", "Phitsanulok", "Umphang"] },
+  { group: "Northern", items: ["Tak", "Mae Sot", "Mae Hong Son", "Pai", "Chiang Mai", "Chiang Rai", "Nan", "Lampang", "Lamphun", "Phrae", "Phayao", "Sukhothai", "Phitsanulok", "Umphang"] },
   { group: "Central & West", items: ["Bangkok", "Kanchanaburi", "Nakhon Sawan", "Ayutthaya", "Suphan Buri", "Kamphaeng Phet"] },
   { group: "Southern & Border", items: ["Hat Yai (Songkhla)", "Sadao", "Phuket", "Krabi", "Surat Thani", "Trang", "Satun", "Yala", "Narathiwat", "Chumphon"] },
   { group: "Eastern & Coastal", items: ["Pattaya (Chonburi)", "Rayong", "Trat", "Hua Hin (Prachuap Khiri Khan)"] },
@@ -8,5 +8,6 @@ export const THAI_REGIONS: { group: string; items: string[] }[] = [
 ];
 
 export function townsForRegion(region: string): string[] {
-  return THAI_REGIONS.find((r) => r.group === region)?.items ?? [];
+  const group = region === "Northern & Touring" ? "Northern" : region;
+  return THAI_REGIONS.find((r) => r.group === group)?.items ?? [];
 }

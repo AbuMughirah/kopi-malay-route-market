@@ -5,10 +5,11 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange"> &
   value: string;
   options: readonly string[];
   onValueChange: (v: string) => void;
+  uppercase?: boolean;
 };
 
 /** Type-to-search state/province picker; snaps to the closest spelling when the field is left. */
-export function PlacePicker({ value, options, onValueChange, onBlur, className, id, ...rest }: Props) {
+export function PlacePicker({ value, options, onValueChange, onBlur, className, id, uppercase = false, ...rest }: Props) {
   const [text, setText] = useState(value);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -26,10 +27,11 @@ export function PlacePicker({ value, options, onValueChange, onBlur, className, 
         aria-controls={listId}
         aria-autocomplete="list"
         autoComplete="off"
-        value={text}
+        value={uppercase ? text.toUpperCase() : text}
+        autoCapitalize={uppercase ? "characters" : "none"}
         className={className}
         onFocus={(e) => { setOpen(true); e.target.select(); }}
-        onChange={(e) => { setText(e.target.value); setOpen(true); setActive(0); }}
+        onChange={(e) => { setText(uppercase ? e.target.value.toUpperCase() : e.target.value); setOpen(true); setActive(0); }}
         onKeyDown={(e) => {
           if (e.key === "ArrowDown") { e.preventDefault(); setOpen(true); setActive((a) => Math.min(a + 1, matches.length - 1)); }
           else if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
@@ -48,7 +50,7 @@ export function PlacePicker({ value, options, onValueChange, onBlur, className, 
           {matches.map((m, i) => (
             <li key={m} role="option" aria-selected={i === active}
               onMouseDown={(e) => { e.preventDefault(); choose(m); }}
-              className={`cursor-pointer px-3 py-2 ${i === active ? "bg-accent text-accent-foreground" : ""}`}>{m}</li>
+              className={`cursor-pointer px-3 py-2 ${i === active ? "bg-accent text-accent-foreground" : ""}`}>{uppercase ? m.toUpperCase() : m}</li>
           ))}
         </ul>
       )}
