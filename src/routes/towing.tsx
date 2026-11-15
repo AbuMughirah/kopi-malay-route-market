@@ -182,7 +182,7 @@ function TowingPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <h1 className="font-display text-3xl font-bold uppercase md:text-4xl">Towing &amp; Rescue</h1>
-      <p className="mt-2 text-muted-foreground">Broken down? Fill in the details below. Fields marked * are required. Emergency: <a href={wa} className="underline">WhatsApp {RESCUE_PHONE}</a></p>
+      <p className="mt-2 text-muted-foreground">Broken down? Fill in the details below. Fields marked * are required. Emergency: <a href={wa} aria-label={`WhatsApp ${RESCUE_PHONE}`} className="whitespace-nowrap underline"><svg viewBox="0 0 24 24" className="mr-1 inline h-[1.1em] w-[1.1em] align-[-0.15em]" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1-.7-.3-1.5-.7-2.2-1.4-.6-.5-1-1.2-1.2-1.6-.1-.2 0-.4.1-.5l.4-.4.2-.4v-.4l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.7.3-.2.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.2-.3-.3-.6-.4z" /></svg>{RESCUE_PHONE}</a></p>
       {limited && <div role="alert" className="mt-4 rounded-md border-2 border-foreground p-4 text-sm font-medium">{limited} <a href={wa} className="underline">Open WhatsApp</a> · <a href={`tel:${RESCUE_PHONE.replace(/\s/g, "")}`} className="underline">Call</a></div>}
       <form noValidate onSubmit={onSubmit} className="mt-6 space-y-8">
         <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
