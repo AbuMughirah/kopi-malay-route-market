@@ -107,3 +107,14 @@ describe("order export phones and filters", () => {
     expect(csv.split("\r\n")[1]).toContain("80.00,1.50,KM10,3.50,20.00,95.00,MYR");
   });
 });
+
+import { towingAlert as _ta } from "@/lib/towing";
+describe("towing alert map links", () => {
+  it("shows full map URLs as plain text so they stay clickable when forwarded", () => {
+    const d: any = { name: "A", rider_type: "thai", phone: "+66123", motorcycle_model: "GS", plate_number: "X", rider_transport: "with_pickup", pickup_town: "T", pickup_region: "Northern", breakdown_location: "L", maps_link: "https://maps.app.goo.gl/abc", pickup_lat: 18.7883, pickup_lng: 98.9853, destination_town: "D", destination_region: "Northern", destination: "Y", urgency: "urgent" };
+    const t = _ta(d, "TW-1", "now", []);
+    expect(t).toContain("📍 GPS pin: https://maps.google.com/?q=18.7883,98.9853");
+    expect(t).toContain("🗺️ Maps link: https://maps.app.goo.gl/abc");
+    expect(t).not.toContain('<a href="https://maps');
+  });
+});

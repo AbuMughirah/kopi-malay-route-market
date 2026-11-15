@@ -81,7 +81,7 @@ const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 
 export function towingAlert(d: TowingData, reference: string, time: string, photoUrls: string[]): string {
   const tel = d.phone.replace(/[^\d+]/g, "");
-  const coords = d.pickup_lat != null && d.pickup_lng != null ? `https://www.google.com/maps?q=${d.pickup_lat},${d.pickup_lng}` : "";
+  const coords = d.pickup_lat != null && d.pickup_lng != null ? `https://maps.google.com/?q=${d.pickup_lat},${d.pickup_lng}` : "";
   const lines = [
     `🚨 <b>TOWING &amp; RESCUE ${esc(reference)}</b>${d.urgency === "urgent" ? " · ‼️ <b>URGENT</b>" : " · Not urgent"}`,
     "",
@@ -93,8 +93,8 @@ export function towingAlert(d: TowingData, reference: string, time: string, phot
     "",
     `📍 From: ${esc(d.pickup_town)}, ${esc(d.pickup_region)}`,
     `   ${esc(d.breakdown_location)}`,
-    ...(d.maps_link ? [`   <a href="${esc(d.maps_link)}">Google Maps link</a>`] : []),
-    ...(coords ? [`   <a href="${coords}">GPS pin</a>`] : []),
+    ...(d.maps_link ? [`   🗺️ Maps link: ${esc(d.maps_link)}`] : []),
+    ...(coords ? [`   📍 GPS pin: ${coords}`] : []),
     `🏁 To: ${esc(d.destination_town)}, ${esc(d.destination_region)}`,
     `   ${esc(d.destination)}`,
     ...(photoUrls.length ? ["", `📷 Photos: ${photoUrls.map((u, i) => `<a href="${esc(u)}">${i + 1}</a>`).join(" · ")}`] : []),
