@@ -678,45 +678,81 @@ export type Database = {
           breakdown_location: string
           created_at: string
           destination: string
+          destination_region: string | null
+          destination_town: string | null
           id: string
+          maps_link: string | null
           motorcycle_model: string
           name: string
+          nationality: string | null
+          passport_number: string | null
           phone: string
+          phone_digits: string | null
+          photo_paths: string[]
           pickup_lat: number | null
           pickup_lng: number | null
+          pickup_region: string | null
+          pickup_town: string | null
           plate_number: string
           reference: string
+          rider_transport: string
+          rider_type: string
           status: string
+          urgency: string
           user_id: string | null
         }
         Insert: {
           breakdown_location: string
           created_at?: string
           destination: string
+          destination_region?: string | null
+          destination_town?: string | null
           id?: string
+          maps_link?: string | null
           motorcycle_model: string
           name: string
+          nationality?: string | null
+          passport_number?: string | null
           phone: string
+          phone_digits?: string | null
+          photo_paths?: string[]
           pickup_lat?: number | null
           pickup_lng?: number | null
+          pickup_region?: string | null
+          pickup_town?: string | null
           plate_number: string
           reference: string
+          rider_transport?: string
+          rider_type?: string
           status?: string
+          urgency?: string
           user_id?: string | null
         }
         Update: {
           breakdown_location?: string
           created_at?: string
           destination?: string
+          destination_region?: string | null
+          destination_town?: string | null
           id?: string
+          maps_link?: string | null
           motorcycle_model?: string
           name?: string
+          nationality?: string | null
+          passport_number?: string | null
           phone?: string
+          phone_digits?: string | null
+          photo_paths?: string[]
           pickup_lat?: number | null
           pickup_lng?: number | null
+          pickup_region?: string | null
+          pickup_town?: string | null
           plate_number?: string
           reference?: string
+          rider_transport?: string
+          rider_type?: string
           status?: string
+          urgency?: string
           user_id?: string | null
         }
         Relationships: []

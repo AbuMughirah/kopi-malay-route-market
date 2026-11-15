@@ -355,7 +355,11 @@ export const listTowing = createServerFn({ method: "POST" }).middleware([require
   const admin = await adminClient(context as unknown as Ctx);
   const { data, error } = await admin.from("towing_requests").select("*").order("created_at", { ascending: false }).limit(500);
   if (error) throw new Error(error.message);
-  return data ?? [];
+  const rows = data ?? [];
+  const paths = rows.flatMap((r) => r.photo_paths ?? []);
+  const signed = paths.length ? (await admin.storage.from("payment-receipts").createSignedUrls(paths, 3600)).data ?? [] : [];
+  const url = new Map(signed.map((s) => [s.path, s.signedUrl]));
+  return rows.map((r) => ({ ...r, photo_urls: (r.photo_paths ?? []).map((p) => url.get(p)).filter(Boolean) as string[] }));
 });
 
 export const updateTowing = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])

@@ -12,6 +12,9 @@ async function resolveCtx(tag: string): Promise<Ctx | null> {
     return null;
   }
   const headers = { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": tgKey, "Content-Type": "application/json" };
+  // Towing alerts go to their own chat when configured, else fall back to the store chat.
+  const towingChat = tag === "towing" ? process.env["TELEGRAM_TOWING_CHAT_ID"]?.trim() : "";
+  if (towingChat) return { headers, chatId: towingChat };
   const envChat = process.env["TELEGRAM_CHAT_ID"]?.trim();
   if (envChat) return { headers, chatId: envChat };
   // Fallback: Telegram keeps updates only ~24h, so set TELEGRAM_CHAT_ID for reliability.

@@ -225,6 +225,13 @@
       "when": 1794666666292,
       "tag": "0031_order_reject_reason",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1794724308040,
+      "tag": "0032_towing_form_upgrade",
+      "breakpoints": true
     }
   ]
 }

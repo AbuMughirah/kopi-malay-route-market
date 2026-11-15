@@ -4,6 +4,7 @@ import { NewArrivalCarousel } from "@/components/new-arrival-carousel";
 import { ProductCard } from "@/components/product-card";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
 import { imageFor } from "@/lib/shop";
+import towingPoster from "@/assets/towing-rescue-poster.jpg.asset.json";
 
 const CAT_IMG: Record<string, string> = { "jerseys-t-shirts": "tee", stickers: "chromium-black-yellow", tumblers: "tumbler-16oz", "fridge-magnets": "magnet-tak-city", patches: "patch", lanyard: "cap", "other-merch": "cap" };
 
@@ -34,6 +35,18 @@ function Home() {
   return (
     <>
       <NewArrivalCarousel products={arrivals.length ? arrivals : products.slice(-6)} />
+
+      <section className="mx-auto max-w-7xl px-4 pt-8">
+        <Link to="/towing" className="grid overflow-hidden rounded-lg border bg-primary text-primary-foreground md:grid-cols-2">
+          <img src={towingPoster.url} alt="Kopi Malay towing and rescue service" className="h-56 w-full object-cover md:h-full" loading="lazy" />
+          <div className="flex flex-col justify-center gap-3 p-6 md:p-10">
+            <p className="font-display text-xs font-bold uppercase tracking-widest opacity-80">Route 1 · Thailand</p>
+            <h2 className="font-display text-2xl font-bold uppercase md:text-4xl">Broken down? Towing &amp; Rescue</h2>
+            <p className="opacity-90">Request motorcycle towing in minutes. We'll contact you with pricing before dispatch.</p>
+            <span className="mt-2 inline-block w-fit rounded-md bg-background px-5 py-2.5 font-display font-semibold uppercase text-foreground">Request a tow</span>
+          </div>
+        </Link>
+      </section>
 
       <section className="mx-auto max-w-7xl px-4 py-12">
         <h2 className="font-display text-2xl font-bold uppercase">Shop by category</h2>
