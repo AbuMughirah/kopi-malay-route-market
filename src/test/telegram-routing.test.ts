@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { sendTelegram } from "../lib/telegram.server";
+import { sendTelegram, sendTelegramWithPhotos } from "../lib/telegram.server";
 
 const fetchMock = vi.fn();
 function firstCall() {
@@ -57,5 +57,33 @@ describe("Telegram bot separation", () => {
     fetchMock.mockRejectedValue(new Error("https://api.telegram.org/bottest-rescue-token/sendMessage"));
     expect(await sendTelegram("Rescue test", "towing")).toBe(false);
     expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain("test-rescue-token");
+  });
+});
+describe("Towing photo hybrid delivery", () => {
+  const methods = () => fetchMock.mock.calls.map((c) => String(c[0]).split("/").pop());
+  it("sends a single photo with the alert as caption", async () => {
+    expect(await sendTelegramWithPhotos("Short alert", "towing", ["https://x/1.jpg"])).toBe(true);
+    expect(methods()).toEqual(["sendPhoto"]);
+    expect(JSON.parse(fetchMock.mock.calls[0]![1].body).caption).toBe("Short alert");
+  });
+  it("sends an album with caption on the first photo", async () => {
+    await sendTelegramWithPhotos("Short alert", "towing", ["https://x/1.jpg", "https://x/2.jpg"]);
+    expect(methods()).toEqual(["sendMediaGroup"]);
+    const media = JSON.parse(fetchMock.mock.calls[0]![1].body).media;
+    expect(media[0].caption).toBe("Short alert");
+    expect(media[1].caption).toBeUndefined();
+  });
+  it("sends text first then photos when alert exceeds 1000 characters", async () => {
+    await sendTelegramWithPhotos("a".repeat(1001), "towing", ["https://x/1.jpg", "https://x/2.jpg"]);
+    expect(methods()).toEqual(["sendMessage", "sendMediaGroup"]);
+  });
+  it("falls back to the text alert when photo delivery fails", async () => {
+    fetchMock.mockResolvedValueOnce(new Response("bad", { status: 400 }));
+    expect(await sendTelegramWithPhotos("Short alert", "towing", ["https://x/1.jpg"])).toBe(true);
+    expect(methods()).toEqual(["sendPhoto", "sendMessage"]);
+  });
+  it("uses a plain message with no photos", async () => {
+    await sendTelegramWithPhotos("Short alert", "towing", []);
+    expect(methods()).toEqual(["sendMessage"]);
   });
 });

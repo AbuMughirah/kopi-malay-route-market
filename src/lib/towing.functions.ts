@@ -16,7 +16,7 @@ export const submitTowingRequest = createServerFn({ method: "POST" })
     // Bots fill the hidden field: pretend success, save nothing.
     if (honeypot) return { rateLimited: false as const, reference: `TW-${Math.floor(10000 + Math.random() * 90000)}`, photosSaved: 0, photosSent: 0 };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { sendTelegram } = await import("./telegram.server");
+    const { sendTelegramWithPhotos } = await import("./telegram.server");
     const digits = phoneDigits(d.phone);
     const since = new Date(Date.now() - 3600_000).toISOString();
     const [byPhone, all] = await Promise.all([
@@ -54,6 +54,6 @@ export const submitTowingRequest = createServerFn({ method: "POST" })
       urls = ((await supabaseAdmin.storage.from("payment-receipts").createSignedUrls(paths, 60 * 60 * 24 * 7)).data ?? []).map((s) => s.signedUrl).filter(Boolean) as string[];
     }
     const time = new Date().toLocaleString("en-GB", { timeZone: "Asia/Kuala_Lumpur", dateStyle: "short", timeStyle: "short" });
-    await sendTelegram(towingAlert(d, reference, time, urls), "towing");
+    await sendTelegramWithPhotos(towingAlert(d, reference, time, urls), "towing", urls);
     return { rateLimited: false as const, reference, photosSaved: paths.length, photosSent: photos.length };
   });

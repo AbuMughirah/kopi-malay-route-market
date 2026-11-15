@@ -73,4 +73,35 @@ export async function sendTelegram(text: string, tag = "alert", attachment?: { u
   }
 }
 
+/** Caption limit is 1,024; stay under 1,000 raw HTML characters for a safe margin. */
+export const CAPTION_SAFE_LIMIT = 1000;
+
+/**
+ * Smart hybrid: short alerts ride as the photo/album caption (one forwardable bundle);
+ * long alerts go as a text message followed by the photos. If photo delivery fails,
+ * the text (which still carries photo links) is sent so the alert is never lost.
+ */
+export async function sendTelegramWithPhotos(text: string, tag: string, photoUrls: string[]): Promise<boolean> {
+  try {
+    const ctx = await resolveCtx(tag);
+    if (!ctx) return false;
+    const urls = photoUrls.slice(0, 10);
+    const textMsg = () => call(tag, ctx, "sendMessage", { text, parse_mode: "HTML", disable_web_page_preview: true });
+    if (!urls.length) return textMsg();
+    const media = (caption?: string) => urls.length === 1
+      ? call(tag, ctx, "sendPhoto", { photo: urls[0], ...(caption ? { caption, parse_mode: "HTML" } : {}) })
+      : call(tag, ctx, "sendMediaGroup", { media: urls.map((u, i) => ({ type: "photo", media: u, ...(i === 0 && caption ? { caption, parse_mode: "HTML" } : {}) })) });
+    if (text.length <= CAPTION_SAFE_LIMIT) {
+      if (await media(text)) return true;
+      return textMsg();
+    }
+    const ok = await textMsg();
+    if (!(await media())) console.error(`[telegram:${tag}] photos not attached; links remain in the text alert`);
+    return ok;
+  } catch (e) {
+    console.error(`[telegram:${tag}] unexpected error`, e);
+    return false;
+  }
+}
+
 export const escHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
