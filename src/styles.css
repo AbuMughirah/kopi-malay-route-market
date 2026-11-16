@@ -5,8 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: "Courier New", Courier, monospace;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 2px);
@@ -32,6 +33,8 @@
   --color-sale-foreground: var(--sale-foreground);
   --color-signal: var(--signal);
   --color-signal-foreground: var(--signal-foreground);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
   --color-ink: var(--ink);
   --color-ink-foreground: var(--ink-foreground);
   --color-chart-1: var(--chart-1);
@@ -68,6 +71,9 @@
   --sale-foreground: oklch(0.985 0 0);
   --signal: oklch(0.985 0 0);
   --signal-foreground: oklch(0.145 0 0);
+  /* Kopi Malay blue (#004b93), used only for Shop now buttons */
+  --brand: oklch(0.42 0.14 255);
+  --brand-foreground: oklch(1 0 0);
   --ink: oklch(0.12 0 0);
   --ink-foreground: oklch(0.985 0 0);
   --border: oklch(0.88 0 0);
@@ -101,6 +107,7 @@
   }
   h1, h2, h3, h4 {
     font-family: var(--font-display);
+    font-weight: 700;
     letter-spacing: -0.02em;
   }
 }

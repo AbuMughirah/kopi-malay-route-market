@@ -11,6 +11,8 @@ export function validateShopSearch(s: Record<string, unknown>): ShopSearch {
   return { q: typeof s["q"] === "string" && s["q"] ? s["q"] : undefined, sort };
 }
 
+import { splitSections } from "@/lib/shop-sections";
+
 export function ShopView({ category, search }: { category?: string; search: ShopSearch }) {
   const { data: products } = useSuspenseQuery(productsQuery);
   const { data: categories } = useSuspenseQuery(categoriesQuery);
@@ -26,6 +28,7 @@ export function ShopView({ category, search }: { category?: string; search: Shop
   else if (search.sort === "price-desc") list = [...list].sort((a, b) => effectivePrice(b) - effectivePrice(a));
   else list = [...list].sort((a, b) => Number(b.is_featured) - Number(a.is_featured));
 
+  const sections = search.q ? null : splitSections(category, list);
   const tab = "whitespace-nowrap rounded-full border px-4 py-1.5 font-display text-sm font-medium transition-colors";
   const on = "border-ink bg-ink text-ink-foreground";
   const off = "bg-card hover:border-ink";
@@ -55,9 +58,14 @@ export function ShopView({ category, search }: { category?: string; search: Shop
       {list.length === 0 ? (
         <p className="py-20 text-center text-muted-foreground">No products found.</p>
       ) : (
-        <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
-          {list.map((p) => <ProductCard key={p.id} p={p} />)}
-        </div>
+        (sections ?? [{ title: "", items: list }]).map((sec) => (
+          <section key={sec.title || "all"} className="mt-8">
+            {sec.title && <h2 className="border-b pb-2 font-display text-xl font-bold uppercase md:text-2xl">{sec.title}</h2>}
+            <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
+              {sec.items.map((p) => <ProductCard key={p.id} p={p} />)}
+            </div>
+          </section>
+        ))
       )}
     </div>
   );

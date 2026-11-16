@@ -4,6 +4,9 @@ import { NewArrivalCarousel } from "@/components/new-arrival-carousel";
 import { ProductCard } from "@/components/product-card";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
 import { imageFor } from "@/lib/shop";
+import { WelcomeBanner, WelcomePopup } from "@/components/welcome-offer";
+import partner1 from "@/assets/partner-1.jpeg.asset.json";
+import partner2 from "@/assets/partner-2.png.asset.json";
 import towingPoster from "@/assets/towing-rescue-poster.jpg.asset.json";
 
 const CAT_IMG: Record<string, string> = { "jerseys-t-shirts": "tee", stickers: "chromium-black-yellow", tumblers: "tumbler-16oz", "fridge-magnets": "magnet-tak-city", patches: "patch", lanyard: "cap", "other-merch": "cap" };
@@ -70,13 +73,19 @@ function Home() {
         </div>
       </section>
 
-      <section className="bg-primary text-primary-foreground">
-        <div className="mx-auto grid max-w-7xl gap-6 px-4 py-14 md:grid-cols-3">
-          {[["1,864", "Curves on the Mae Hong Son Loop"], ["FREE", "Accessories shipping across Thailand"], ["RM 20", "Malaysia quantity-block shipping"]].map(([big, small]) => (
-            <div key={big}><p className="font-display text-5xl font-bold">{big}</p><p className="mt-1 text-primary-foreground/80">{small}</p></div>
-          ))}
+      <WelcomeBanner />
+
+      <section className="border-t bg-background">
+        <div className="mx-auto max-w-7xl px-4 py-14 text-center">
+          <h2 className="font-display text-3xl font-bold uppercase md:text-5xl">Strategic Partners</h2>
+          <div className="mx-auto mt-8 grid max-w-4xl grid-cols-2 items-center gap-6 md:gap-12">
+            {[partner1, partner2].map((p, i) => (
+              <img key={i} src={p.url} alt={`Strategic partner ${i + 1}`} loading="lazy" className="mx-auto max-h-40 w-full object-contain md:max-h-56" />
+            ))}
+          </div>
         </div>
       </section>
+      <WelcomePopup />
     </>
   );
 }

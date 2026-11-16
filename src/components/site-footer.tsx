@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 
-import { SUPPORT_WHATSAPP_PHONE, SUPPORT_WHATSAPP_URL as WHATSAPP_URL } from "@/lib/whatsapp";
+import { Phone } from "lucide-react";
+import { OFFICE_PHONE, OFFICE_TEL_URL, SUPPORT_WHATSAPP_PHONE, SUPPORT_WHATSAPP_URL as WHATSAPP_URL } from "@/lib/whatsapp";
+import route1 from "@/assets/tak-route-1-badge.png.asset.json";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 
 function FacebookIcon() {
@@ -34,6 +36,7 @@ const legal = [
   { to: "/refund-policy", label: "Refund Policy" },
   { to: "/shipping-returns", label: "Shipping & Returns" },
   { to: "/faq", label: "FAQ" },
+  { to: "/contact", label: "Contact Us" },
   { to: "/track", label: "Track Your Order" },
 ] as const;
 
@@ -43,21 +46,26 @@ const socials = [
   { href: "https://www.tiktok.com/@kopi.malay", label: "TikTok", Icon: TikTokIcon },
 ];
 
-const heading = "mb-4 font-display text-xs font-bold uppercase tracking-[0.2em] text-ink-foreground";
+const heading = "mb-4 font-display text-xs font-bold uppercase tracking-[0.2em] text-foreground";
 const iconBtn =
-  "inline-flex h-10 w-10 items-center justify-center rounded-full border border-ink-foreground/30 text-ink-foreground transition-colors hover:bg-ink-foreground hover:text-ink";
+  "inline-flex h-10 w-10 items-center justify-center rounded-full border border-foreground/30 text-foreground transition-colors hover:bg-foreground hover:text-background";
 
 export function SiteFooter() {
   return (
-    <footer className="no-print bg-ink text-ink-foreground">
-      <div className="road-stripe" />
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 text-sm text-ink-foreground/70 md:grid-cols-3">
+    <footer className="no-print border-t bg-background text-foreground">
+      <div className="flex flex-col items-center px-4 pt-12 text-center">
+        <button type="button" aria-label="Back to top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="transition-transform hover:-translate-y-1">
+          <img src={route1.url} alt="Tak Route 1" className="size-36 object-contain md:size-44" loading="lazy" />
+        </button>
+        <p className="mt-4 font-display text-sm font-bold uppercase tracking-[0.25em] md:text-base">Crafted with care, made to perfection</p>
+      </div>
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 text-sm text-muted-foreground md:grid-cols-3">
         <nav aria-label="Legal">
           <h2 className={heading}>Legal</h2>
           <ul className="space-y-2">
             {legal.map((l) => (
               <li key={l.to}>
-                <Link to={l.to} className="hover:text-ink-foreground hover:underline">{l.label}</Link>
+                <Link to={l.to} className="hover:text-foreground hover:underline">{l.label}</Link>
               </li>
             ))}
           </ul>
@@ -74,16 +82,20 @@ export function SiteFooter() {
         </div>
         <address className="not-italic">
           <h2 className={heading}>Contact</h2>
-          <p className="font-semibold text-ink-foreground">Kopi Malay</p>
+          <p className="font-semibold text-foreground">Kopi Malay</p>
           <p className="mt-1">3, 13 Chomphon, Tambon Rahaeng,<br />Mueang Tak District, Tak 63000</p>
-          <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" aria-label="Chat with Kopi Malay on WhatsApp" className="mt-4 inline-flex items-center gap-3 hover:text-ink-foreground">
+          <a href={OFFICE_TEL_URL} aria-label="Call Kopi Malay office" className="mt-4 flex items-center gap-3 hover:text-foreground">
+            <span className={iconBtn}><Phone className="size-5" /></span>
+            <span>{OFFICE_PHONE} <span className="text-xs">(office)</span></span>
+          </a>
+          <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" aria-label="Chat with Kopi Malay on WhatsApp" className="mt-3 flex items-center gap-3 hover:text-foreground">
             <span className={iconBtn}><WhatsAppIcon /></span>
             <span>{SUPPORT_WHATSAPP_PHONE}</span>
           </a>
         </address>
       </div>
-      <div className="border-t border-ink-foreground/10">
-        <p className="mx-auto max-w-7xl px-4 py-5 text-xs text-ink-foreground/50">
+      <div className="border-t border-border">
+        <p className="mx-auto max-w-7xl px-4 py-5 text-xs text-muted-foreground">
           © {new Date().getFullYear()} Kopi Malay. Ride safe, drink good kopi.
         </p>
       </div>
