@@ -25,7 +25,7 @@ export const CSV_HEADERS = [
 ];
 
 /** Statuses the app uses today; any other status found on orders is added automatically. */
-export const BASE_STATUSES = ["pending", "pending_verification", "verified", "shipped", "completed", "rejected", "paid"];
+export const BASE_STATUSES = ["pending_verification", "verified", "shipped", "completed", "rejected", "refunded"];
 export const statusOptions = (rows: { status: string }[]) => Array.from(new Set([...BASE_STATUSES, ...rows.map((r) => r.status)]));
 
 export const fullAddress = (a: AdminOrderRow["address"]) =>

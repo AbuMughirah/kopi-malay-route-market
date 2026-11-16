@@ -93,7 +93,9 @@ describe("order export phones and filters", () => {
   });
   it("adds statuses found on orders to the filter list", () => {
     expect(statusOptions([{ status: "refunded" }])).toContain("refunded");
-    expect(statusOptions([])).toContain("pending");
+    expect(statusOptions([])).not.toContain("pending");
+    expect(statusOptions([])).not.toContain("paid");
+    expect(statusOptions([])).toContain("pending_verification");
   });
   it("filters by product, status, currency and date", () => {
     expect(filterOrders([order], { q: "tumbler" })).toHaveLength(1);
