@@ -31,7 +31,8 @@ describe("tracking stage per status", () => {
     expect(trackingStage("rejected")).toBe("closed");
     expect(trackingStage("refunded")).toBe("closed");
     expect(trackingHint("refunded", "J&T Express")).toBeNull();
-    expect(trackingHint("verified", "Flash Express")).toContain("Flash Express tracking number");
+    expect(trackingHint("verified", "Flash Express")).toBe("We'll email your tracking number");
+    expect(trackingHint("pending_verification", "J&T Express")).toBe("We'll email your tracking number");
   });
 });
 

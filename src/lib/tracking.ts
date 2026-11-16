@@ -37,8 +37,8 @@ export function trackingStage(status: string): TrackingStage {
 /** Customer-facing next-step wording for orders that are not yet trackable. */
 export function trackingHint(status: string, courierName: string): string | null {
   switch (trackingStage(status)) {
-    case "checking": return `We're checking your payment. Once your parcel ships, we'll email you the ${courierName} tracking number — no need to message us.`;
-    case "preparing": return `Payment verified — we're packing your order. You'll get an email with your ${courierName} tracking number as soon as it ships.`;
+    case "checking": return "We'll email your tracking number";
+    case "preparing": return "We'll email your tracking number";
     default: return null;
   }
 }
