@@ -5,6 +5,7 @@ import { filterOrders, ordersToCsv, type AdminOrderRow } from "./admin-csv";
 import { TOWING_STATUSES } from "./towing";
 import { type StockStatus } from "./order-stock";
 import { ORDER_ACTIONS, ORDER_FLOW } from "./order-flow";
+import { countVerifiedOrders, orderSource, lifetimeSpend } from "./customer-orders";
 import type { ShippedOrder } from "./order-shipped";
 import { buildRoleChanges, buildRoleIndex, actorBadge, highestRole, orderPlacer, sortUsersByRole, type PlacedBy, type RoleIndex } from "./roles";
 type StockDelta = { variantId: string; quantity: number };
@@ -402,7 +403,7 @@ export const listUsers = createServerFn({ method: "POST" }).middleware([requireS
   if (error) throw new Error(error.message);
   const [roles, orders, profiles] = await Promise.all([
     admin.from("user_roles").select("user_id,role").in("role", ["admin", "owner"]),
-    admin.from("orders").select("user_id,guest_email"),
+    admin.from("orders").select("user_id,guest_email,status"),
     admin.from("profiles").select("id,full_name,phone,city,state,country,motorcycle_make,motorcycle_model,motorcycle_plate,preferred_contact"),
   ]);
   const prof = new Map((profiles.data ?? []).map((p) => [p.id, p]));
@@ -416,9 +417,44 @@ export const listUsers = createServerFn({ method: "POST" }).middleware([requireS
     role: highestRole([...(owners.has(u.id) ? ["owner"] : []), ...(admins.has(u.id) ? ["admin"] : [])]),
     email_confirmed: !!u.email_confirmed_at,
     profile: prof.get(u.id) ?? null,
-    orders: (orders.data ?? []).filter((o) => o.user_id === u.id || (!!u.email && o.guest_email?.toLowerCase() === u.email.toLowerCase())).length,
+    orders: countVerifiedOrders(orders.data ?? [], { id: u.id, email: u.email ?? "" }),
   })));
 });
+
+/** Owner-only purchase history for one account: member orders plus guest checkouts with the same email. */
+export const getUserOrders = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ user_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const admin = await ownerClient(context as unknown as Ctx);
+    const { data: got, error: uErr } = await admin.auth.admin.getUserById(data.user_id);
+    if (uErr || !got.user) throw new Error("User not found");
+    const u = got.user; const email = (u.email ?? "").trim().toLowerCase();
+    const cols = "id,user_id,guest_email,order_number,created_at,status,currency,total_amount,subtotal,shipping_fee,discount_amount,sticker_bundle_discount,promo_code,payment_method,tracking_number,shipping_address,receipt_path,order_items(product_name,selected_variant,quantity,unit_price)";
+    const [mine, guest, profile] = await Promise.all([
+      admin.from("orders").select(cols).eq("user_id", u.id).order("created_at", { ascending: false }).limit(500),
+      email ? admin.from("orders").select(cols).is("user_id", null).ilike("guest_email", email.replace(/[\\%_]/g, "\\$&")).order("created_at", { ascending: false }).limit(500) : Promise.resolve({ data: [], error: null }),
+      admin.from("profiles").select("full_name,phone,address,city,state,postcode,country,motorcycle_make,motorcycle_model,motorcycle_plate").eq("id", u.id).maybeSingle(),
+    ]);
+    if (mine.error) throw new Error(mine.error.message);
+    if (guest.error) throw new Error(guest.error.message);
+    const rows = [...(mine.data ?? []), ...(guest.data ?? [])].filter((o) => orderSource(o, { id: u.id, email })).sort((a, b) => b.created_at.localeCompare(a.created_at));
+    const paths = rows.map((o) => o.receipt_path).filter((p): p is string => !!p);
+    const signed = paths.length ? (await admin.storage.from("payment-receipts").createSignedUrls(paths, 3600)).data ?? [] : [];
+    const orders = rows.map((o) => ({
+      id: o.id, order_number: o.order_number, created_at: o.created_at, status: o.status, currency: o.currency,
+      total_amount: Number(o.total_amount), subtotal: Number(o.subtotal), shipping_fee: Number(o.shipping_fee),
+      discount: Number(o.discount_amount ?? 0) + Number(o.sticker_bundle_discount ?? 0), promo_code: o.promo_code,
+      payment_method: o.payment_method, tracking_number: o.tracking_number,
+      country: ((o.shipping_address ?? {}) as { country?: string }).country ?? null,
+      source: orderSource(o, { id: u.id, email })!,
+      items: (o.order_items ?? []).map((i) => ({ ...i, unit_price: Number(i.unit_price) })),
+      receipt_url: signed.find((x) => x.path === o.receipt_path)?.signedUrl ?? null,
+    }));
+    return {
+      user: { id: u.id, email: u.email ?? "", created_at: u.created_at, email_confirmed: !!u.email_confirmed_at },
+      profile: profile.data ?? null, orders, spend: lifetimeSpend(orders),
+    };
+  });
 
 /** Owner-only, read-only view of the admin role audit log. */
 export const listRoleChanges = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
