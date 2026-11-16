@@ -180,13 +180,13 @@ function CustomerOrdersDialog() {
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2 text-xs">
                       {t ? <a href={t.url} target="_blank" rel="noreferrer" className="rounded border px-2 py-1 font-semibold underline-offset-2 hover:underline">{t.courier}: {t.trackingNumber} ↗</a> : <span className="text-muted-foreground">No tracking yet</span>}
-                      {o.receipt_url && <button onClick={() => setSlip(o.receipt_url)} className="rounded border px-2 py-1 font-semibold">View payment slip</button>}
+                      {o.receipt_url && <button aria-expanded={slip === o.id} onClick={() => setSlip(slip === o.id ? null : o.id)} className={`rounded border px-2 py-1 font-semibold ${slip === o.id ? "bg-primary text-primary-foreground" : ""}`}>{slip === o.id ? "Hide payment slip" : "View payment slip"}</button>}
                     </div>
+                    {slip === o.id && o.receipt_url && <div className="mt-2 rounded-md border p-2"><button type="button" onClick={() => setSlip(null)} aria-label="Close payment slip" className="block w-full cursor-pointer"><img src={o.receipt_url} alt={`Payment slip for ${o.order_number}`} className="max-h-[420px] w-full rounded bg-muted object-contain" /></button><div className="mt-1 flex justify-between text-xs"><span className="text-muted-foreground">Tap image to close</span><a href={o.receipt_url} target="_blank" rel="noreferrer" className="underline">Open full size ↗</a></div></div>}
                   </li>
                 );
               })}</ul>
             )}
-            {slip && <div className="rounded-md border p-2"><div className="mb-2 flex justify-between"><span className="font-semibold">Payment slip</span><button onClick={() => setSlip(null)} className="text-xs underline">Hide</button></div><img src={slip} alt="Payment slip" className="max-h-[60dvh] w-full object-contain" /><a href={slip} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs underline">Open full size</a></div>}
           </div>
         )}
       </DialogContent>
