@@ -7,6 +7,7 @@ import { getOrderByReference } from "@/lib/checkout.functions";
 import { formatMoney } from "@/lib/shop";
 import { SUPPORT_TELEGRAM_URL } from "@/lib/manual-order";
 import { customerStatus } from "@/lib/order-flow";
+import { OrderTracking } from "@/components/order-tracking";
 
 export const Route = createFileRoute("/order-success")({
   validateSearch: (s: Record<string, unknown>): { ref?: string; t?: string } => ({
@@ -50,8 +51,9 @@ function OrderSuccess() {
         <span className={`mt-3 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold ${order.status === "refunded" ? "border border-foreground bg-background text-foreground" : "bg-accent text-accent-foreground"}`}>
           <Clock className="size-4" /> {customerStatus(order.status)}
         </span>
-        <p className="mt-3 text-sm text-muted-foreground">We'll check your payment and confirm by email at {order.email}.</p>
+        <p className="mt-3 text-sm text-muted-foreground">Updates are emailed to {order.email}. Bookmark this page — it always shows your latest status.</p>
       </div>
+      <div className="mt-6"><OrderTracking status={order.status} country={a.country} currency={order.currency} tracking_number={order.tracking_number} /></div>
       <div className="mt-8 rounded-lg border bg-card p-5 text-sm">
         <p className="text-muted-foreground">Ship to</p>
         <p>{a.name}, {a.address}, {a.postcode} {a.city}, {a.state}, {a.country} · {a.phone}</p>

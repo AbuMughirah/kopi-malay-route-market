@@ -20,6 +20,7 @@ import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
 import { Route as ShippingReturnsRouteImport } from './routes/shipping-returns'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TowingRouteImport } from './routes/towing'
+import { Route as TrackRouteImport } from './routes/track'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
@@ -89,6 +90,11 @@ const TermsRoute = TermsRouteImport.update({
 const TowingRoute = TowingRouteImport.update({
   id: '/towing',
   path: '/towing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrackRoute = TrackRouteImport.update({
+  id: '/track',
+  path: '/track',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WishlistRoute = WishlistRouteImport.update({
@@ -190,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/shipping-returns': typeof ShippingReturnsRoute
   '/terms': typeof TermsRoute
   '/towing': typeof TowingRoute
+  '/track': typeof TrackRoute
   '/wishlist': typeof WishlistRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
@@ -218,6 +225,7 @@ export interface FileRoutesByTo {
   '/shipping-returns': typeof ShippingReturnsRoute
   '/terms': typeof TermsRoute
   '/towing': typeof TowingRoute
+  '/track': typeof TrackRoute
   '/wishlist': typeof WishlistRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/product/$slug': typeof ProductSlugRoute
@@ -247,6 +255,7 @@ export interface FileRoutesById {
   '/shipping-returns': typeof ShippingReturnsRoute
   '/terms': typeof TermsRoute
   '/towing': typeof TowingRoute
+  '/track': typeof TrackRoute
   '/wishlist': typeof WishlistRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -277,6 +286,7 @@ export interface FileRouteTypes {
     | '/shipping-returns'
     | '/terms'
     | '/towing'
+    | '/track'
     | '/wishlist'
     | '/admin'
     | '/profile'
@@ -305,6 +315,7 @@ export interface FileRouteTypes {
     | '/shipping-returns'
     | '/terms'
     | '/towing'
+    | '/track'
     | '/wishlist'
     | '/profile'
     | '/product/$slug'
@@ -333,6 +344,7 @@ export interface FileRouteTypes {
     | '/shipping-returns'
     | '/terms'
     | '/towing'
+    | '/track'
     | '/wishlist'
     | '/_authenticated/admin'
     | '/_authenticated/profile'
@@ -363,6 +375,7 @@ export interface RootRouteChildren {
   ShippingReturnsRoute: typeof ShippingReturnsRoute
   TermsRoute: typeof TermsRoute
   TowingRoute: typeof TowingRoute
+  TrackRoute: typeof TrackRoute
   WishlistRoute: typeof WishlistRoute
   ProductSlugRoute: typeof ProductSlugRoute
   ShopCategoryRoute: typeof ShopCategoryRoute
@@ -450,6 +463,13 @@ declare module '@tanstack/react-router' {
       path: '/towing'
       fullPath: '/towing'
       preLoaderRoute: typeof TowingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/track': {
+      id: '/track'
+      path: '/track'
+      fullPath: '/track'
+      preLoaderRoute: typeof TrackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/wishlist': {
@@ -613,6 +633,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShippingReturnsRoute: ShippingReturnsRoute,
   TermsRoute: TermsRoute,
   TowingRoute: TowingRoute,
+  TrackRoute: TrackRoute,
   WishlistRoute: WishlistRoute,
   ProductSlugRoute: ProductSlugRoute,
   ShopCategoryRoute: ShopCategoryRoute,

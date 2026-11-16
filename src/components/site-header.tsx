@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronDown, Heart, LayoutDashboard, Menu, Search, ShoppingBag, User, X } from "lucide-react";
+import { ChevronDown, Heart, LayoutDashboard, Menu, Search, ShoppingBag, Truck, User, X } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { useWishlist } from "@/hooks/use-wishlist";
 import { useIsAdmin } from "@/hooks/use-is-admin";
@@ -65,6 +65,7 @@ export function SiteHeader() {
               <DropdownMenuItem asChild><Link to="/towing" className={itemCls}>Towing &amp; Rescue</Link></DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <Link to="/track" className={topCls}><Truck className="size-4" /> Track order</Link>
           {admin && <Link to="/admin" className={topCls}><LayoutDashboard className="size-4" /> Admin</Link>}
         </nav>
         <div className="ml-auto flex shrink-0 items-center gap-0 sm:gap-3 [&>*]:grid [&>*]:min-h-10 [&>*]:min-w-9 sm:[&>*]:min-w-10 [&>*]:place-items-center sm:[&>*]:flex">
@@ -104,6 +105,7 @@ export function SiteHeader() {
           {NAV.map((n) => <NavLink key={n.label} item={n} onClick={close} className="py-1.5 pl-2 font-display text-sm uppercase text-ink-foreground/85" />)}
           <p className="pb-1 pt-3 font-display text-xs font-bold uppercase tracking-widest text-ink-foreground/50">Services</p>
           <Link to="/towing" onClick={close} className="py-1.5 pl-2 font-display text-sm uppercase text-ink-foreground/85">Towing &amp; Rescue</Link>
+          <Link to="/track" onClick={close} className="mt-3 flex items-center gap-2 py-1.5 font-display text-sm font-bold uppercase"><Truck className="size-4" /> Track my order</Link>
           {admin && <Link to="/admin" onClick={close} className="pt-3 font-display text-sm font-bold uppercase">Admin dashboard</Link>}
         </nav>
       )}

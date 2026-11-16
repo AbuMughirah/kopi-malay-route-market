@@ -15,7 +15,7 @@ function OrderReceived({ name, orderNumber, total, link }: Props) {
           <Heading style={s.heading}>Order received</Heading>
           <Text>{name ? `Hi ${name},` : "Hi there,"}</Text>
           <Text>Thanks for your order <strong>{orderNumber}</strong>{total ? ` (${total})` : ""}. We're checking your payment proof now — your order is <strong>Pending Verification</strong>.</Text>
-          <Text>Use the button below anytime to see your order's latest status. Keep this email: the link is private to you.</Text>
+          <Text>When your parcel ships, we'll email you the courier tracking number. Use the button below anytime to see your order's latest status. Keep this email: the link is private to you.</Text>
           {link && <Button href={link} style={s.button}>View order status</Button>}
           <Text style={s.muted}>If the button doesn't work, copy this link into your browser: {link}</Text>
         </Container>

@@ -5,6 +5,7 @@ import { filterOrders, ordersToCsv, type AdminOrderRow } from "./admin-csv";
 import { TOWING_STATUSES } from "./towing";
 import { type StockStatus } from "./order-stock";
 import { ORDER_ACTIONS, ORDER_FLOW } from "./order-flow";
+import type { ShippedOrder } from "./order-shipped";
 import { buildRoleChanges, buildRoleIndex, actorBadge, highestRole, orderPlacer, sortUsersByRole, type PlacedBy, type RoleIndex } from "./roles";
 type StockDelta = { variantId: string; quantity: number };
 type UpdateResult = { ok: true } | { ok: false; shortfall: { item: string; needed: number; available: number }[] } | { ok: false; promoConfirmation: { paidDiscount: number; currency: string; maxThb: number } } | { ok: false; returnStockRequired: true };
@@ -162,6 +163,8 @@ export const updateOrder = createServerFn({ method: "POST" }).middleware([requir
       const { data: ok, error } = await admin.rpc("transition_order_status", { _id: data.id, _from: from, _to: to, ...actor, ...(tracking ? { _tracking: tracking } : {}) });
       if (error) throw new Error(error.message);
       if (!ok) throw new Error(conflict);
+      // Email the customer their courier tracking after the status is saved. Never blocks or undoes the change.
+      if (tracking && (data.action === "ship" || data.action === "tracking")) await emailShipped(admin, data.id, tracking, data.action === "tracking");
       return { ok: true };
     }
     // Verify: claim (pending_verification -> verifying) before calling the POS.
@@ -190,6 +193,20 @@ export const updateOrder = createServerFn({ method: "POST" }).middleware([requir
     if (error || !ok) { await revert(); throw new Error(error?.message ?? conflict); }
     return { ok: true };
   });
+
+async function emailShipped(admin: Awaited<ReturnType<typeof adminClient>>, id: string, tracking: string, corrected: boolean) {
+  try {
+    const { data: o } = await admin.from("orders").select("id,order_number,guest_email,currency,access_token,shipping_address,order_items(product_name,selected_variant,quantity)").eq("id", id).single();
+    if (!o) return;
+    const { buildShippedEmail } = await import("./order-shipped");
+    const mail = buildShippedEmail(o as unknown as ShippedOrder, tracking, corrected);
+    if (!mail) return;
+    const { sendTemplateEmail } = await import("./email-templates/send-email");
+    await sendTemplateEmail("order-shipped", mail.to, { templateData: mail.templateData, idempotencyKey: mail.idempotencyKey });
+  } catch (e) {
+    console.error("Shipped email failed", e);
+  }
+}
 
 export type OrderHistoryEntry = { id: string; changed_at: string; changed_by_email: string; from_status: string | null; to_status: string; tracking_number: string | null; old_tracking_number: string | null; pos_receipt_number: string | null; notes: string | null; reason: string | null; actor_role: "owner" | "staff" | null };
 

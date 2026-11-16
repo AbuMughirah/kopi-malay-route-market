@@ -248,7 +248,7 @@ export const submitManualOrder = createServerFn({ method: "POST" })
   });
 
 export type OrderSummary = {
-  currency: string; order_number: string; status: string; created_at: string;
+  currency: string; order_number: string; status: string; created_at: string; tracking_number: string | null;
   subtotal: number; shipping_fee: number; total_amount: number; promo_code: string | null; discount_amount: number; sticker_bundle_discount: number; sale_discount: number; email: string | null;
   shipping_address: { name?: string; phone?: string; address?: string; city?: string; state?: string; postcode?: string; country?: string };
   items: { product_name: string; selected_variant: string; unit_price: number; quantity: number }[];
@@ -261,7 +261,7 @@ export const getOrderByReference = createServerFn({ method: "GET" })
     const { data: order } = await supabaseAdmin.from("orders").select("*, order_items(*)").eq("order_number", data.ref).eq("access_token", data.token).maybeSingle();
     if (!order) return null;
     return {
-      currency: order.currency, order_number: order.order_number, status: order.status, created_at: order.created_at,
+      currency: order.currency, order_number: order.order_number, status: order.status, created_at: order.created_at, tracking_number: order.tracking_number ?? null,
       subtotal: Number(order.subtotal), shipping_fee: Number(order.shipping_fee), total_amount: Number(order.total_amount),
       promo_code: order.promo_code, discount_amount: Number(order.discount_amount ?? 0),
       sticker_bundle_discount: Number(order.sticker_bundle_discount ?? 0), sale_discount: Number(order.sale_discount ?? 0),

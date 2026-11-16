@@ -148,6 +148,33 @@ export type Database = {
           },
         ]
       }
+      order_lookup_attempts: {
+        Row: {
+          client_hash: string
+          created_at: string
+          email_hash: string
+          id: string
+          matched: boolean
+          order_number: string
+        }
+        Insert: {
+          client_hash: string
+          created_at?: string
+          email_hash: string
+          id?: string
+          matched?: boolean
+          order_number: string
+        }
+        Update: {
+          client_hash?: string
+          created_at?: string
+          email_hash?: string
+          id?: string
+          matched?: boolean
+          order_number?: string
+        }
+        Relationships: []
+      }
       order_pos_operations: {
         Row: {
           completed_at: string | null

@@ -40,6 +40,7 @@ const legal = [
   { to: "/refund-policy", label: "Refund Policy" },
   { to: "/shipping-returns", label: "Shipping & Returns" },
   { to: "/faq", label: "FAQ" },
+  { to: "/track", label: "Track Your Order" },
 ] as const;
 
 const socials = [
