@@ -261,6 +261,7 @@ const PromoSchema = z.object({
   min_order_thb: z.number().min(0).nullable(),
   max_uses: z.number().int().min(1).nullable(),
   is_active: z.boolean(),
+  one_per_customer: z.boolean().default(false),
   expires_at: z.string().nullable(),
 });
 

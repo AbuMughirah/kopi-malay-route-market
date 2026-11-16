@@ -634,6 +634,7 @@ export type Database = {
           max_uses: number | null
           min_order_myr: number | null
           min_order_thb: number | null
+          one_per_customer: boolean
           receipt_discount_thb: number | null
         }
         Insert: {
@@ -650,6 +651,7 @@ export type Database = {
           max_uses?: number | null
           min_order_myr?: number | null
           min_order_thb?: number | null
+          one_per_customer?: boolean
           receipt_discount_thb?: number | null
         }
         Update: {
@@ -666,6 +668,7 @@ export type Database = {
           max_uses?: number | null
           min_order_myr?: number | null
           min_order_thb?: number | null
+          one_per_customer?: boolean
           receipt_discount_thb?: number | null
         }
         Relationships: []

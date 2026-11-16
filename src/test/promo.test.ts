@@ -14,3 +14,13 @@ describe("promo codes", () => {
   it("enforces minimum", () => expect(computePromoDiscount({ ...base, min_order_myr: 60 }, 50, "myr").ok).toBe(false));
   it("unknown code", () => expect(computePromoDiscount(null, 50, "myr").ok).toBe(false));
 });
+
+import { hasUsedPromo as used, normPhone as np, type PriorOrder } from "@/lib/promo";
+describe("limit 1 per customer", () => {
+  const prior: PriorOrder[] = [{ user_id: "u1", guest_email: "A@X.com", phone: "+60 12-345 6789", status: "verified" }];
+  it("blocks same account", () => expect(used(prior, { userId: "u1" })).toBe(true));
+  it("blocks same email, any case", () => expect(used(prior, { userId: "u2", email: " a@x.com" })).toBe(true));
+  it("blocks same phone in another format", () => { expect(np("012-3456789")).toBe(np("+60123456789")); expect(used(prior, { userId: "u2", phone: "0123456789" })).toBe(true); });
+  it("allows a new customer", () => expect(used(prior, { userId: "u2", email: "b@x.com", phone: "0199999999" })).toBe(false));
+  it("ignores rejected orders", () => expect(used([{ ...prior[0]!, status: "rejected" }], { userId: "u1" })).toBe(false));
+});

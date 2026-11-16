@@ -1,1 +1,2 @@
 - Courier/tracking links come only from `src/lib/tracking.ts`; public `lookupOrder` returns status/tracking/items only and rate-limits failed guesses via service-only hashed logs, since order numbers are guessable.
+- `one_per_customer` promos require sign-in and are rejected via `hasUsedPromo` when a prior non-rejected order shares account, email or phone.

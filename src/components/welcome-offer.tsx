@@ -2,18 +2,35 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
+import { toast } from "sonner";
+import { PENDING_PROMO_KEY, WELCOME_CODE } from "@/lib/promo";
 import loop from "@/assets/mae-hong-son-loop.avif.asset.json";
 
 export const WELCOME_TITLE = "Receive 5% Discount When You Sign Up!";
 const SEEN_KEY = "km_welcome_popup_seen";
+const stage = () => localStorage.setItem(PENDING_PROMO_KEY, WELCOME_CODE);
+
+function CodeChip() {
+  const copy = async (e: React.MouseEvent) => {
+    e.preventDefault(); e.stopPropagation(); stage();
+    try { await navigator.clipboard.writeText(WELCOME_CODE); toast.success(`Promo code ${WELCOME_CODE} copied`); }
+    catch { toast(`Your code: ${WELCOME_CODE}`); }
+  };
+  return (
+    <button type="button" onClick={copy} className="inline-flex items-center gap-2 rounded-md border-2 border-dashed border-current px-4 py-2 font-mono text-sm font-bold">
+      CODE: {WELCOME_CODE} <span className="font-sans text-xs font-normal underline">Copy</span>
+    </button>
+  );
+}
 
 export function WelcomeBanner() {
   return (
     <section className="mx-auto max-w-7xl px-4 pb-12">
-      <Link to="/auth" search={{ mode: "signup" }} className="relative block overflow-hidden rounded-lg">
+      <Link to="/auth" search={{ mode: "signup" }} onClick={stage} className="relative block overflow-hidden rounded-lg">
         <img src={loop.url} alt="Mae Hong Son Loop curves" loading="lazy" className="h-64 w-full object-cover md:h-80" />
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-ink/55 p-6 text-center text-ink-foreground">
           <h2 className="font-display text-2xl font-bold uppercase md:text-5xl">{WELCOME_TITLE}</h2>
+          <CodeChip />
           <span className="rounded-md bg-background px-6 py-3 font-display font-semibold uppercase text-foreground">Create account</span>
         </div>
       </Link>
@@ -45,8 +62,9 @@ export function WelcomePopup() {
         <img src={loop.url} alt="Mae Hong Son Loop curves" className="h-48 w-full object-cover" />
         <div className="p-6 text-center">
           <h2 className="font-display text-2xl font-bold uppercase">{WELCOME_TITLE}</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Become a Kopi Malay member for special offers.</p>
-          <Link to="/auth" search={{ mode: "signup" }} onClick={dismiss} className="mt-5 block rounded-md bg-foreground px-6 py-3 font-display font-semibold uppercase text-background">Create account</Link>
+          <p className="mt-2 text-sm text-muted-foreground">Members get 5% off their first order. Applied automatically at checkout.</p>
+          <div className="mt-4"><CodeChip /></div>
+          <Link to="/auth" search={{ mode: "signup" }} onClick={() => { stage(); dismiss(); }} className="mt-5 block rounded-md bg-foreground px-6 py-3 font-display font-semibold uppercase text-background">Create account</Link>
         </div>
       </div>
     </div>

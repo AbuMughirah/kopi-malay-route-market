@@ -1,0 +1,1 @@
+ALTER TABLE public.promo_codes ADD COLUMN one_per_customer boolean NOT NULL DEFAULT false;

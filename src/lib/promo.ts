@@ -35,3 +35,25 @@ export function computePromoDiscount(p: Promo | null, subtotal: number, currency
   if (fixed == null) return { ok: false, error: "This promo code isn't available for your destination" };
   return { ok: true, discount: round(Math.min(subtotal, Math.max(fixed, 0))), label: "" };
 }
+
+/** Code staged by the welcome banner/popup, auto-applied at checkout for members. */
+export const WELCOME_CODE = "WELCOME5";
+export const PENDING_PROMO_KEY = "km_pending_promo";
+
+export const normEmail = (e: string | null | undefined) => (e ?? "").trim().toLowerCase();
+/** Digits only, dropping country code 60/66 and leading 0 so +6012…, 012… and 6012… match. */
+export function normPhone(p: string | null | undefined): string {
+  const d = (p ?? "").replace(/\D/g, "");
+  return d.replace(/^(60|66)/, "").replace(/^0+/, "");
+}
+
+export type PriorOrder = { user_id: string | null; guest_email: string | null; phone: string | null; status: string };
+/** True when a non-rejected earlier order by this user, email or phone already used the code. */
+export function hasUsedPromo(orders: PriorOrder[], who: { userId: string | null; email?: string | null | undefined; phone?: string | null | undefined }): boolean {
+  const email = normEmail(who.email);
+  const phone = normPhone(who.phone);
+  return orders.some((o) => o.status !== "rejected" && (
+    (who.userId != null && o.user_id === who.userId)
+    || (email !== "" && normEmail(o.guest_email) === email)
+    || (phone.length >= 7 && normPhone(o.phone) === phone)));
+}

@@ -10,9 +10,9 @@ export const Route = createFileRoute("/_authenticated/admin/promos")({ component
 
 type Draft = {
   id?: string; code: string; discount_type: "percentage" | "fixed_amount"; discount_value: string; discount_myr: string; discount_thb: string; receipt_discount_thb: string;
-  min_order_myr: string; min_order_thb: string; max_uses: string; is_active: boolean; expires_at: string;
+  min_order_myr: string; min_order_thb: string; max_uses: string; is_active: boolean; one_per_customer: boolean; expires_at: string;
 };
-const EMPTY: Draft = { code: "", discount_type: "percentage", discount_value: "", discount_myr: "", discount_thb: "", receipt_discount_thb: "", min_order_myr: "", min_order_thb: "", max_uses: "", is_active: true, expires_at: "" };
+const EMPTY: Draft = { code: "", discount_type: "percentage", discount_value: "", discount_myr: "", discount_thb: "", receipt_discount_thb: "", min_order_myr: "", min_order_thb: "", max_uses: "", is_active: true, one_per_customer: false, expires_at: "" };
 const num = (s: string) => (s.trim() === "" ? null : Number(s));
 const str = (n: unknown) => (n == null ? "" : String(n));
 const input = "w-full rounded border bg-card px-2 py-1.5 text-sm";
@@ -35,7 +35,7 @@ function PromosAdmin() {
         discount_value: fixed ? Number(d.discount_myr || 0) : Number(d.discount_value || 0),
         discount_myr: fixed ? num(d.discount_myr) : null, discount_thb: fixed ? num(d.discount_thb) : null, receipt_discount_thb: num(d.receipt_discount_thb),
         min_order_myr: num(d.min_order_myr), min_order_thb: num(d.min_order_thb), max_uses: num(d.max_uses),
-        is_active: d.is_active, expires_at: d.expires_at ? new Date(d.expires_at).toISOString() : null,
+        is_active: d.is_active, one_per_customer: d.one_per_customer, expires_at: d.expires_at ? new Date(d.expires_at).toISOString() : null,
       } });
       toast.success("Promo saved"); setD(null); qc.invalidateQueries({ queryKey: ["admin", "promos"] });
     } catch (err) { toast.error(err instanceof Error ? err.message : "Save failed"); }
@@ -65,6 +65,7 @@ function PromosAdmin() {
           <label className="text-sm">Max uses<input type="number" min={1} className={input} value={d.max_uses} onChange={(e) => setD({ ...d, max_uses: e.target.value })} /></label>
           <label className="text-sm">Expires<input type="date" className={input} value={d.expires_at} onChange={(e) => setD({ ...d, expires_at: e.target.value })} /></label>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={d.is_active} onChange={(e) => setD({ ...d, is_active: e.target.checked })} /> Active</label>
+          <label className="flex items-start gap-2 text-sm sm:col-span-3"><input type="checkbox" className="mt-1" checked={d.one_per_customer} onChange={(e) => setD({ ...d, one_per_customer: e.target.checked })} /><span>Limit 1 per customer<span className="block text-xs text-muted-foreground">Members only. Blocked if the same account, email or phone already has an order with this code (rejected orders don't count).</span></span></label>
           <div className="flex gap-2 sm:col-span-4">
             <button className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Save</button>
             <button type="button" onClick={() => setD(null)} className="rounded-md border px-4 py-2 text-sm">Cancel</button>
@@ -80,7 +81,7 @@ function PromosAdmin() {
             <tbody>
               {data.map((p) => (
                 <tr key={p.id} className="border-t">
-                  <td className="px-3 py-2 font-mono font-semibold">{p.code}</td>
+                  <td className="px-3 py-2 font-mono font-semibold">{p.code}{p.one_per_customer && <span className="ml-2 rounded border px-1.5 py-0.5 font-sans text-xs font-normal">1/customer</span>}</td>
                   <td className="px-3 py-2">{p.discount_type === "percentage" ? `${Number(p.discount_value)}%` : `RM ${str(p.discount_myr)} / THB ${str(p.discount_thb)}`}</td>
                   <td className="px-3 py-2">{p.min_order_myr != null || p.min_order_thb != null ? `RM ${str(p.min_order_myr) || "—"} / THB ${str(p.min_order_thb) || "—"}` : "—"}</td>
                   <td className="px-3 py-2">{p.current_uses}{p.max_uses != null ? ` / ${p.max_uses}` : ""}</td>
@@ -88,7 +89,7 @@ function PromosAdmin() {
                   <td className="px-3 py-2">{p.is_active ? "Yes" : "No"}</td>
                   <td className="px-3 py-2"><button className="underline" onClick={() => setD({
                     id: p.id, code: p.code, discount_type: p.discount_type, discount_value: str(p.discount_value), discount_myr: str(p.discount_myr), discount_thb: str(p.discount_thb), receipt_discount_thb: str(p.receipt_discount_thb),
-                    min_order_myr: str(p.min_order_myr), min_order_thb: str(p.min_order_thb), max_uses: str(p.max_uses), is_active: p.is_active, expires_at: p.expires_at?.slice(0, 10) ?? "",
+                    min_order_myr: str(p.min_order_myr), min_order_thb: str(p.min_order_thb), max_uses: str(p.max_uses), is_active: p.is_active, one_per_customer: p.one_per_customer, expires_at: p.expires_at?.slice(0, 10) ?? "",
                   })}>Edit</button></td>
                 </tr>
               ))}

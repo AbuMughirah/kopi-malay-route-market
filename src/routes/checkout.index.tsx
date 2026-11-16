@@ -7,6 +7,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { productsQuery } from "@/lib/queries";
 import { Button } from "@/components/ui/button";
 import { submitManualOrder, validatePromoCode } from "@/lib/checkout.functions";
+import { PENDING_PROMO_KEY } from "@/lib/promo";
 import { makeOrderRef } from "@/lib/manual-order";
 import { useNavigate } from "@tanstack/react-router";
 import qrAsset from "@/assets/qr-touch-n-go.jpeg.asset.json";
@@ -93,13 +94,22 @@ function Checkout() {
     if (!code.trim()) return;
     setPromoBusy(true); setPromoErr(null);
     try {
-      const r = await checkPromo({ data: { code: code.trim(), country, items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })) } });
+      const r = await checkPromo({ data: { code: code.trim(), country, email: f.email || undefined, phone: f.phone || undefined, items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })) } });
       if (r.ok) setPromo({ code: r.code, discount: r.discount, label: r.label });
       else { setPromo(null); setPromoErr(r.error); }
     } catch { setPromo(null); setPromoErr("Could not check this code. Please try again."); }
     setPromoBusy(false);
   };
   useEffect(() => { if (promo) void applyPromo(promo.code); }, [country, promoItemsKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [pendingPromo, setPendingPromo] = useState<string | null>(null);
+  useEffect(() => { setPendingPromo(localStorage.getItem(PENDING_PROMO_KEY)); }, []);
+  useEffect(() => {
+    if (!pendingPromo || !user || promo || items.length === 0) return;
+    setPromoInput(pendingPromo);
+    void applyPromo(pendingPromo);
+    localStorage.removeItem(PENDING_PROMO_KEY);
+    setPendingPromo(null);
+  }, [pendingPromo, user, items.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { if (cancelled) toast.warning("Payment was cancelled — your cart is still saved."); }, [cancelled]);
   useEffect(() => { const email = user?.email; if (email) setF((p) => (p.email ? p : { ...p, email })); }, [user]);
@@ -244,6 +254,7 @@ function Checkout() {
                   <Button type="button" variant="outline" disabled={promoBusy || !promoInput.trim()} onClick={() => void applyPromo(promoInput)}>{promoBusy ? "…" : "Apply"}</Button>
                 </div>
               )}
+              {!user && pendingPromo && !promo && <p className="text-sm"><Link to="/auth" className="font-semibold underline">Sign in or create an account</Link> to activate your {pendingPromo} 5% discount.</p>}
               {promoErr && <p role="alert" className="text-sm text-sale">{promoErr}</p>}
             </div>
             <div className="flex justify-between"><dt>Subtotal{sale > 0 ? " (regular price)" : ""}</dt><dd>{unavailable ? "—" : money(subtotal + sale)}</dd></div>

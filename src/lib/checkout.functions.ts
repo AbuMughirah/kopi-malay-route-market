@@ -3,7 +3,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { effectivePrice, effectivePriceThb, formatMoney, formatParcelWeight, parcelWeight, shippingFee, thailandTumblerShipping , saleSavingUnit } from "./shop";
 import { CheckoutDetails, validateDeliveryState } from "./checkout-validation";
-import { computePromoDiscount, type Promo } from "./promo";
+import { computePromoDiscount, hasUsedPromo, type Promo } from "./promo";
 import { makeOrderRef, ORDER_REF_RE, receiptError } from "./manual-order";
 import { aggregateStockSales } from "./stock";
 import { stickerBundle } from "./sticker-bundle";
@@ -42,7 +42,26 @@ async function loadPromo(admin: Admin, code: string): Promise<Promo | null> {
   return { ...data, discount_value: Number(data.discount_value), discount_myr: n(data.discount_myr), discount_thb: n(data.discount_thb), min_order_myr: n(data.min_order_myr), min_order_thb: n(data.min_order_thb) } as Promo;
 }
 
+async function bearerUser(admin: Admin): Promise<string | null> {
+  const auth = getRequest().headers.get("authorization");
+  if (!auth?.startsWith("Bearer ")) return null;
+  const { data: u } = await admin.auth.getUser(auth.slice(7));
+  return u.user?.id ?? null;
+}
+
+/** Enforces "Limit 1 per customer": members only, one non-rejected order per account, email or phone. */
+async function perCustomerError(admin: Admin, promo: Promo & { one_per_customer?: boolean }, who: { userId: string | null; email?: string | null | undefined; phone?: string | null | undefined }): Promise<string | null> {
+  if (!promo.one_per_customer) return null;
+  if (!who.userId) return "Sign in or create an account to use this code";
+  const { data, error } = await admin.from("orders").select("user_id,guest_email,shipping_address,status").ilike("promo_code", promo.code.replace(/[%_\\]/g, ""));
+  if (error) return "Could not check this code. Please try again.";
+  const rows = (data ?? []).map((o) => ({ user_id: o.user_id, guest_email: o.guest_email, status: o.status, phone: (o.shipping_address as { phone?: string } | null)?.phone ?? null }));
+  return hasUsedPromo(rows, who) ? "You have already used this promo code on a previous order" : null;
+}
+
 const PromoInput = z.object({
+  email: z.string().max(200).optional(),
+  phone: z.string().max(40).optional(),
   code: z.string().trim().min(1).max(40),
   country: z.enum(["Malaysia", "Thailand"]),
   items: z.array(z.object({ productId: z.string().uuid(), quantity: z.number().int().min(1).max(50) })).min(1).max(50),
@@ -66,6 +85,10 @@ export const validatePromoCode = createServerFn({ method: "POST" })
     }), data.country);
     const promo = await loadPromo(supabaseAdmin, data.code);
     const r = computePromoDiscount(promo, subtotal - bundle.discount, data.country === "Thailand" ? "thb" : "myr");
+    if (r.ok && promo) {
+      const err = await perCustomerError(supabaseAdmin, promo, { userId: await bearerUser(supabaseAdmin), email: data.email, phone: data.phone });
+      if (err) return { ok: false as const, error: err };
+    }
     return r.ok && promo ? { ok: true as const, code: promo.code.toUpperCase(), discount: r.discount, label: r.label } : { ok: false as const, error: r.ok ? "Invalid promo code" : r.error };
   });
 
@@ -151,6 +174,8 @@ export const submitManualOrder = createServerFn({ method: "POST" })
       const r = computePromoDiscount(promo, subtotal - bundle.discount, currency);
       if (!r.ok) throw new Error(`Promo code: ${r.error}`);
       if (!promo) throw new Error("Promo code: Invalid or expired promo code");
+      const once = await perCustomerError(supabaseAdmin, promo, { userId, email: data.email, phone: data.phone });
+      if (once) throw new Error(`Promo code: ${once}`);
       const { data: redeemed } = await supabaseAdmin.rpc("redeem_promo_code", { _code: promo.code });
       if (!redeemed) throw new Error("Promo code: Invalid or expired promo code");
       promoCode = promo.code.toUpperCase();
