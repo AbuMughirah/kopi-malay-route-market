@@ -7,6 +7,8 @@ import { formatMoney, MY_STATES, TH_PROVINCES } from "@/lib/shop";
 import { PlacePicker } from "@/components/PlacePicker";
 import { capitalizeFormDetails, capitalizeFormValue } from "@/lib/form-capitals";
 import { OrderTracking } from "@/components/order-tracking";
+import { buildOrderWhatsAppUrl } from "@/lib/whatsapp";
+import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { trackingStage } from "@/lib/tracking";
 import { CONTACT_OPTIONS, EMPTY_PROFILE, loadMyProfile, type Profile } from "@/lib/profile";
 
@@ -199,6 +201,7 @@ function OrderCard({ o, open }: { o: MyOrder; open: boolean }) {
           <div className="flex justify-between"><dt>Shipping</dt><dd>{o.shipping_fee === 0 ? "Free" : money(o.shipping_fee)}</dd></div>
           <div className="flex justify-between font-display font-bold"><dt>Total</dt><dd>{money(o.total_amount)}</dd></div>
         </dl>
+        <a href={buildOrderWhatsAppUrl(o.order_number)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium underline"><WhatsAppIcon className="size-4" />Ask on WhatsApp about this order</a>
         {a.address && (
           <p className="break-words text-muted-foreground"><span className="font-semibold text-foreground">Ship to:</span> {[a.name, a.address, [a.postcode, a.city].filter(Boolean).join(" "), a.state, a.country].filter(Boolean).join(", ")}</p>
         )}

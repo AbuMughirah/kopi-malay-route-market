@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { Clock, MessageCircle } from "lucide-react";
+import { Clock } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { getOrderByReference } from "@/lib/checkout.functions";
 import { formatMoney } from "@/lib/shop";
-import { SUPPORT_TELEGRAM_URL } from "@/lib/manual-order";
+import { buildOrderWhatsAppUrl } from "@/lib/whatsapp";
+import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { customerStatus } from "@/lib/order-flow";
 import { OrderTracking } from "@/components/order-tracking";
 
@@ -75,7 +76,7 @@ function OrderSuccess() {
         </dl>
       </div>
       <div className="mt-6 flex flex-wrap justify-center gap-3">
-        <a href={SUPPORT_TELEGRAM_URL} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-md border bg-card px-5 py-2.5 font-display font-semibold uppercase"><MessageCircle className="size-4" />Ask on Telegram</a>
+        <a href={buildOrderWhatsAppUrl(order.order_number)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-md border bg-card px-5 py-2.5 font-display font-semibold uppercase"><WhatsAppIcon className="size-4" />Ask on WhatsApp</a>
         <Link to="/shop" className="rounded-md bg-ink px-5 py-2.5 font-display font-semibold uppercase text-ink-foreground">Keep shopping</Link>
       </div>
     </div>

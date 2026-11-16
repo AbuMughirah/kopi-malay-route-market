@@ -15,4 +15,3 @@ export function makeOrderRef(rand: () => number = Math.random): string {
   return `KM-${String(Math.floor(rand() * 90000) + 10000)}`;
 }
 
-export const SUPPORT_TELEGRAM_URL = "https://t.me/kopimalay";

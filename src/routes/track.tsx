@@ -6,6 +6,8 @@ import { lookupOrder } from "@/lib/order-lookup.functions";
 import { OrderLookupSchema, type LookupOrder } from "@/lib/order-lookup";
 import { customerStatus } from "@/lib/order-flow";
 import { OrderTracking } from "@/components/order-tracking";
+import { buildOrderWhatsAppUrl } from "@/lib/whatsapp";
+import { WhatsAppIcon } from "@/components/whatsapp-icon";
 
 export const Route = createFileRoute("/track")({
   validateSearch: (s: Record<string, unknown>): { ref?: string } => (typeof s["ref"] === "string" ? { ref: s["ref"] } : {}),
@@ -83,6 +85,7 @@ function TrackPage() {
               {order.items.map((i, idx) => <li key={idx} className="py-1.5">{i.product_name}{i.selected_variant ? ` (Size ${i.selected_variant})` : ""} × {i.quantity}</li>)}
             </ul>
           )}
+          <a href={buildOrderWhatsAppUrl(order.order_number)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium underline"><WhatsAppIcon className="size-4" />Ask on WhatsApp about this order</a>
           <p className="text-xs text-muted-foreground">For your full receipt and delivery address, open the private link in your order email.</p>
         </section>
       )}
