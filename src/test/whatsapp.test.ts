@@ -5,7 +5,7 @@ describe("buildOrderWhatsAppUrl", () => {
   it("pre-fills only the order reference to Kopi Malay's number", () => {
     const url = buildOrderWhatsAppUrl("KM-20878");
     expect(url.startsWith("https://wa.me/66970098182?text=")).toBe(true);
-    expect(decodeURIComponent(url.split("text=")[1])).toBe("Hi Kopi Malay, I have a question regarding my order KM-20878.");
+    expect(decodeURIComponent(url.split("text=")[1] ?? "")).toBe("Hi Kopi Malay, I have a question regarding my order KM-20878.");
   });
   it("never carries a link or token, and rejects non-reference input", () => {
     const url = buildOrderWhatsAppUrl("KM-20878&t=secret-token");
