@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Ruler } from "lucide-react";
 import { changeItemSize, getSizeOptions, type SizeOption } from "@/lib/size-exchange.functions";
 
 /** Customer self-service apparel size change for an order still Pending Verification. Exchange only, no refund. */
@@ -31,7 +32,7 @@ export function SizeChange({ orderId, onChanged }: { orderId: string; onChanged:
 
   return (
     <>
-      <Button type="button" variant="outline" size="sm" onClick={start}>Change size</Button>
+      <Button type="button" variant="outline" size="sm" onClick={start} className="w-full gap-2 sm:w-auto"><Ruler className="size-4" aria-hidden />Change size</Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>

@@ -206,8 +206,10 @@ function OrderCard({ o, open, onChanged }: { o: MyOrder; open: boolean; onChange
           <div className="flex justify-between"><dt>Shipping</dt><dd>{o.shipping_fee === 0 ? "Free" : money(o.shipping_fee)}</dd></div>
           <div className="flex justify-between font-display font-bold"><dt>Total</dt><dd>{money(o.total_amount)}</dd></div>
         </dl>
-        {canChangeSize(o.status) && o.items.some((i) => i.selected_variant) && <SizeChange orderId={o.id} onChanged={onChanged} />}
-        <a href={buildOrderWhatsAppUrl(o.order_number)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium underline"><WhatsAppIcon className="size-4" />Ask on WhatsApp about this order</a>
+        <div className="flex flex-col gap-3 border-t pt-3 sm:flex-row sm:items-center sm:justify-between">
+          {canChangeSize(o.status) && o.items.some((i) => i.selected_variant) && <SizeChange orderId={o.id} onChanged={onChanged} />}
+          <a href={buildOrderWhatsAppUrl(o.order_number)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 sm:ml-auto"><WhatsAppIcon className="size-4" />Ask on WhatsApp about this order</a>
+        </div>
         {a.address && (
           <p className="break-words text-muted-foreground"><span className="font-semibold text-foreground">Ship to:</span> {[a.name, a.address, [a.postcode, a.city].filter(Boolean).join(" "), a.state, a.country].filter(Boolean).join(", ")}</p>
         )}

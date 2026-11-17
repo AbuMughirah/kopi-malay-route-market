@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { SUPPORT_WHATSAPP_PHONE } from "@/lib/whatsapp";
 import { LegalPage, legalHead } from "@/components/legal-page";
 
 export const Route = createFileRoute("/shipping-returns")({
@@ -23,10 +24,12 @@ export const Route = createFileRoute("/shipping-returns")({
       <p>Orders ship after payment verification, usually within 1–3 working days. You will receive a courier tracking number once dispatched. Cross-border delivery typically takes 5–10 working days.</p>
       <h2>Returns & exchanges</h2>
       <ul>
-        <li>Contact us on WhatsApp (+66 97 009 8182) within 7 days of delivery with your order reference.</li>
-        <li>Items must be unused, unwashed and in original packaging.</li>
-        <li>Size exchanges are subject to stock; the customer covers return shipping unless the item was faulty or incorrect.</li>
+        <li>Apparel sizes can be changed free in My Profile while an order is still "Pending Verification".</li>
+        <li>After delivery we offer exchanges only, requested within 7 days on WhatsApp ({SUPPORT_WHATSAPP_PHONE}). Items must be unused, unwashed and in original packaging.</li>
+        <li>Report transit damage within 48 hours and defects within 7 days, with photos.</li>
+        <li>The customer covers shipping both ways for size or change-of-mind exchanges; we cover it when the item was damaged, faulty or incorrect.</li>
         <li>Return address: Kopi Malay, 3, 13 Chomphon, Tambon Rahaeng, Mueang Tak District, Tak 63000, Thailand.</li>
+        <li>No store credit. Full details: <Link to="/refund-policy" className="font-medium text-foreground underline underline-offset-4">Refund, Return & Exchange Policy</Link>.</li>
       </ul>
     </LegalPage>
   ),
