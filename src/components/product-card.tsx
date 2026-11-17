@@ -12,7 +12,7 @@ export function PriceTag({ p, className = "" }: { p: Product; className?: string
     <div className={`flex flex-wrap items-baseline gap-2 ${className}`}>
       <span className={onSale ? "font-semibold text-sale" : "font-semibold"}>{formatRM(effectivePrice(p))}</span>
       {onSale && <span className="text-sm text-muted-foreground line-through">{formatRM(p.price)}</span>}
-      {p.price_thb != null && <span className="text-sm text-muted-foreground">/ THB {effectivePriceThb(p)!.toFixed(2)}{effectivePriceThb(p)! < p.price_thb && <> <span className="line-through">THB {p.price_thb.toFixed(2)}</span></>}</span>}
+      {p.price_thb != null && <span><span className="text-muted-foreground">/ </span><span className="font-semibold">THB {effectivePriceThb(p)!.toFixed(2)}</span>{effectivePriceThb(p)! < p.price_thb && <> <span className="text-sm text-muted-foreground line-through">THB {p.price_thb.toFixed(2)}</span></>}</span>}
     </div>
   );
 }
