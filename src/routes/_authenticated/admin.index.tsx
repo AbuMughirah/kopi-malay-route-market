@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { compressImage } from "@/lib/image-compress";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { type ReactNode, useMemo, useState } from "react";
@@ -53,9 +54,10 @@ function OrdersAdmin() {
 
   const [progress, setProgress] = useState<{ id: string; name: string; pct: number } | null>(null);
   const [labelError, setLabelError] = useState<{ id: string; msg: string } | null>(null);
-  const uploadLabel = async (o: AdminOrder, file: File | null) => {
+  const uploadLabel = async (o: AdminOrder, picked: File | null) => {
     setLabelError(null);
-    if (file && !["image/png", "image/jpeg", "image/webp"].includes(file.type)) { setLabelError({ id: o.id, msg: `${file.name}: please use a PNG, JPG or WEBP image` }); return; }
+    if (picked && !["image/png", "image/jpeg", "image/webp"].includes(picked.type)) { setLabelError({ id: o.id, msg: `${picked.name}: please use a PNG, JPG or WEBP image` }); return; }
+    const file = picked ? await compressImage(picked, { quality: 0.9 }) : null;
     if (file && file.size > 5 * 1024 * 1024) { setLabelError({ id: o.id, msg: `${file.name}: image must be 5MB or smaller` }); return; }
     setBusy(o.id);
     if (file) setProgress({ id: o.id, name: file.name, pct: 0 });

@@ -1,4 +1,5 @@
 import { isPaperBundleSticker } from "@/lib/pos-pricing";
+import { compressImage } from "@/lib/image-compress";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -35,8 +36,9 @@ function ProductsAdmin() {
     setUploading(true);
     const added: string[] = [];
     try {
-      for (const f of Array.from(files)) {
-        if (!["image/png", "image/jpeg", "image/webp"].includes(f.type)) { toast.error(`${f.name}: only PNG, JPG or WEBP`); continue; }
+      for (const raw of Array.from(files)) {
+        if (!["image/png", "image/jpeg", "image/webp"].includes(raw.type)) { toast.error(`${raw.name}: only PNG, JPG or WEBP`); continue; }
+        const f = await compressImage(raw, { maxSize: 2000, quality: 0.85, keepPng: true });
         if (f.size > 5 * 1024 * 1024) { toast.error(`${f.name}: larger than 5MB`); continue; }
         const ext = f.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
         const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;

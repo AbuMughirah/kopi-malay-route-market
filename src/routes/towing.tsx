@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { compressImage } from "@/lib/image-compress";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -32,20 +33,6 @@ type Form = {
 const EMPTY: Form = { rider_type: "thai", nationality: "", passport_number: "", name: "", phone: "", plate_number: "", motorcycle_model: "", urgency: "", rider_transport: "", pickup_region: "", pickup_town: "", breakdown_location: "", maps_link: "", destination_region: "", destination_town: "", destination: "" };
 const ORDER = ["nationality", "passport_number", "name", "phone", "plate_number", "motorcycle_model", "urgency", "rider_transport", "pickup_region", "pickup_town", "breakdown_location", "maps_link", "destination_region", "destination_town", "destination"];
 const field = "w-full rounded-md border bg-card px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ring";
-
-async function compress(file: File): Promise<File> {
-  try {
-    const bmp = await createImageBitmap(file);
-    const scale = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
-    const c = document.createElement("canvas");
-    c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
-    const ctx = c.getContext("2d");
-    if (!ctx) return file;
-    ctx.drawImage(bmp, 0, 0, c.width, c.height);
-    const blob = await new Promise<Blob | null>((r) => c.toBlob(r, "image/jpeg", 0.75));
-    return blob && blob.size < file.size ? new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }) : file;
-  } catch { return file; }
-}
 
 function TowingPage() {
   const submit = useServerFn(submitTowingRequest);
@@ -82,7 +69,7 @@ function TowingPage() {
     for (const f of files.slice(0, Math.max(0, room))) {
       const e = photoError({ type: f.type, size: 0 });
       if (e) { toast.error(`${f.name}: ${e}`); continue; }
-      const c = await compress(f);
+      const c = await compressImage(f);
       const e2 = photoError(c);
       if (e2) { toast.error(`${f.name}: ${e2}`); continue; }
       next.push({ file: c, url: URL.createObjectURL(c) });

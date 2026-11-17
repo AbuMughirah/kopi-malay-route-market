@@ -96,7 +96,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-border">
         <p className="mx-auto max-w-7xl px-4 py-5 text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Kopi Malay. Ride safe, drink good kopi.
+          © {new Date().getFullYear()} Kopi Malay. CRAFTED WITH CARE, MADE TO PERFECTION.
         </p>
       </div>
     </footer>

@@ -7,7 +7,7 @@ import { useIsAdmin } from "@/hooks/use-is-admin";
 import { supabase } from "@/integrations/supabase/client";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import badge from "@/assets/tak-route-1-badge.png.asset.json";
-import kopiLogo from "@/assets/kopi-malay-logo-v2.png.asset.json";
+import kopiLogo from "@/assets/kopi-malay-logo-cropped.png.asset.json";
 
 export const NAV = [
   { label: "Shop All", category: undefined },
@@ -48,7 +48,7 @@ export function SiteHeader() {
           {menu ? <X className="size-6" /> : <Menu className="size-6" />}
         </button>
         <Link to="/" className="flex shrink-0 items-center gap-2 sm:gap-3" aria-label="Kopi Malay x Route 1 home">
-          <img src={kopiLogo.url} alt="Kopi Malay official logo" className="size-16 shrink-0 object-contain sm:size-20" />
+          <img src={kopiLogo.url} alt="Kopi Malay official logo" className="h-16 w-auto shrink-0 object-contain sm:h-20" />
           <span aria-hidden className="font-display text-xl font-bold text-foreground/70 sm:text-2xl">x</span>
           <img src={badge.url} alt="Tak Route 1 badge" className="size-16 shrink-0 object-contain sm:size-20" />
         </Link>

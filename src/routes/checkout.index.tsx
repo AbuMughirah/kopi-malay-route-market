@@ -18,6 +18,8 @@ import { stickerBundle } from "@/lib/sticker-bundle";
 import { PlacePicker } from "@/components/PlacePicker";
 import { loadMyProfile } from "@/lib/profile";
 import { capitalizeFormDetails, capitalizeFormValue } from "@/lib/form-capitals";
+import { compressImage } from "@/lib/image-compress";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/checkout/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(productsQuery),
@@ -47,6 +49,21 @@ function Checkout() {
   const [busy, setBusy] = useState(false);
   const [ref, setRef] = useState("");
   const [receipt, setReceipt] = useState<File | null>(null);
+  const [compressing, setCompressing] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  useEffect(() => {
+    if (!receipt || !receipt.type.startsWith("image/")) { setReceiptPreview(null); return; }
+    const url = URL.createObjectURL(receipt);
+    setReceiptPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [receipt]);
+  const pickReceipt = async (picked: File | null) => {
+    setTouched((prev) => ({ ...prev, receipt: true }));
+    if (!picked) { setReceipt(null); return; }
+    setCompressing(true);
+    try { setReceipt(await compressImage(picked)); } finally { setCompressing(false); }
+  };
   const [touched, setTouched] = useState<Partial<Record<CheckoutField, boolean>>>({});
   const [attempted, setAttempted] = useState(false);
   useEffect(() => { setRef(makeOrderRef()); }, []);
@@ -145,7 +162,13 @@ function Checkout() {
     }
     if (unavailable) { toast.warning("Some items are unavailable for this destination."); return; }
     if (ship == null) { toast.warning("Tumbler weight is unavailable. Please contact Kopi Malay for shipping."); return; }
-    if (!receipt) return;
+    if (!receipt || compressing) return;
+    setConfirming(true);
+  };
+
+  const placeOrder = async () => {
+    if (busy || !receipt) return;
+    setConfirming(false);
     setBusy(true);
     try {
       const fd = new FormData();
@@ -222,9 +245,10 @@ function Checkout() {
               </div>
               <label className="block space-y-1.5">
                 <span className="font-medium">Upload payment proof / receipt *</span>
-                <input {...inputProps("receipt")} type="file" accept="image/png,image/jpeg,application/pdf" onChange={(e) => { setReceipt(e.target.files?.[0] ?? null); setTouched((prev) => ({ ...prev, receipt: true })); }} />
+                <input {...inputProps("receipt")} type="file" accept="image/png,image/jpeg,application/pdf" onChange={(e) => { void pickReceipt(e.target.files?.[0] ?? null); }} />
                 <span className="block text-xs text-muted-foreground">PNG, JPG or PDF, up to 5MB.</span>
-                {receipt && !receiptMsg && <span className="block text-xs">Selected: {receipt.name}</span>}
+                {compressing && <span className="block text-xs text-muted-foreground">Preparing your receipt…</span>}
+                {receipt && !compressing && !receiptMsg && <span className="block text-xs">Selected: {receipt.name} ({Math.max(1, Math.round(receipt.size / 1024))} KB)</span>}
                 {errorPrompt("receipt")}
               </label>
           </section>
@@ -282,12 +306,33 @@ function Checkout() {
           </dl>
           {unavailable && <p role="alert" className="mt-3 text-sm text-sale">Some items have no price for {country} or are no longer available. Remove them or choose another destination.</p>}
           {ship == null && <p role="alert" className="mt-3 text-sm text-sale">Tumbler weight is unavailable. Please contact Kopi Malay for shipping.</p>}
-          <Button type="submit" disabled={busy || promoBusy || unavailable || ship == null} className="mt-5 h-auto w-full py-3 font-display font-semibold uppercase">
+          <Button type="submit" disabled={busy || promoBusy || compressing || unavailable || ship == null} className="mt-5 h-auto w-full py-3 font-display font-semibold uppercase">
             {busy ? "Submitting…" : "Confirm Order & Submit Receipt"}
           </Button>
           <p className="mt-2 text-center text-xs text-muted-foreground">{country === "Thailand" ? "Thailand: apparel and accessories free; tumblers THB 60 per started kilogram." : "Malaysia: RM 20 per 2 tumblers, RM 20 per 2 apparel items, and RM 20 per 20 accessories. Each group is charged separately. Sabah & Sarawak: add RM 10 per order."}</p>
         </aside>
       </form>
+      <AlertDialog open={confirming} onOpenChange={setConfirming}>
+        <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-display uppercase">Are you sure with your order?</AlertDialogTitle>
+            <AlertDialogDescription>Please check your items, total and payment receipt before submitting.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <ul className="space-y-1 text-sm">
+            {lines.map((i) => <li key={i.productId + i.variant} className="flex justify-between gap-3"><span>{i.name}{i.variant ? ` (${i.variant})` : ""} × {i.quantity}</span><span className="shrink-0">{i.price == null ? "—" : money(i.price * i.quantity)}</span></li>)}
+          </ul>
+          <div className="flex justify-between text-sm"><span>Shipping</span><span>{ship == null ? "—" : ship === 0 ? "Free" : money(ship)}</span></div>
+          {bundle.discount + discount > 0 && <div className="flex justify-between text-sm text-primary"><span>Discounts</span><span>- {money(bundle.discount + discount)}</span></div>}
+          <div className="flex justify-between border-t pt-2 font-display text-lg font-bold"><span>Total</span><span>{money(payable)}</span></div>
+          <p className="text-sm text-muted-foreground">Ship to: {f.name}, {f.city}, {f.state}, {country}</p>
+          {receiptPreview ? <img src={receiptPreview} alt="Your payment receipt" className="mx-auto max-h-60 rounded border object-contain" /> : receipt && <p className="text-sm">Receipt: {receipt.name}</p>}
+          <AlertDialogFooter>
+            <AlertDialogCancel>Go back</AlertDialogCancel>
+            <AlertDialogAction onClick={() => void placeOrder()}>Yes, submit order</AlertDialogAction>
+          </AlertDialogFooter>
+          <p className="text-center text-xs text-muted-foreground">By submitting you agree to our <Link to="/refund-policy" target="_blank" className="underline">Refund Policy</Link>.</p>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

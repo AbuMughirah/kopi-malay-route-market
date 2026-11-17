@@ -26,10 +26,10 @@ function CodeChip() {
 export function WelcomeBanner() {
   return (
     <section className="mx-auto max-w-7xl px-4 pb-12">
-      <Link to="/auth" search={{ mode: "signup" }} onClick={stage} className="relative block overflow-hidden rounded-lg">
-        <img src={loop.url} alt="Mae Hong Son Loop curves" loading="lazy" className="h-64 w-full object-cover md:h-80" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-ink/55 p-6 text-center text-ink-foreground">
-          <h2 className="font-display text-2xl font-bold uppercase md:text-5xl">{WELCOME_TITLE}</h2>
+      <Link to="/auth" search={{ mode: "signup" }} onClick={stage} className="grid overflow-hidden rounded-lg bg-ink text-ink-foreground md:grid-cols-2">
+        <img src={loop.url} alt="Mae Hong Son Loop curves" loading="lazy" className="h-auto w-full" />
+        <div className="flex flex-col items-center justify-center gap-4 p-6 text-center md:p-10">
+          <h2 className="font-display text-2xl font-bold uppercase md:text-4xl lg:text-5xl">{WELCOME_TITLE}</h2>
           <CodeChip />
           <span className="rounded-md bg-background px-6 py-3 font-display font-semibold uppercase text-foreground">Create account</span>
         </div>
@@ -57,9 +57,9 @@ export function WelcomePopup() {
   if (!open || user) return null;
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-ink/60 p-4" onClick={dismiss} role="dialog" aria-modal="true" aria-label={WELCOME_TITLE}>
-      <div className="relative w-full max-w-md overflow-hidden rounded-lg bg-background" onClick={(e) => e.stopPropagation()}>
+      <div className="relative max-h-[95vh] w-full max-w-md overflow-y-auto rounded-lg bg-background" onClick={(e) => e.stopPropagation()}>
         <button aria-label="Close" onClick={dismiss} className="absolute right-2 top-2 z-10 grid size-10 place-items-center rounded-full bg-background/90 text-foreground"><X className="size-5" /></button>
-        <img src={loop.url} alt="Mae Hong Son Loop curves" className="h-48 w-full object-cover" />
+        <img src={loop.url} alt="Mae Hong Son Loop curves" className="mx-auto block max-h-[40vh] w-auto bg-ink object-contain" />
         <div className="p-6 text-center">
           <h2 className="font-display text-2xl font-bold uppercase">{WELCOME_TITLE}</h2>
           <p className="mt-2 text-sm text-muted-foreground">Members get 5% off their first order. Applied automatically at checkout.</p>
