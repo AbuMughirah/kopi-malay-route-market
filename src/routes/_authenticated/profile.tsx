@@ -10,6 +10,8 @@ import { OrderTracking } from "@/components/order-tracking";
 import { buildOrderWhatsAppUrl } from "@/lib/whatsapp";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { trackingStage } from "@/lib/tracking";
+import { SizeChange } from "@/components/size-change";
+import { canChangeSize } from "@/lib/size-exchange";
 import { CONTACT_OPTIONS, EMPTY_PROFILE, loadMyProfile, type Profile } from "@/lib/profile";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -37,11 +39,14 @@ function ProfilePage() {
   const [orders, setOrders] = useState<MyOrder[]>([]);
   const [shown, setShown] = useState(ORDERS_PAGE);
 
+  const reload = () => {
+    supabase.from("orders").select(ORDER_COLUMNS).order("created_at", { ascending: false }).limit(200)
+      .then(({ data }) => setOrders((data ?? []).map(toMyOrder)));
+  };
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
     loadMyProfile().then((r) => { if (r) setP(capitalizeFormDetails(r)); setLoading(false); });
-    supabase.from("orders").select(ORDER_COLUMNS).order("created_at", { ascending: false }).limit(200)
-      .then(({ data }) => setOrders((data ?? []).map(toMyOrder)));
+    reload();
   }, []);
 
   const set = (k: keyof Profile) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setP((prev) => ({ ...prev, [k]: capitalizeFormValue(k, e.target.value) }));
@@ -124,7 +129,7 @@ function ProfilePage() {
         {!orders.length ? <p className="text-sm text-muted-foreground">No orders yet.</p> : (
           <>
             <ul className="space-y-3">
-              {orders.slice(0, shown).map((o) => <li key={o.id}><OrderCard o={o} open={o.id === firstTrackable(orders)} /></li>)}
+              {orders.slice(0, shown).map((o) => <li key={o.id}><OrderCard o={o} open={o.id === firstTrackable(orders)} onChanged={reload} /></li>)}
             </ul>
             {shown < orders.length && (
               <button type="button" onClick={() => setShown((n) => n + ORDERS_PAGE)} className="w-full rounded-md border py-2.5 font-display text-sm font-semibold uppercase">
@@ -164,7 +169,7 @@ function toMyOrder(o: Record<string, unknown>): MyOrder {
 /** The newest order currently in transit opens automatically so its tracking is one glance away. */
 const firstTrackable = (orders: MyOrder[]) => orders.find((o) => trackingStage(o.status) === "shipped" && o.tracking_number)?.id;
 
-function OrderCard({ o, open }: { o: MyOrder; open: boolean }) {
+function OrderCard({ o, open, onChanged }: { o: MyOrder; open: boolean; onChanged: () => void }) {
   const money = (v: number) => formatMoney(v, o.currency);
   const count = o.items.reduce((s, i) => s + i.quantity, 0);
   const a = o.address;
@@ -201,6 +206,7 @@ function OrderCard({ o, open }: { o: MyOrder; open: boolean }) {
           <div className="flex justify-between"><dt>Shipping</dt><dd>{o.shipping_fee === 0 ? "Free" : money(o.shipping_fee)}</dd></div>
           <div className="flex justify-between font-display font-bold"><dt>Total</dt><dd>{money(o.total_amount)}</dd></div>
         </dl>
+        {canChangeSize(o.status) && o.items.some((i) => i.selected_variant) && <SizeChange orderId={o.id} onChanged={onChanged} />}
         <a href={buildOrderWhatsAppUrl(o.order_number)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium underline"><WhatsAppIcon className="size-4" />Ask on WhatsApp about this order</a>
         {a.address && (
           <p className="break-words text-muted-foreground"><span className="font-semibold text-foreground">Ship to:</span> {[a.name, a.address, [a.postcode, a.city].filter(Boolean).join(" "), a.state, a.country].filter(Boolean).join(", ")}</p>

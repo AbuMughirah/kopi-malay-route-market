@@ -155,6 +155,7 @@ export function thailandTumblerShipping(lines: ShippingLine[]) {
   const surcharge = Math.max(0, blocks - 1) * 60;
   return { weight, blocks, base, surcharge, total: base + surcharge };
 }
+export const ACCESSORY_ALLOWANCE_PER_UNIT = 20;
 /** Malaysia quantity-block breakdown; shippingFee sums exactly these groups so displayed lines match the total. */
 export function malaysiaShippingBreakdown(lines: ShippingLine[], state = "") {
   let tumblers = 0, apparel = 0, accessories = 0;
@@ -163,11 +164,13 @@ export function malaysiaShippingBreakdown(lines: ShippingLine[], state = "") {
     else if (["jerseys-t-shirts", "shirts", "sweaters-jackets"].includes(line.category_slug)) apparel += line.quantity;
     else accessories += line.quantity;
   }
-  const group = (label: string, units: number, size: number) => {
-    const blocks = Math.ceil(units / size);
-    return { label, units, size, blocks, fee: 20 * blocks };
+  const group = (label: string, units: number, size: number, included = 0) => {
+    const blocks = Math.ceil(Math.max(0, units - included) / size);
+    return { label, units, size, included: Math.min(units, included), blocks, fee: 20 * blocks };
   };
-  const groups = [group("Tumblers", tumblers, 2), group("Apparel", apparel, 2), group("Accessories", accessories, 20)];
+  // Each apparel or tumbler unit carries 20 accessories free; only the excess is billed in blocks of 20.
+  const allowance = (tumblers + apparel) * ACCESSORY_ALLOWANCE_PER_UNIT;
+  const groups = [group("Tumblers", tumblers, 2), group("Apparel", apparel, 2), group("Accessories", accessories, 20, allowance)];
   const surcharge = eastMalaysiaSurcharge("Malaysia", state);
   return { groups, surcharge, total: groups.reduce((sum, g) => sum + g.fee, 0) + surcharge };
 }
@@ -187,7 +190,7 @@ export function shippingDescription(category: string): string {
   const block = category === "tumblers" ? "2 tumblers" : ["jerseys-t-shirts", "shirts", "sweaters-jackets"].includes(category) ? "2 apparel items" : "20 accessories";
   const apparel = ["jerseys-t-shirts", "shirts", "sweaters-jackets"].includes(category);
   const thailand = category === "tumblers" ? "Each tumbler weighs 292g. Thailand: THB 60.00 for the first 1kg of tumbler weight, plus THB 60.00 per additional started kilogram." : "Free shipping to Thailand.";
-  return `${thailand} Malaysia: RM 20.00 per block of ${block}. Mixed shipping groups are charged separately. Sabah & Sarawak: an additional flat RM 10.00 per order.${apparel ? " Shipped from Tak, Thailand across the border via Peninsular Malaysia." : ""}`;
+  return `${thailand} Malaysia: RM 20.00 per block of ${block}. Each apparel or tumbler item ships up to 20 accessories free; extra accessories are RM 20.00 per block of 20. Sabah & Sarawak: an additional flat RM 10.00 per order.${apparel ? " Shipped from Tak, Thailand across the border via Peninsular Malaysia." : ""}`;
 }
 
 export function deliveryEstimate(state: string): string {

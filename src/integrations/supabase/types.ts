@@ -855,6 +855,19 @@ export type Database = {
         Args: { _claim: string; _id: string }
         Returns: string
       }
+      customer_change_item_size: {
+        Args: {
+          _email: string
+          _item: string
+          _max: number
+          _new_variant: string
+          _old_variant: string
+          _order: string
+          _size: string
+          _user: string
+        }
+        Returns: string
+      }
       designated_google_admin_matches: {
         Args: {
           _confirmed_at: string

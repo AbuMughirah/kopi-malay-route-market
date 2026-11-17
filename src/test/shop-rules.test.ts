@@ -26,7 +26,7 @@ describe("shipping", () => {
     for (const category_slug of ["jerseys-t-shirts", "tumblers", "stickers", "fridge-magnets", "patches", "lanyard", "other-merch"]) {
       expect(shippingFee("Malaysia", [{ category_slug, quantity: 1 }], "Sabah")).toBe(30);
     }
-    expect(shippingFee("Malaysia", [{ category_slug: "jerseys-t-shirts", quantity: 3 }, { category_slug: "tumblers", quantity: 2 }, { category_slug: "stickers", quantity: 21 }], "Sabah")).toBe(110);
+    expect(shippingFee("Malaysia", [{ category_slug: "jerseys-t-shirts", quantity: 3 }, { category_slug: "tumblers", quantity: 2 }, { category_slug: "stickers", quantity: 21 }], "Sabah")).toBe(70);
   });
   it("adds RM 10 once in Sarawak", () => {
     expect(shippingFee("Malaysia", [{ category_slug: "jerseys-t-shirts", quantity: 4 }], "Sarawak")).toBe(50);
@@ -54,9 +54,9 @@ describe("shipping", () => {
     const lines = [{ category_slug: "tumblers", quantity: 4, weight_kg: 0.292 }, { category_slug: "stickers", quantity: 100, weight_kg: 0.05 }];
     expect(thailandTumblerShipping(lines)).toEqual({ weight: { kg: 1.168, complete: true }, blocks: 2, base: 60, surcharge: 60, total: 120 });
     expect(shippingFee("Thailand", lines)).toBe(120);
-    expect(shippingFee("Malaysia", lines, "Johor")).toBe(140);
-    expect(shippingFee("Malaysia", lines, "Sabah")).toBe(150);
-    expect(shippingFee("Malaysia", lines, "Sarawak")).toBe(150);
+    expect(shippingFee("Malaysia", lines, "Johor")).toBe(60);
+    expect(shippingFee("Malaysia", lines, "Sabah")).toBe(70);
+    expect(shippingFee("Malaysia", lines, "Sarawak")).toBe(70);
   });
   it("charges RM 20 for every two tumblers", () => {
     expect([1, 2, 3, 4, 5].map((quantity) => shippingFee("Malaysia", [{ category_slug: "tumblers", quantity }]))).toEqual([20, 20, 40, 40, 60]);
@@ -70,7 +70,7 @@ describe("shipping", () => {
     expect(shippingFee("Malaysia", [{ category_slug: "stickers", quantity: 10 }, { category_slug: "fridge-magnets", quantity: 11 }])).toBe(40);
   });
   it("adds distinct shipping groups", () => {
-    expect(shippingFee("Malaysia", [{ category_slug: "tumblers", quantity: 3 }, { category_slug: "jerseys-t-shirts", quantity: 2 }, { category_slug: "stickers", quantity: 21 }])).toBe(100);
+    expect(shippingFee("Malaysia", [{ category_slug: "tumblers", quantity: 3 }, { category_slug: "jerseys-t-shirts", quantity: 2 }, { category_slug: "stickers", quantity: 21 }])).toBe(60);
   });
 });
 
@@ -103,4 +103,13 @@ it("treats untracked products as unlimited and missing sizes as sold out", () =>
   expect(availableStock({ stock: null }, "M")).toBeNull();
   expect(availableStock({ stock: { M: 3 } }, "M")).toBe(3);
   expect(availableStock({ stock: { M: 3 } }, "L")).toBe(0);
+});
+it("gives 20 free accessories per apparel or tumbler unit in Malaysia", () => {
+    const fee = (shirts: number, stickers: number) => shippingFee("Malaysia", [{ category_slug: "jerseys-t-shirts", quantity: shirts }, { category_slug: "stickers", quantity: stickers }], "Johor");
+    expect(fee(1, 20)).toBe(20);
+    expect(fee(2, 40)).toBe(20);
+    expect(fee(3, 60)).toBe(40);
+    expect(fee(3, 61)).toBe(60);
+    expect(fee(0, 20)).toBe(20);
+    expect(shippingFee("Malaysia", [{ category_slug: "tumblers", quantity: 1 }, { category_slug: "patches", quantity: 21 }], "Sabah")).toBe(50);
 });

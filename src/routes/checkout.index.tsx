@@ -296,7 +296,7 @@ function Checkout() {
                   {thaiShipping.surcharge > 0 && <div className="flex justify-between gap-3"><dt>Extra weight ({thaiShipping.blocks - 1} × 1kg tier)</dt><dd>{money(thaiShipping.surcharge)}</dd></div>}
                 </>}
                 {country === "Malaysia" && malaysiaShipping.groups.filter((g) => g.units > 0).map((g) => (
-                  <div key={g.label} className="flex justify-between gap-3"><dt>{g.label}: {g.units} {g.units === 1 ? "unit" : "units"} ({g.blocks} {g.blocks === 1 ? "block" : "blocks"} of {g.size})</dt><dd className="shrink-0">{money(g.fee)}</dd></div>
+                  <div key={g.label} className="flex justify-between gap-3"><dt>{g.label}: {g.units} {g.units === 1 ? "unit" : "units"}{g.included > 0 ? ` (${g.included} free with apparel/tumbler${g.units > g.included ? `, ${g.units - g.included} charged` : ""})` : ""}{g.blocks > 0 ? ` (${g.blocks} ${g.blocks === 1 ? "block" : "blocks"} of ${g.size})` : ""}</dt><dd className="shrink-0">{money(g.fee)}</dd></div>
                 ))}
                 {country === "Malaysia" && surcharge > 0 && <div className="flex justify-between gap-3"><dt>Sabah &amp; Sarawak surcharge</dt><dd>{money(surcharge)}</dd></div>}
               </div>

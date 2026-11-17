@@ -192,8 +192,28 @@ export const updateOrder = createServerFn({ method: "POST" }).middleware([requir
     const { data: op } = await admin.from("order_pos_operations").select("receipt_number").eq("order_id", data.id).eq("kind", "sale").order("cycle", { ascending: false }).limit(1).maybeSingle();
     const { data: ok, error } = await admin.rpc("transition_order_status", { _id: data.id, _from: "verifying", _to: "verified", ...actor, ...(op?.receipt_number ? { _pos_receipt: op.receipt_number } : {}), _claim: claim, _deltas: deltas as unknown as never });
     if (error || !ok) { await revert(); throw new Error(error?.message ?? conflict); }
+    await alertIfReverified(admin, data.id, actor._actor_email, ctx.userId, op?.receipt_number ?? null);
     return { ok: true };
   });
+
+/** Best-effort: never throws, so a Telegram outage cannot undo a saved verification. */
+async function alertIfReverified(admin: Awaited<ReturnType<typeof adminClient>>, id: string, actorEmail: string, actorId: string, receipt: string | null) {
+  try {
+    const { wasUndoneBefore, buildReverifyAlert } = await import("./reverify");
+    const { data: history } = await admin.from("order_status_history").select("from_status,to_status").eq("order_id", id);
+    if (!wasUndoneBefore(history ?? [])) return;
+    const { data: o } = await admin.from("orders").select("order_number,currency,total_amount,shipping_address").eq("id", id).single();
+    const addr = (o?.shipping_address ?? {}) as { full_name?: string; name?: string; country?: string };
+    const idx = await loadRoleIndex(admin);
+    const { sendTelegram, escHtml } = await import("./telegram.server");
+    await sendTelegram(buildReverifyAlert({
+      orderNumber: o?.order_number ?? "", actorEmail, actorRole: actorBadge(actorId, idx), customer: addr.full_name ?? addr.name ?? "", country: addr.country ?? "",
+      total: o ? `${o.currency === "thb" ? "THB" : "RM"} ${Number(o.total_amount).toFixed(2)}` : "", receipt, at: new Date(),
+    }, escHtml), "reverify");
+  } catch (e) {
+    console.error("Re-verify alert failed", e);
+  }
+}
 
 async function emailShipped(admin: Awaited<ReturnType<typeof adminClient>>, id: string, tracking: string, corrected: boolean) {
   try {
