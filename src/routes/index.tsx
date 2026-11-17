@@ -5,7 +5,7 @@ import { ProductCard } from "@/components/product-card";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
 import { imageFor } from "@/lib/shop";
 import { WelcomeBanner, WelcomePopup } from "@/components/welcome-offer";
-import partner1 from "@/assets/partner-1.jpeg.asset.json";
+import partner1 from "@/assets/mita-ventures-logo.png.asset.json";
 import partner2 from "@/assets/partner-2.png.asset.json";
 import towingPoster from "@/assets/towing-rescue-poster.jpg.asset.json";
 
