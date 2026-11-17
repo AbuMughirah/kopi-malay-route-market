@@ -40,4 +40,4 @@
 - Admin role changes: `runSetAdminRole` → service-only `set_admin_role_audited` (role + append-only audit row, one transaction).
 - Role badges come from `src/lib/roles.ts` on the server; browser never derives roles.
 - Income/Orders dates and charts use Bangkok-time helpers in `src/lib/income.ts`.
-- Traffic analytics go only through `recordVisit` (public, anonymous daily-salted hash, no IP/cookies, bots/staff/admin paths skipped) into service-only `traffic_events`; `getTrafficReport` re-checks admin and prunes raw rows after 90 days, keeping storage small on Tiny compute.
+- Analytics: `recordVisit` → service-only `traffic_events` (no IP/cookies; skips bots/staff); report re-checks admin, prunes >90d.
