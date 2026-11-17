@@ -10,6 +10,7 @@ import {
   type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { TrafficTracker } from "@/components/traffic-tracker";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -94,6 +95,7 @@ function RootComponent() {
           <SiteFooter />
         </div>
         <CartDrawer />
+        <TrafficTracker />
         <Toaster position="top-center" richColors />
       </WishlistProvider>
       </CartProvider>

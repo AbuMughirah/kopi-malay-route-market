@@ -787,6 +787,42 @@ export type Database = {
         }
         Relationships: []
       }
+      traffic_events: {
+        Row: {
+          country: string
+          created_at: string
+          device_type: string
+          event_type: string
+          id: string
+          path: string
+          product_slug: string | null
+          referrer: string
+          visitor_hash: string
+        }
+        Insert: {
+          country?: string
+          created_at?: string
+          device_type?: string
+          event_type?: string
+          id?: string
+          path: string
+          product_slug?: string | null
+          referrer?: string
+          visitor_hash: string
+        }
+        Update: {
+          country?: string
+          created_at?: string
+          device_type?: string
+          event_type?: string
+          id?: string
+          path?: string
+          product_slug?: string | null
+          referrer?: string
+          visitor_hash?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

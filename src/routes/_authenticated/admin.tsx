@@ -29,6 +29,7 @@ const TABS = [
   { to: "/admin/promos", label: "Promo Codes" },
   { to: "/admin/towing", label: "Towing Requests" },
   { to: "/admin/users", label: "Users" },
+  { to: "/admin/analytics", label: "Analytics" },
 ] as const;
 
 function AdminLayout() {
@@ -39,16 +40,23 @@ function AdminLayout() {
   }, [user.id]);
   const tabs = TABS.filter((t) => !["/admin/users", "/admin/income"].includes(t.to) || isOwner);
   return (
-    <div className="mx-auto max-w-[1400px] px-4 py-8">
-      <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="font-display text-3xl font-bold uppercase">Admin dashboard</h1><OwnerPinButton /></div>
-      <nav className="mt-4 flex gap-1 overflow-x-auto border-b">
-        {tabs.map((t) => (
-          <Link key={t.to} to={t.to} activeOptions={{ exact: "exact" in t }} className="whitespace-nowrap border-b-2 border-transparent px-3 py-2 font-display text-sm font-semibold uppercase text-muted-foreground hover:text-foreground [&.active]:border-foreground [&.active]:text-foreground">
-            {t.label}
-          </Link>
-        ))}
+    <div className="mx-auto w-full max-w-[1400px] px-3 py-5 sm:px-6 sm:py-8">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+        <h1 className="truncate font-display text-xl font-bold uppercase sm:text-3xl">Admin dashboard</h1>
+        <OwnerPinButton />
+      </div>
+      <nav aria-label="Admin sections" className="sticky top-0 z-20 -mx-3 mt-4 border-b bg-background px-3 sm:mx-0 sm:px-0">
+        <div className="flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {tabs.map((t) => (
+            <Link key={t.to} to={t.to} activeOptions={{ exact: "exact" in t }} className="shrink-0 whitespace-nowrap border-b-2 border-transparent px-3 py-3 font-display text-xs font-semibold uppercase text-muted-foreground hover:text-foreground sm:text-sm [&.active]:border-foreground [&.active]:text-foreground">
+              {t.label}
+            </Link>
+          ))}
+        </div>
       </nav>
-      <div className="mt-6"><Outlet /></div>
+      <div className="mt-5 min-w-0 sm:mt-6 [&_table]:min-w-full">
+        <Outlet />
+      </div>
     </div>
   );
 }

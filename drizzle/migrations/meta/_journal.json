@@ -253,6 +253,13 @@
       "when": 1794912246884,
       "tag": "0035_customer_size_change",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1794922228580,
+      "tag": "0036_traffic_events",
+      "breakpoints": true
     }
   ]
 }
