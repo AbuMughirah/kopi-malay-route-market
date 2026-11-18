@@ -19,7 +19,7 @@
 - Accumulate catalog unit weights through the shared integer-gram parcel helper on browser and server; save weight and completeness at order placement so missing weights and historical totals remain explicit. Category-specific fixed unit weights are enforced on catalog writes by a database trigger.
 - Pass the validated delivery state to the shared shipping helper on browser and server; region surcharges are applied once to the order, not per shipping group.
 - Derive Thailand tumbler tiers and their base/excess breakdown through one browser-safe helper used by checkout and server alerts; calculate from catalog integer-gram weight so displayed and charged totals agree.
-- Product details share a dialog-based image viewer using react-zoom-pan-pinch; apparel size charts use the uploaded asset rather than reconstructed measurements.
+- Product details share a dialog-based image viewer using react-zoom-pan-pinch; size charts render from `src/lib/size-guide.ts` (official values, stocked sizes only).
 - Retire replaced catalog placeholders with `is_active=false`, excluding them from reads and checkout while retaining historical order references.
 - Promo codes live in a service-role-only `promo_codes` table; `computePromoDiscount` in `src/lib/promo.ts` is shared by preview and `submitManualOrder`, which re-validates and atomically redeems via `redeem_promo_code` so the client discount is never trusted.
 - Stock for Loyverse-linked items lives in `product_stock`; checkout only checks/snapshots inventory. Verify/reversal uses an atomic order claim and private durable `order_pos_operations` intents, with one sale/refund per cycle and reference reconciliation before retry; receipt-less historical restores remain count-based, and unknown stock never moves automatically.
@@ -40,4 +40,4 @@
 - Admin role changes: `runSetAdminRole` → service-only `set_admin_role_audited` (role + append-only audit row, one transaction).
 - Role badges come from `src/lib/roles.ts` on the server; browser never derives roles.
 - Income/Orders dates and charts use Bangkok-time helpers in `src/lib/income.ts`.
-- Analytics: `recordVisit` → service-only `traffic_events` (no IP/cookies; skips bots/staff); report re-checks admin, prunes >90d.
+- Analytics: `recordVisit` → service-only `traffic_events` (no IP/cookies, no bots/staff); admin report prunes >90d.

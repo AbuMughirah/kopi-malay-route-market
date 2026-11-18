@@ -11,7 +11,7 @@ import { useCart } from "@/hooks/use-cart";
 import { productQuery } from "@/lib/queries";
 import { availableStock, isApparel, shippingDescription } from "@/lib/shop";
 import { ProductImageViewer } from "@/components/product-image-viewer";
-import { ApparelSizeGuide } from "@/components/apparel-size-guide";
+import { ApparelSizeGuide, SizeGuideTable } from "@/components/apparel-size-guide";
 
 export const Route = createFileRoute("/product/$slug")({
   loader: async ({ context, params }) => {
@@ -73,7 +73,7 @@ function ProductPage() {
           : left !== null && left > 10 ? <p className="mt-2 text-sm text-muted-foreground">In stock</p> : null}
         {apparel && (
           <div className="mt-6">
-            <div className="mb-3 flex items-center justify-between gap-3"><p className="font-display text-sm font-semibold uppercase">Size {size && <span className="text-muted-foreground">— {size}</span>}</p><ApparelSizeGuide /></div>
+            <div className="mb-3 flex items-center justify-between gap-3"><p className="font-display text-sm font-semibold uppercase">Size {size && <span className="text-muted-foreground">— {size}</span>}</p><ApparelSizeGuide selected={size} /></div>
             <div className="flex flex-wrap gap-2">
               {(p.variants.sizes ?? []).map((s) => (
                 <Button variant="outline" key={s} disabled={availableStock(p, s) === 0} onClick={() => { setSize(s); setQty(1); }} className={`min-w-12 px-3 font-medium ${size === s ? "border-ink bg-ink text-ink-foreground" : "bg-card hover:border-ink"}`}>{s}</Button>
@@ -98,7 +98,7 @@ function ProductPage() {
           <AccordionItem value="desc"><AccordionTrigger className="font-display uppercase">Description</AccordionTrigger><AccordionContent>{p.description}</AccordionContent></AccordionItem>
           {apparel && (
             <AccordionItem value="size"><AccordionTrigger className="font-display uppercase">Size guide</AccordionTrigger>
-              <AccordionContent><ApparelSizeGuide /></AccordionContent>
+              <AccordionContent><SizeGuideTable selected={size} /></AccordionContent>
             </AccordionItem>
           )}
           <AccordionItem value="ship"><AccordionTrigger className="font-display uppercase">Shipping</AccordionTrigger>

@@ -1,15 +1,76 @@
+import { useState } from "react";
 import { Ruler } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import chart from "@/assets/catalog/apparel-size-guide.jpg.asset.json";
+import { SIZE_GUIDE, formatMeasure, type SizeUnit } from "@/lib/size-guide";
 
-export function ApparelSizeGuide() {
+function Measure({ cm, inches, unit }: { cm: number; inches: number; unit: SizeUnit }) {
+  if (unit !== "both") return <span className="whitespace-nowrap">{formatMeasure(cm, inches, unit)}</span>;
+  return <><span className="whitespace-nowrap">{formatMeasure(cm, inches, "cm")}</span><span className="block whitespace-nowrap text-muted-foreground sm:inline"><span className="hidden sm:inline"> / </span>{formatMeasure(cm, inches, "in")}</span></>;
+}
+
+const UNITS: { value: SizeUnit; label: string }[] = [
+  { value: "both", label: "Both" },
+  { value: "cm", label: "CM" },
+  { value: "in", label: "Inches" },
+];
+
+export function SizeGuideTable({ selected }: { selected?: string }) {
+  const [unit, setUnit] = useState<SizeUnit>("both");
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs uppercase tracking-widest text-muted-foreground">Available sizes S–5XL</p>
+        <div role="group" aria-label="Measurement unit" className="inline-flex rounded-md border bg-card p-0.5">
+          {UNITS.map((u) => (
+            <button key={u.value} type="button" aria-pressed={unit === u.value} onClick={() => setUnit(u.value)}
+              className={`rounded px-3 py-1 text-xs font-semibold uppercase transition-colors ${unit === u.value ? "bg-ink text-ink-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              {u.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="overflow-hidden rounded-md border">
+        <table className="w-full text-sm tabular-nums">
+          <thead className="bg-ink text-ink-foreground">
+            <tr>
+              <th scope="col" className="px-3 py-2.5 text-left font-display text-xs font-semibold uppercase tracking-wide">Size</th>
+              <th scope="col" className="px-3 py-2.5 text-left font-display text-xs font-semibold uppercase tracking-wide">Chest</th>
+              <th scope="col" className="px-3 py-2.5 text-left font-display text-xs font-semibold uppercase tracking-wide">Length</th>
+            </tr>
+          </thead>
+          <tbody>
+            {SIZE_GUIDE.map((r) => {
+              const active = r.size === selected;
+              return (
+                <tr key={r.size} aria-current={active ? "true" : undefined} className={`border-t ${active ? "bg-muted font-semibold" : "bg-background"}`}>
+                  <th scope="row" className="px-3 py-2.5 text-left font-display font-bold">
+                    <span className="inline-flex flex-wrap items-center gap-1.5">{r.size}{active && <span className="whitespace-nowrap rounded bg-ink px-1.5 py-0.5 text-[10px] font-semibold uppercase text-ink-foreground">Your pick</span>}</span>
+                  </th>
+                  <td className="px-3 py-2.5"><Measure cm={r.chestCm} inches={r.chestIn} unit={unit} /></td>
+                  <td className="px-3 py-2.5"><Measure cm={r.lengthCm} inches={r.lengthIn} unit={unit} /></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <ul className="space-y-1 text-xs text-muted-foreground">
+        <li><span className="font-semibold text-foreground">Chest:</span> around the fullest part of the chest, under the arms.</li>
+        <li><span className="font-semibold text-foreground">Length:</span> from the highest point of the shoulder straight down to the hem.</li>
+        <li>Measurements are of the garment and may vary slightly. Between sizes? Pick the larger one for a relaxed fit.</li>
+      </ul>
+    </div>
+  );
+}
+
+export function ApparelSizeGuide({ selected }: { selected?: string }) {
   return <Dialog>
     <DialogTrigger asChild><Button variant="outline" size="sm"><Ruler className="mr-2 size-4" />Size guide</Button></DialogTrigger>
-    <DialogContent className="max-h-[90vh] w-[calc(100%-2rem)] max-w-5xl overflow-auto border-white/10 bg-ink p-4 text-ink-foreground">
+    <DialogContent className="max-h-[90vh] w-[calc(100%-2rem)] max-w-lg overflow-auto p-5">
       <DialogTitle className="font-display uppercase tracking-wide">Jerseys & T-shirts — Size guide</DialogTitle>
-      <DialogDescription className="text-ink-foreground/60">Chest and length in CM / Inches. Available sizes: S–5XL.</DialogDescription>
-      <a href={chart.url} target="_blank" rel="noopener noreferrer" aria-label="Open full-resolution size chart"><img src={chart.url} alt="Standard apparel size guide: chest and length measurements in centimeters and inches, XS to 5XL" className="w-full rounded-md" /></a>
+      <DialogDescription>Chest and length measurements for every size we stock.</DialogDescription>
+      <SizeGuideTable selected={selected} />
     </DialogContent>
   </Dialog>;
 }
