@@ -32,7 +32,7 @@ export function ProductCard({ p }: { p: Product }) {
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-lg border bg-card">
       <WishlistButton productId={p.id} name={p.name} className="absolute right-2 top-2 z-10" />
-      <Link to="/product/$slug" params={{ slug: p.slug }} className="relative block aspect-square overflow-hidden bg-muted">
+      <Link to="/product/$slug" params={{ slug: p.slug }} className="relative block aspect-square overflow-hidden border-b bg-background">
         <img src={imageFor(p.images[0])} alt={p.name} loading="lazy" decoding="async" width={1024} height={1024} className="size-full object-contain transition-transform duration-500 group-hover:scale-105" />
         {onSale && <span className="absolute left-2 top-2 rounded-sm bg-sale px-2 py-0.5 font-display text-xs font-bold uppercase text-sale-foreground">Sale</span>}
         {p.is_featured && !onSale && <img src={bestSellerRibbon.url} alt="Best seller" width={240} height={200} decoding="async" className="pointer-events-none absolute left-1 top-1 h-auto w-20 sm:w-24" />}

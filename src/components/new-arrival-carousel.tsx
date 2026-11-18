@@ -33,7 +33,7 @@ export function NewArrivalCarousel({ products }: { products: Product[] }) {
                   <Link to="/product/$slug" params={{ slug: p.slug }} className="mt-6 inline-block rounded-md bg-brand px-6 py-3 font-display font-semibold uppercase text-brand-foreground hover:opacity-90">Shop now</Link>
                 </div>
                 <Link to="/product/$slug" params={{ slug: p.slug }} className="order-1 md:order-2">
-                  <img src={imageFor(p.images[0])} alt={p.name} width={448} height={448} loading={i === 0 ? "eager" : "lazy"} fetchPriority={i === 0 ? "high" : "auto"} decoding={i === 0 ? "sync" : "async"} className="mx-auto aspect-square w-full max-w-md rounded-lg bg-muted object-contain" />
+                  <img src={imageFor(p.images[0])} alt={p.name} width={448} height={448} loading={i === 0 ? "eager" : "lazy"} fetchPriority={i === 0 ? "high" : "auto"} decoding={i === 0 ? "sync" : "async"} className="mx-auto aspect-square w-full max-w-md rounded-lg bg-muted object-cover object-top" />
                 </Link>
               </div>
             </div>
