@@ -4,6 +4,7 @@ import { NewArrivalCarousel } from "@/components/new-arrival-carousel";
 import { ProductCard } from "@/components/product-card";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
 import { imageFor } from "@/lib/shop";
+import { Testimonials } from "@/components/testimonials";
 import { WelcomeBanner, WelcomePopup } from "@/components/welcome-offer";
 import partner1 from "@/assets/mita-ventures-logo.png.asset.json";
 import partner2 from "@/assets/partner-2.png.asset.json";
@@ -72,6 +73,8 @@ function Home() {
           {featured.map((p) => <ProductCard key={p.id} p={p} />)}
         </div>
       </section>
+
+      <Testimonials />
 
       <WelcomeBanner />
 
