@@ -3,6 +3,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { effectivePrice, effectivePriceThb, formatRM, imageFor, type Product } from "@/lib/shop";
+import newArrivalsRibbon from "@/assets/new-arrivals-ribbon.png.asset.json";
 
 export function NewArrivalCarousel({ products }: { products: Product[] }) {
   const [ref, api] = useEmblaCarousel({ loop: true, align: "start" });
@@ -26,7 +27,7 @@ export function NewArrivalCarousel({ products }: { products: Product[] }) {
             <div key={p.id} className="min-w-0 shrink-0 grow-0 basis-full">
               <div className="mx-auto grid min-h-[520px] max-w-7xl items-center gap-6 px-6 py-10 md:grid-cols-2 md:px-16">
                 <div className="order-2 md:order-1">
-                  <span className="inline-block rounded-md bg-foreground px-4 py-2 font-display text-base font-bold uppercase tracking-widest text-background md:text-lg">New arrival</span>
+                  <img src={newArrivalsRibbon.url} alt="New arrivals" width={600} height={357} className="w-40 md:w-52" />
                   <h2 className="mt-4 font-display text-4xl font-bold uppercase leading-[0.95] md:text-6xl">{p.name}</h2>
                   <p className="mt-3 text-lg text-muted-foreground">{formatRM(effectivePrice(p))}{p.price_thb != null && ` / THB ${effectivePriceThb(p)!.toFixed(2)}`}</p>
                   <Link to="/product/$slug" params={{ slug: p.slug }} className="mt-6 inline-block rounded-md bg-brand px-6 py-3 font-display font-semibold uppercase text-brand-foreground hover:opacity-90">Shop now</Link>
