@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import r1 from "@/assets/review-1.jpg.asset.json";
 import r2 from "@/assets/review-2.jpg.asset.json";
@@ -15,7 +16,28 @@ import r10 from "@/assets/review-10.jpg.asset.json";
 const reviews = [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10];
 
 export function Testimonials() {
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpen] = useState<number | null>(null);
+  const [current, setCurrent] = useState(0);
+  const [zoomed, setZoomed] = useState(false);
+  const track = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (open === null) return;
+    setCurrent(open);
+    const t = setTimeout(() => {
+      const el = track.current;
+      if (el) el.scrollTo({ left: el.clientWidth * open, behavior: "instant" as ScrollBehavior });
+    }, 30);
+    return () => clearTimeout(t);
+  }, [open]);
+
+  const go = (i: number) => {
+    const el = track.current;
+    if (!el) return;
+    const n = Math.max(0, Math.min(reviews.length - 1, i));
+    el.scrollTo({ left: el.clientWidth * n, behavior: "smooth" });
+  };
+
   return (
     <section className="border-t bg-background">
       <div className="mx-auto max-w-7xl px-4 py-12">
@@ -26,7 +48,7 @@ export function Testimonials() {
             <button
               key={r.asset_id}
               type="button"
-              onClick={() => setOpen(r.url)}
+              onClick={() => setOpen(i)}
               className="w-44 shrink-0 snap-start overflow-hidden rounded-md border bg-muted md:w-56"
               aria-label={`Open rider review ${i + 1}`}
             >
@@ -35,16 +57,40 @@ export function Testimonials() {
           ))}
         </div>
       </div>
-      <Dialog open={!!open} onOpenChange={(o) => !o && setOpen(null)}>
+      <Dialog open={open !== null} onOpenChange={(o) => !o && setOpen(null)}>
         <DialogContent className="max-w-md p-2">
           <DialogTitle className="sr-only">Rider review</DialogTitle>
-          {open && (
-            <TransformWrapper doubleClick={{ mode: "toggle" }}>
-              <TransformComponent wrapperClass="!w-full" contentClass="!w-full">
-                <img src={open} alt="Rider review" className="max-h-[80vh] w-full object-contain" />
-              </TransformComponent>
-            </TransformWrapper>
-          )}
+          <div
+            ref={track}
+            onScroll={(e) => {
+              const el = e.currentTarget;
+              setCurrent(Math.round(el.scrollLeft / el.clientWidth));
+            }}
+            className={`flex snap-x snap-mandatory ${zoomed ? "overflow-hidden" : "overflow-x-auto"}`}
+          >
+            {reviews.map((r, i) => (
+              <div key={r.asset_id} className="w-full shrink-0 snap-center">
+                <TransformWrapper
+                  doubleClick={{ mode: "toggle" }}
+                  panning={{ disabled: !zoomed }}
+                  onTransform={(_, s) => i === current && setZoomed(s.scale > 1.01)}
+                >
+                  <TransformComponent wrapperClass="!w-full" contentClass="!w-full">
+                    <img src={r.url} alt={`Rider review ${i + 1}`} loading="lazy" className="max-h-[78vh] w-full object-contain" />
+                  </TransformComponent>
+                </TransformWrapper>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center justify-between px-1 pt-1">
+            <button type="button" onClick={() => go(current - 1)} disabled={current === 0} className="rounded-full border p-2 disabled:opacity-30" aria-label="Previous review">
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="text-xs text-muted-foreground">{current + 1} / {reviews.length}</span>
+            <button type="button" onClick={() => go(current + 1)} disabled={current === reviews.length - 1} className="rounded-full border p-2 disabled:opacity-30" aria-label="Next review">
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
     </section>
