@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
+import bestSellerRibbon from "@/assets/best-seller-ribbon.png.asset.json";
 import { WishlistButton } from "@/components/wishlist-button";
 import { effectivePrice, effectivePriceThb, formatRM, imageFor, isApparel, type Product } from "@/lib/shop";
 
@@ -34,7 +35,7 @@ export function ProductCard({ p }: { p: Product }) {
       <Link to="/product/$slug" params={{ slug: p.slug }} className="relative block aspect-square overflow-hidden bg-muted">
         <img src={imageFor(p.images[0])} alt={p.name} loading="lazy" decoding="async" width={1024} height={1024} className="size-full object-contain transition-transform duration-500 group-hover:scale-105" />
         {onSale && <span className="absolute left-2 top-2 rounded-sm bg-sale px-2 py-0.5 font-display text-xs font-bold uppercase text-sale-foreground">Sale</span>}
-        {p.is_featured && !onSale && <span className="absolute left-2 top-2 rounded-sm bg-signal px-2 py-0.5 font-display text-xs font-bold uppercase text-signal-foreground">Best seller</span>}
+        {p.is_featured && !onSale && <img src={bestSellerRibbon.url} alt="Best seller" width={240} height={200} decoding="async" className="pointer-events-none absolute left-1 top-1 h-auto w-20 sm:w-24" />}
       </Link>
       <div className="flex flex-1 flex-col gap-1 p-3">
         <p className="text-xs uppercase tracking-wide text-muted-foreground">{p.category_name}</p>
