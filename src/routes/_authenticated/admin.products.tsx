@@ -31,6 +31,8 @@ function ProductsAdmin() {
   const [filter, setFilter] = useState("");
   const [syncing, setSyncing] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [dropActive, setDropActive] = useState(false);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
   const uploadPhotos = async (files: FileList | null) => {
     if (!files?.length) return;
     setUploading(true);
@@ -115,9 +117,14 @@ function ProductsAdmin() {
           <label className="text-sm">Sale price THB<input type="number" step="0.01" min={0} className={input} value={d.sale_price_thb} onChange={(e) => setD({ ...d, sale_price_thb: e.target.value })} /></label>
           </div></fieldset>
           <label className="text-sm sm:col-span-4">Description<textarea rows={3} className={input} value={d.description} onChange={(e) => setD({ ...d, description: e.target.value })} /></label>
-          <div className="text-sm sm:col-span-2">
+          <div
+            className={`rounded-md border-2 border-dashed p-2 text-sm sm:col-span-2 ${dropActive ? "border-primary bg-muted" : "border-transparent"}`}
+            onDragOver={(e) => { if (e.dataTransfer.types.includes("Files")) { e.preventDefault(); setDropActive(true); } }}
+            onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropActive(false); }}
+            onDrop={(e) => { if (e.dataTransfer.files.length) { e.preventDefault(); setDropActive(false); if (!uploading) uploadPhotos(e.dataTransfer.files); } }}
+          >
             <div className="flex items-center justify-between gap-2">
-              <span>Photos (first = cover)</span>
+              <span>Photos (first = cover) — drop files here, drag thumbnails to reorder</span>
               <label className={`cursor-pointer rounded-md border px-3 py-1 text-xs font-semibold ${uploading ? "opacity-50" : ""}`}>
                 {uploading ? "Uploading…" : "Upload photo"}
                 <input type="file" accept="image/png,image/jpeg,image/webp" multiple className="hidden" disabled={uploading} onChange={(e) => { uploadPhotos(e.target.files); e.target.value = ""; }} />
@@ -126,7 +133,11 @@ function ProductsAdmin() {
             {d.images.split("\n").filter((s) => s.trim()).length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {d.images.split("\n").map((s) => s.trim()).filter(Boolean).map((url, i, arr) => (
-                  <div key={url + i} className="relative">
+                  <div key={url + i} className={`relative cursor-move ${dragIdx === i ? "opacity-40" : ""}`} draggable
+                    onDragStart={(e) => { setDragIdx(i); e.dataTransfer.effectAllowed = "move"; }}
+                    onDragEnd={() => setDragIdx(null)}
+                    onDragOver={(e) => { if (dragIdx !== null) e.preventDefault(); }}
+                    onDrop={(e) => { if (dragIdx === null || dragIdx === i) return; e.preventDefault(); e.stopPropagation(); const next = [...arr]; const [m] = next.splice(dragIdx, 1); next.splice(i, 0, m); setD({ ...d, images: next.join("\n") }); setDragIdx(null); }}>
                     <img src={imageFor(url)} alt="" className="size-16 rounded border bg-muted object-contain" />
                     <button type="button" aria-label="Remove photo" onClick={() => setD({ ...d, images: arr.filter((_, j) => j !== i).join("\n") })} className="absolute -right-1 -top-1 rounded-full bg-primary px-1.5 text-xs text-primary-foreground">×</button>
                   </div>
