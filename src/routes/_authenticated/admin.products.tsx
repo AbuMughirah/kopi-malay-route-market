@@ -29,6 +29,7 @@ function ProductsAdmin() {
   const { data, isLoading, error } = useQuery({ queryKey: ["admin", "products"], queryFn: () => fetchAll() });
   const [d, setD] = useState<Draft | null>(null);
   const [filter, setFilter] = useState("");
+  const [flag, setFlag] = useState<"all" | "best" | "new" | "hidden">("all");
   const [syncing, setSyncing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [dropActive, setDropActive] = useState(false);
@@ -87,7 +88,9 @@ function ProductsAdmin() {
   if (error) return <p className="text-destructive">{error.message}</p>;
   if (isLoading || !data) return <p className="text-muted-foreground">Loading…</p>;
   const cat = (id: string) => data.categories.find((c) => c.id === id)?.name ?? "";
-  const rows = data.products.filter((p) => p.name.toLowerCase().includes(filter.toLowerCase()));
+  const flagMatch = { all: (_p: P) => true, best: (p: P) => p.is_featured, new: (p: P) => p.is_new_arrival, hidden: (p: P) => !p.is_active };
+  const rows = data.products.filter((p) => flagMatch[flag](p) && p.name.toLowerCase().includes(filter.toLowerCase()));
+  const pills = [["all", "All"], ["best", "★ Best Sellers"], ["new", "⚡ New Arrivals"], ["hidden", "Hidden"]] as const;
 
   return (
     <div className="space-y-4">
@@ -95,6 +98,14 @@ function ProductsAdmin() {
         <button onClick={() => edit()} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">+ Add product</button>
         <button onClick={doSync} disabled={syncing} className="flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-semibold disabled:opacity-50"><RefreshCw className={`size-4 ${syncing ? "animate-spin" : ""}`} /> Sync stock from Loyverse</button>
         <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter products…" className="ml-auto w-full max-w-xs rounded-md border bg-card px-3 py-2 text-sm" />
+      </div>
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by badge">
+        {pills.map(([k, label]) => (
+          <button key={k} type="button" aria-pressed={flag === k} onClick={() => setFlag(k)}
+            className={`rounded-full border px-3 py-1 text-xs font-semibold ${flag === k ? "border-foreground bg-foreground text-background" : "bg-card"}`}>
+            {label} ({data.products.filter(flagMatch[k]).length})
+          </button>
+        ))}
       </div>
       <p className="text-xs text-muted-foreground">Stock counts come from Loyverse (master record) and are read-only here. Add new items in Loyverse first, then link them below.</p>
 
