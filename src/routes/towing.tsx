@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { towingErrors, photoError, cleanPassport, TOWING_MAX_PHOTOS, RESCUE_PHONE } from "@/lib/towing";
 import { submitTowingRequest } from "@/lib/towing.functions";
-import { THAI_REGIONS, townsForRegion } from "@/lib/thai-regions";
+import { THAI_REGIONS, regionForTown } from "@/lib/thai-regions";
 import { loadMyProfile } from "@/lib/profile";
 import { capitalizeFormDetails, capitalizeFormValue } from "@/lib/form-capitals";
 
@@ -31,7 +31,7 @@ type Form = {
   destination_region: string; destination_town: string; destination: string;
 };
 const EMPTY: Form = { rider_type: "thai", nationality: "", passport_number: "", name: "", phone: "", plate_number: "", motorcycle_model: "", urgency: "", rider_transport: "", pickup_region: "", pickup_town: "", breakdown_location: "", maps_link: "", destination_region: "", destination_town: "", destination: "" };
-const ORDER = ["nationality", "passport_number", "name", "phone", "plate_number", "motorcycle_model", "urgency", "rider_transport", "pickup_region", "pickup_town", "breakdown_location", "maps_link", "destination_region", "destination_town", "destination"];
+const ORDER = ["nationality", "passport_number", "name", "phone", "plate_number", "motorcycle_model", "urgency", "rider_transport", "pickup_town", "pickup_region", "breakdown_location", "maps_link", "destination_town", "destination_region", "destination"];
 const field = "w-full rounded-md border bg-card px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ring";
 
 function TowingPage() {
@@ -147,20 +147,12 @@ function TowingPage() {
     return (
       <>
         <div className="space-y-1.5">
-          <Label k={rk}>{title} region *</Label>
-          <select id={`tow-${rk}`} value={form[rk]} onChange={(e) => setForm((f) => ({ ...f, [rk]: e.target.value, [tk]: "" }))} aria-invalid={!!errors[rk]} className={`${field} uppercase ${inv(rk)}`}>
-            <option value="">Select region…</option>
-            {THAI_REGIONS.map((g) => <option key={g.group} value={g.group}>{g.group}</option>)}
-          </select>
-          {err(rk)}
-        </div>
-        <div className="space-y-1.5">
           <Label k={tk}>{title} town *</Label>
-          <select id={`tow-${tk}`} disabled={!form[rk]} value={form[tk]} onChange={(e) => set(tk, e.target.value)} aria-invalid={!!errors[tk]} className={`${field} uppercase disabled:opacity-50 ${inv(tk)}`}>
-            <option value="">{form[rk] ? "Select town…" : "Select a region first"}</option>
-            {townsForRegion(form[rk]).map((t) => <option key={t} value={t}>{t}</option>)}
+          <select id={`tow-${tk}`} value={form[tk]} onChange={(e) => setForm((f) => ({ ...f, [tk]: e.target.value, [rk]: regionForTown(e.target.value) }))} aria-invalid={!!(errors[tk] || errors[rk])} className={`${field} uppercase ${inv(tk)}`}>
+            <option value="">Select town…</option>
+            {THAI_REGIONS.map((g) => <optgroup key={g.group} label={g.group}>{g.items.map((t) => <option key={t} value={t}>{t}</option>)}</optgroup>)}
           </select>
-          {err(tk)}
+          {err(tk) || err(rk)}
         </div>
       </>
     );

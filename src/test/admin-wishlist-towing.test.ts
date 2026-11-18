@@ -126,3 +126,13 @@ describe("towing alert map links", () => {
     expect(t).not.toContain('<a href="https://maps');
   });
 });
+
+import { regionForTown } from "@/lib/thai-regions";
+describe("towing town-only picker", () => {
+  it("derives the region from the town", () => {
+    expect(regionForTown("Pai")).toBe("Northern");
+    expect(regionForTown("Phuket")).toBe("Southern & Border");
+    expect(regionForTown("Other / not listed")).toBe("Other");
+    expect(regionForTown("Nowhere")).toBe("");
+  });
+});

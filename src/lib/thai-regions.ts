@@ -11,3 +11,8 @@ export function townsForRegion(region: string): string[] {
   const group = region === "Northern & Touring" ? "Northern" : region;
   return THAI_REGIONS.find((r) => r.group === group)?.items ?? [];
 }
+
+/** Region a listed town belongs to, so riders only pick the town. */
+export function regionForTown(town: string): string {
+  return THAI_REGIONS.find((r) => r.items.includes(town))?.group ?? "";
+}
