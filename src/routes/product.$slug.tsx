@@ -3,7 +3,7 @@ import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-ro
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { PriceTag } from "@/components/product-card";
@@ -61,9 +61,22 @@ function ProductPage() {
     else toast.success(`${p.name} added to cart`, { action: { label: "View cart", onClick: () => setOpen(true) } });
   };
 
+  const goBack = () => {
+    const idx = (window.history.state as { __TSR_index?: number } | null)?.__TSR_index ?? 0;
+    if (idx > 0) window.history.back();
+    else if (p.category_slug) navigate({ to: "/shop/$category", params: { category: p.category_slug } });
+    else navigate({ to: "/shop" });
+  };
+
   return (
     <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 md:grid-cols-2 md:gap-12">
-      <ProductImageViewer key={p.id} images={p.images} name={p.name} />
+      <div className="relative">
+        <ProductImageViewer key={p.id} images={p.images} name={p.name} />
+        <button type="button" aria-label="Close and go back" onClick={(e) => { e.stopPropagation(); goBack(); }}
+          className="absolute right-3 top-3 z-10 grid size-10 place-items-center rounded-full border border-foreground/15 bg-background/90 text-foreground shadow-md backdrop-blur-sm">
+          <X className="size-5" />
+        </button>
+      </div>
       <div>
         <Link to="/shop/$category" params={{ category: p.category_slug }} className="text-xs uppercase tracking-widest text-primary">{p.category_name}</Link>
         <div className="mt-2 flex items-start justify-between gap-3"><h1 className="font-display text-3xl font-bold md:text-4xl">{p.name}</h1><WishlistButton productId={p.id} name={p.name} className="shrink-0" /></div>

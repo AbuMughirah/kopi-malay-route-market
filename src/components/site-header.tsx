@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown, Heart, LayoutDashboard, Menu, Search, ShoppingBag, Truck, User, X } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { useWishlist } from "@/hooks/use-wishlist";
@@ -40,6 +40,15 @@ export function SiteHeader() {
   const [q, setQ] = useState("");
   const navigate = useNavigate();
   const close = () => setMenu(false);
+
+  useEffect(() => {
+    if (!menu) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMenu(false); };
+    window.addEventListener("keydown", onKey);
+    return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", onKey); };
+  }, [menu]);
 
   return (
     <header className="no-print sticky top-0 z-40 border-b bg-background text-foreground">
@@ -100,8 +109,9 @@ export function SiteHeader() {
             className="mx-auto block w-full max-w-2xl rounded-md border border-foreground/20 bg-transparent px-4 py-2 text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/40" />
         </form>
       )}
+      {menu && <div aria-hidden className="fixed inset-x-0 bottom-0 top-24 z-30 bg-foreground/40 sm:top-28 lg:hidden" onClick={close} />}
       {menu && (
-        <nav className="flex max-h-[70vh] flex-col gap-1 overflow-y-auto border-t border-foreground/10 px-4 py-4 lg:hidden">
+        <nav className="relative z-40 flex max-h-[70vh] bg-background flex-col gap-1 overflow-y-auto border-t border-foreground/10 px-4 py-4 lg:hidden">
           <p className="pb-1 font-display text-xs font-bold uppercase tracking-widest text-foreground/50">Shop</p>
           {NAV.map((n) => <NavLink key={n.label} item={n} onClick={close} className="py-1.5 pl-2 font-display text-sm uppercase text-foreground/85" />)}
           <p className="pb-1 pt-3 font-display text-xs font-bold uppercase tracking-widest text-foreground/50">Services</p>
