@@ -113,7 +113,7 @@ function Checkout() {
     try {
       const r = await checkPromo({ data: { code: code.trim(), country, email: f.email || undefined, phone: f.phone || undefined, items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })) } });
       if (r.ok) setPromo({ code: r.code, discount: r.discount, label: r.label });
-      else { setPromo(null); setPromoErr(r.error); }
+      else { setPromo(null); setPromoErr(r.error); toast.error(`Promo code not applied: ${r.error}`); }
     } catch { setPromo(null); setPromoErr("Could not check this code. Please try again."); }
     setPromoBusy(false);
   };
@@ -274,12 +274,12 @@ function Checkout() {
                 </div>
               ) : (
                 <div className="flex gap-2">
-                  <input id="promo" value={promoInput} onChange={(e) => setPromoInput(e.target.value.toUpperCase())} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void applyPromo(promoInput); } }} placeholder="ENTER CODE" className={field} />
+                  <input id="promo" value={promoInput} onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoErr(null); }} aria-invalid={!!promoErr} aria-describedby={promoErr ? "promo-error" : undefined} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void applyPromo(promoInput); } }} placeholder="ENTER CODE" className={`${field} ${promoErr ? "border-destructive ring-1 ring-destructive focus:ring-destructive" : ""}`} />
                   <Button type="button" variant="outline" disabled={promoBusy || !promoInput.trim()} onClick={() => void applyPromo(promoInput)}>{promoBusy ? "…" : "Apply"}</Button>
                 </div>
               )}
               {!user && pendingPromo && !promo && <p className="text-sm"><Link to="/auth" className="font-semibold underline">Sign in or create an account</Link> to activate your {pendingPromo} 5% discount.</p>}
-              {promoErr && <p role="alert" className="text-sm text-sale">{promoErr}</p>}
+              {promoErr && <div id="promo-error" role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-destructive"><p className="font-display text-sm font-bold uppercase">⛔ Code not usable</p><p className="mt-1 text-sm">{promoErr}. No discount applied — regular pricing applies.</p></div>}
             </div>
             <div className="flex justify-between"><dt>Subtotal{sale > 0 ? " (regular price)" : ""}</dt><dd>{unavailable ? "—" : money(subtotal + sale)}</dd></div>
             {!unavailable && sale > 0 && <div className="flex justify-between text-primary"><dt>Sale</dt><dd>- {money(sale)}</dd></div>}
