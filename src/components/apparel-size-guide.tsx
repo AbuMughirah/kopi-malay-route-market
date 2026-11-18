@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Ruler } from "lucide-react";
+import { Ruler, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { SIZE_GUIDE, formatMeasure, type SizeUnit } from "@/lib/size-guide";
 
 function Measure({ cm, inches, unit }: { cm: number; inches: number; unit: SizeUnit }) {
@@ -67,10 +67,20 @@ export function SizeGuideTable({ selected }: { selected?: string | undefined }) 
 export function ApparelSizeGuide({ selected }: { selected?: string | undefined }) {
   return <Dialog>
     <DialogTrigger asChild><Button variant="outline" size="sm"><Ruler className="mr-2 size-4" />Size guide</Button></DialogTrigger>
-    <DialogContent className="max-h-[90vh] w-[calc(100%-2rem)] max-w-lg overflow-auto p-5">
-      <DialogTitle className="font-display uppercase tracking-wide">Jerseys & T-shirts — Size guide</DialogTitle>
-      <DialogDescription>Chest and length measurements for every size we stock.</DialogDescription>
-      <SizeGuideTable selected={selected} />
+    <DialogContent className="flex max-h-[90vh] w-[calc(100%-2rem)] max-w-lg flex-col gap-0 overflow-hidden p-0 [&>button:last-child]:hidden">
+      <div className="flex items-start justify-between gap-3 border-b bg-background px-5 py-4">
+        <div className="min-w-0 space-y-1">
+          <DialogTitle className="font-display uppercase leading-tight tracking-wide">Jerseys & T-shirts — Size guide</DialogTitle>
+          <DialogDescription>Chest and length measurements for every size we stock.</DialogDescription>
+        </div>
+        <DialogClose className="grid size-10 shrink-0 place-items-center rounded-full border border-foreground/15 bg-muted text-foreground transition-colors hover:bg-foreground hover:text-background focus:outline-none focus:ring-2 focus:ring-ring" aria-label="Close size guide">
+          <X className="size-5" />
+        </DialogClose>
+      </div>
+      <div className="flex-1 overflow-y-auto px-5 py-4"><SizeGuideTable selected={selected} /></div>
+      <div className="border-t bg-background px-5 py-3">
+        <DialogClose asChild><Button className="h-11 w-full uppercase tracking-wide">Close guide</Button></DialogClose>
+      </div>
     </DialogContent>
   </Dialog>;
 }
