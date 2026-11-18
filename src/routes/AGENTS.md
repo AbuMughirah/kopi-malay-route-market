@@ -1,0 +1,2 @@
+- Every route declares `staticData.sitemap`; `/sitemap.xml` derives static pages from the router and lists categories/active products via the public client, failing whole on query errors so crawlers never get a partial map.
+- Share previews (`shareImageMeta`) go on leaf routes only and tag the same hosted photo the page leads with; bundled images have no stable public URL, so they are skipped.

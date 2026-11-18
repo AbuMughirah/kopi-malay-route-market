@@ -1,0 +1,1 @@
+- `router.tsx`: QueryClient uses a short default stale time for storefront reuse; `admin`, `owner-pin-status` and `order-ref` keys stay always-fresh so staff and payment screens never show cached state.

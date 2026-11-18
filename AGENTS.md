@@ -41,6 +41,3 @@
 - Role badges come from `src/lib/roles.ts` on the server; browser never derives roles.
 - Income/Orders dates and charts use Bangkok-time helpers in `src/lib/income.ts`.
 - Analytics: `recordVisit` → service-only `traffic_events` (no IP/cookies, no bots/staff); admin report prunes >90d.
-- Every route declares `staticData.sitemap`; `/sitemap.xml` derives static pages from the router and lists categories/active products via the public client, failing whole on query errors so crawlers never get a partial map.
-- Share previews use `shareImageMeta` from `src/lib/share-image.ts` on leaf routes only, tagging the same hosted photo the page leads with and skipping bundled images that have no stable public URL.
-- The QueryClient defaults to a short stale time for storefront reuse, while `admin`, `owner-pin-status` and `order-ref` keys stay always-fresh so staff and payment screens never show cached state.
