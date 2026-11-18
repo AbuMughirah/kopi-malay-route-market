@@ -137,7 +137,7 @@ function ProductsAdmin() {
                     onDragStart={(e) => { setDragIdx(i); e.dataTransfer.effectAllowed = "move"; }}
                     onDragEnd={() => setDragIdx(null)}
                     onDragOver={(e) => { if (dragIdx !== null) e.preventDefault(); }}
-                    onDrop={(e) => { if (dragIdx === null || dragIdx === i) return; e.preventDefault(); e.stopPropagation(); const next = [...arr]; const [m] = next.splice(dragIdx, 1); next.splice(i, 0, m); setD({ ...d, images: next.join("\n") }); setDragIdx(null); }}>
+                    onDrop={(e) => { if (dragIdx === null || dragIdx === i) return; e.preventDefault(); e.stopPropagation(); const next = [...arr]; const [m] = next.splice(dragIdx, 1); next.splice(i, 0, m!); setD({ ...d, images: next.join("\n") }); setDragIdx(null); }}>
                     <img src={imageFor(url)} alt="" className="size-16 rounded border bg-muted object-contain" />
                     <button type="button" aria-label="Remove photo" onClick={() => setD({ ...d, images: arr.filter((_, j) => j !== i).join("\n") })} className="absolute -right-1 -top-1 rounded-full bg-primary px-1.5 text-xs text-primary-foreground">×</button>
                   </div>
