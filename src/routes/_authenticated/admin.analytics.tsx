@@ -5,7 +5,7 @@ import { useState } from "react";
 import { getTrafficReport } from "@/lib/analytics.functions";
 import type { Range } from "@/lib/analytics";
 
-export const Route = createFileRoute("/_authenticated/admin/analytics")({
+export const Route = createFileRoute("/_authenticated/admin/analytics")({ staticData: { sitemap: false },
   head: () => ({ meta: [
     { title: "Traffic Analytics | Kopi Malay Admin" },
     { name: "description", content: "Visitors, conversion funnel, channels and top products for the Kopi Malay store." },

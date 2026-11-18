@@ -15,7 +15,7 @@ const presetChart = (p: DatePreset): ChartPeriod => p === "today" || p === "yest
 const defaultFilters = (): IncomeFilters => IncomeFiltersSchema.parse({ ...incomeDates("month"), chart: "day" });
 const incomeOptions = (filters: IncomeFilters) => queryOptions({ queryKey: ["admin", "income", filters], queryFn: () => getIncomeReport({ data: filters }), staleTime: 30_000 });
 
-export const Route = createFileRoute("/_authenticated/admin/income")({
+export const Route = createFileRoute("/_authenticated/admin/income")({ staticData: { sitemap: false },
   beforeLoad: async () => { try { await checkIncomeOwner(); } catch { throw redirect({ to: "/admin" }); } },
   loader: ({ context }) => context.queryClient.ensureQueryData(incomeOptions(defaultFilters())),
   head: () => ({ meta: [

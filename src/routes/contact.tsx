@@ -7,7 +7,7 @@ import { OFFICE_PHONE, OFFICE_TEL_URL, SUPPORT_WHATSAPP_PHONE, SUPPORT_WHATSAPP_
 const ADDRESS = "3, 13 Chomphon, Tambon Rahaeng, Mueang Tak District, Tak 63000";
 const MAPS = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("Kopi Malay, " + ADDRESS)}`;
 
-export const Route = createFileRoute("/contact")({
+export const Route = createFileRoute("/contact")({ staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Contact Us — Kopi Malay Tak" },

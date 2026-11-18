@@ -4,7 +4,7 @@ import { ProductCard } from "@/components/product-card";
 import { productsQuery } from "@/lib/queries";
 import { useWishlist } from "@/hooks/use-wishlist";
 
-export const Route = createFileRoute("/wishlist")({
+export const Route = createFileRoute("/wishlist")({ staticData: { sitemap: false },
   loader: ({ context }) => context.queryClient.ensureQueryData(productsQuery),
   head: () => ({
     meta: [

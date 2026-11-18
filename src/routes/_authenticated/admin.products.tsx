@@ -11,7 +11,7 @@ import { imageFor } from "@/lib/shop";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-export const Route = createFileRoute("/_authenticated/admin/products")({ component: ProductsAdmin });
+export const Route = createFileRoute("/_authenticated/admin/products")({ staticData: { sitemap: false }, component: ProductsAdmin });
 
 type Data = Awaited<ReturnType<typeof listAdminProducts>>;
 type P = Data["products"][number];

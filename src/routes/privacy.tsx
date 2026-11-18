@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, legalHead } from "@/components/legal-page";
 
-export const Route = createFileRoute("/privacy")({
+export const Route = createFileRoute("/privacy")({ staticData: { sitemap: true },
   head: () => legalHead("/privacy", "Privacy Policy", "How Kopi Malay collects, uses and protects customer, guest-order and towing request information."),
   component: () => (
     <LegalPage title="Privacy Policy">

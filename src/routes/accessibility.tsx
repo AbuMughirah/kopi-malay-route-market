@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, legalHead } from "@/components/legal-page";
 
-export const Route = createFileRoute("/accessibility")({
+export const Route = createFileRoute("/accessibility")({ staticData: { sitemap: true },
   head: () => legalHead("/accessibility", "Accessibility Statement", "Kopi Malay's commitment to an accessible, mobile-first shop for every rider and shopper."),
   component: () => (
     <LegalPage title="Accessibility Statement">

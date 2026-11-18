@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SUPPORT_WHATSAPP_PHONE } from "@/lib/whatsapp";
 import { LegalPage, legalHead } from "@/components/legal-page";
 
-export const Route = createFileRoute("/shipping-returns")({
+export const Route = createFileRoute("/shipping-returns")({ staticData: { sitemap: true },
   head: () => legalHead("/shipping-returns", "Shipping & Returns", "Shipping rates from Tak to Malaysia and Thailand, tumbler weight fees, East Malaysia surcharge and returns."),
   component: () => (
     <LegalPage title="Shipping & Returns">

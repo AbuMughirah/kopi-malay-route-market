@@ -10,7 +10,7 @@ import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { customerStatus } from "@/lib/order-flow";
 import { OrderTracking } from "@/components/order-tracking";
 
-export const Route = createFileRoute("/order-success")({
+export const Route = createFileRoute("/order-success")({ staticData: { sitemap: false },
   validateSearch: (s: Record<string, unknown>): { ref?: string; t?: string } => ({
     ref: typeof s["ref"] === "string" ? s["ref"] : "",
     t: typeof s["t"] === "string" ? s["t"] : "",

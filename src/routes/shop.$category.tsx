@@ -6,7 +6,7 @@ const NAMES: Record<string, string> = {
   "jerseys-t-shirts": "Jerseys & T-shirts", stickers: "Stickers", tumblers: "Tumblers", "fridge-magnets": "Fridge Magnets", patches: "Patches", lanyard: "Lanyard", "other-merch": "Other Merch",
 };
 
-export const Route = createFileRoute("/shop/$category")({
+export const Route = createFileRoute("/shop/$category")({ staticData: { sitemap: true },
   validateSearch: validateShopSearch,
   loader: async ({ context }) => {
     await Promise.all([context.queryClient.ensureQueryData(productsQuery), context.queryClient.ensureQueryData(categoriesQuery)]);

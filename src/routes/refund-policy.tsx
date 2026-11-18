@@ -4,7 +4,7 @@ import { OFFICE_PHONE, OFFICE_TEL_URL, SUPPORT_WHATSAPP_PHONE, SUPPORT_WHATSAPP_
 
 const link = "font-medium text-foreground underline underline-offset-4";
 
-export const Route = createFileRoute("/refund-policy")({
+export const Route = createFileRoute("/refund-policy")({ staticData: { sitemap: true },
   head: () => legalHead("/refund-policy", "Refund, Return & Exchange Policy", "How Kopi Malay handles QR payment verification, cancellations, exchanges, damaged items and bank refunds."),
   component: RefundPolicy,
 });

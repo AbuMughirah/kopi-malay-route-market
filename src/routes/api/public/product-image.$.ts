@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 // Serves catalog photos from the private product-images bucket. Product photos are
 // public storefront content; only paths inside that bucket can be read.
-export const Route = createFileRoute("/api/public/product-image/$")({
+export const Route = createFileRoute("/api/public/product-image/$")({ staticData: { sitemap: false },
   server: {
     handlers: {
       GET: async ({ params }) => {

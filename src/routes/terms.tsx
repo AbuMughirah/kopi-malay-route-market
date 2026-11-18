@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, legalHead } from "@/components/legal-page";
 
-export const Route = createFileRoute("/terms")({
+export const Route = createFileRoute("/terms")({ staticData: { sitemap: true },
   head: () => legalHead("/terms", "Terms & Conditions", "Terms for shopping Kopi Malay Route 1 merchandise, accounts, guest orders, pricing and services."),
   component: () => (
     <LegalPage title="Terms & Conditions">

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 // Loyverse calls this when counter stock changes. The payload is never trusted:
 // we only use it as a signal and re-read stock directly from the Loyverse API.
-export const Route = createFileRoute("/api/public/loyverse-webhook")({
+export const Route = createFileRoute("/api/public/loyverse-webhook")({ staticData: { sitemap: false },
   server: {
     handlers: {
       POST: async () => {

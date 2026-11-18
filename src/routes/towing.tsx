@@ -9,7 +9,7 @@ import { THAI_REGIONS, regionForTown } from "@/lib/thai-regions";
 import { loadMyProfile } from "@/lib/profile";
 import { capitalizeFormDetails, capitalizeFormValue } from "@/lib/form-capitals";
 
-export const Route = createFileRoute("/towing")({
+export const Route = createFileRoute("/towing")({ staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Towing & Rescue — Kopi Malay Route 1" },

@@ -21,7 +21,7 @@ import { capitalizeFormDetails, capitalizeFormValue } from "@/lib/form-capitals"
 import { compressImage } from "@/lib/image-compress";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
-export const Route = createFileRoute("/checkout/")({
+export const Route = createFileRoute("/checkout/")({ staticData: { sitemap: false },
   loader: ({ context }) => context.queryClient.ensureQueryData(productsQuery),
   validateSearch: (s: Record<string, unknown>): { cancelled?: number | undefined } => (s["cancelled"] ? { cancelled: 1 } : {}),
   head: () => ({

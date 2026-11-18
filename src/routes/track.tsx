@@ -9,7 +9,7 @@ import { OrderTracking } from "@/components/order-tracking";
 import { buildOrderWhatsAppUrl } from "@/lib/whatsapp";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 
-export const Route = createFileRoute("/track")({
+export const Route = createFileRoute("/track")({ staticData: { sitemap: false },
   validateSearch: (s: Record<string, unknown>): { ref?: string } => (typeof s["ref"] === "string" ? { ref: s["ref"] } : {}),
   head: () => ({
     meta: [

@@ -4,6 +4,7 @@ import { NewArrivalCarousel } from "@/components/new-arrival-carousel";
 import { ProductCard } from "@/components/product-card";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
 import { imageFor } from "@/lib/shop";
+import { SITE_ORIGIN, shareImageMeta } from "@/lib/share-image";
 import { Testimonials } from "@/components/testimonials";
 import { WelcomeBanner, WelcomePopup } from "@/components/welcome-offer";
 import partner1 from "@/assets/mita-ventures-logo.png.asset.json";
@@ -12,11 +13,15 @@ import towingPoster from "@/assets/towing-rescue-poster.jpg.asset.json";
 
 const CAT_IMG: Record<string, string> = { "jerseys-t-shirts": "tee", stickers: "chromium-black-yellow", tumblers: "tumbler-16oz", "fridge-magnets": "magnet-tak-city", patches: "patch", lanyard: "cap", "other-merch": "cap" };
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/")({ staticData: { sitemap: true },
   loader: async ({ context }) => {
-    await Promise.all([context.queryClient.ensureQueryData(productsQuery), context.queryClient.ensureQueryData(categoriesQuery)]);
+    const [products] = await Promise.all([context.queryClient.ensureQueryData(productsQuery), context.queryClient.ensureQueryData(categoriesQuery)]);
+    // Share preview uses the same photo as the first homepage slide.
+    const arrivals = products.filter((p) => p.is_new_arrival);
+    const lead = (arrivals.length ? arrivals : products.slice(-6))[0];
+    return { shareImage: lead ? imageFor(lead.images[0]) : null, shareAlt: lead?.name ?? "Kopi Malay Route 1 merchandise" };
   },
-  head: () => ({
+  head: ({ loaderData }) => ({
     meta: [
       { title: "Kopi Malay — Route 1 Official Merchandise" },
       { name: "description", content: "Official Route 1 merch for coffee lovers and riders: Mae Hong Son Loop stickers, riding jackets, tees and kopi tumblers." },
@@ -24,7 +29,10 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Gear for the long road and the perfect kopi stop." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:url", content: SITE_ORIGIN },
+      ...shareImageMeta(loaderData?.shareImage, loaderData?.shareAlt ?? "Kopi Malay Route 1 merchandise"),
     ],
+    links: [{ rel: "canonical", href: SITE_ORIGIN }],
   }),
   component: Home,
   errorComponent: ({ error }) => <p className="p-8 text-sale">{error instanceof Error ? error.message : "Something went wrong"}</p>,

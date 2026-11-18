@@ -14,7 +14,7 @@ import { SizeChange } from "@/components/size-change";
 import { canChangeSize } from "@/lib/size-exchange";
 import { CONTACT_OPTIONS, EMPTY_PROFILE, loadMyProfile, type Profile } from "@/lib/profile";
 
-export const Route = createFileRoute("/_authenticated/profile")({
+export const Route = createFileRoute("/_authenticated/profile")({ staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "My Profile — Kopi Malay Route 1" },

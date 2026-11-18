@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { getUserOrders, listRoleChanges, listUsers, setAdminRole } from "@/lib/admin.functions";
 import { filterByRole, roleCounts, ROLE_CHANGE_PAGE, ROLE_LABEL, type UserKind } from "@/lib/roles";
 
-export const Route = createFileRoute("/_authenticated/admin/users")({
+export const Route = createFileRoute("/_authenticated/admin/users")({ staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "Users · Kopi Malay Admin" }, { name: "robots", content: "noindex" }] }),
   validateSearch: (s: Record<string, unknown>): { viewUser?: string } => (typeof s["viewUser"] === "string" && /^[0-9a-f-]{36}$/i.test(s["viewUser"]) ? { viewUser: s["viewUser"] } : {}),
   component: UsersAdmin,

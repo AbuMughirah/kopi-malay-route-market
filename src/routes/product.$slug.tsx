@@ -9,17 +9,19 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { PriceTag } from "@/components/product-card";
 import { useCart } from "@/hooks/use-cart";
 import { productQuery } from "@/lib/queries";
-import { availableStock, isApparel, shippingDescription } from "@/lib/shop";
+import { availableStock, imageFor, isApparel, shippingDescription } from "@/lib/shop";
+import { SITE_ORIGIN, shareImageMeta } from "@/lib/share-image";
 import { ProductImageViewer } from "@/components/product-image-viewer";
 import { ApparelSizeGuide, SizeGuideTable } from "@/components/apparel-size-guide";
 
-export const Route = createFileRoute("/product/$slug")({
+export const Route = createFileRoute("/product/$slug")({ staticData: { sitemap: true },
   loader: async ({ context, params }) => {
     const p = await context.queryClient.ensureQueryData(productQuery(params.slug));
     if (!p) throw notFound();
-    return { name: p.name, description: p.description };
+    return { name: p.name, description: p.description, shareImage: imageFor(p.images[0]) };
   },
-  head: ({ loaderData }) => ({
+  head: ({ loaderData, params }) => ({
+    links: loaderData ? [{ rel: "canonical", href: `${SITE_ORIGIN}/product/${params.slug}` }] : [],
     meta: loaderData
       ? [
           { title: `${loaderData.name} — Kopi Malay Route 1` },
@@ -28,6 +30,8 @@ export const Route = createFileRoute("/product/$slug")({
           { property: "og:description", content: loaderData.description.slice(0, 155) },
           { property: "og:type", content: "product" },
           { name: "twitter:card", content: "summary_large_image" },
+          { property: "og:url", content: `${SITE_ORIGIN}/product/${params.slug}` },
+          ...shareImageMeta(loaderData.shareImage, loaderData.name),
         ]
       : [{ title: "Product unavailable — Kopi Malay" }, { name: "robots", content: "noindex" }],
   }),

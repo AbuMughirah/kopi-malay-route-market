@@ -10,7 +10,7 @@ const faqs: { q: string; a: React.ReactNode }[] = [
   { q: "How can I track my order?", a: <>We email your tracking number as soon as your parcel ships — J&amp;T Express for Malaysia, Flash Express for Thailand. You can also check anytime on <Link to="/track" className="underline">Track your order</Link> with your order number and checkout email, or under My profile if you are a member.</> },
 ];
 
-export const Route = createFileRoute("/faq")({
+export const Route = createFileRoute("/faq")({ staticData: { sitemap: true },
   head: () => legalHead("/faq", "FAQ", "Answers about ordering, shipping to Malaysia and Thailand, QR payments, sticker bundles and Towing & Rescue."),
   component: () => (
     <LegalPage title="Frequently Asked Questions">

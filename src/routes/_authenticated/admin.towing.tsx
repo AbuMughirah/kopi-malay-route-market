@@ -7,7 +7,7 @@ import { listTowing, updateTowing } from "@/lib/admin.functions";
 import { TOWING_STATUSES, URGENCY_LABEL, TRANSPORT_LABEL } from "@/lib/towing";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-export const Route = createFileRoute("/_authenticated/admin/towing")({ component: TowingAdmin });
+export const Route = createFileRoute("/_authenticated/admin/towing")({ staticData: { sitemap: false }, component: TowingAdmin });
 
 type Row = Awaited<ReturnType<typeof listTowing>>[number];
 type Status = (typeof TOWING_STATUSES)[number];

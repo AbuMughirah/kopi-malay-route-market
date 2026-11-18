@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ShopView, validateShopSearch } from "@/components/shop-view";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
 
-export const Route = createFileRoute("/shop/")({
+export const Route = createFileRoute("/shop/")({ staticData: { sitemap: true },
   validateSearch: validateShopSearch,
   loader: async ({ context }) => {
     await Promise.all([context.queryClient.ensureQueryData(productsQuery), context.queryClient.ensureQueryData(categoriesQuery)]);

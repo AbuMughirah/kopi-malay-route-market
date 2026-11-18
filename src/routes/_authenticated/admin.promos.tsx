@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { listPromos, savePromo } from "@/lib/admin.functions";
 
-export const Route = createFileRoute("/_authenticated/admin/promos")({ component: PromosAdmin });
+export const Route = createFileRoute("/_authenticated/admin/promos")({ staticData: { sitemap: false }, component: PromosAdmin });
 
 type Draft = {
   id?: string; code: string; discount_type: "percentage" | "fixed_amount"; discount_value: string; discount_myr: string; discount_thb: string; receipt_discount_thb: string;

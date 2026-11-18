@@ -19,6 +19,7 @@ import { Route as OrderSuccessRouteImport } from './routes/order-success'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
 import { Route as ShippingReturnsRouteImport } from './routes/shipping-returns'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TowingRouteImport } from './routes/towing'
 import { Route as TrackRouteImport } from './routes/track'
@@ -87,6 +88,11 @@ const RefundPolicyRoute = RefundPolicyRouteImport.update({
 const ShippingReturnsRoute = ShippingReturnsRouteImport.update({
   id: '/shipping-returns',
   path: '/shipping-returns',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -208,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/shipping-returns': typeof ShippingReturnsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/towing': typeof TowingRoute
   '/track': typeof TrackRoute
@@ -239,6 +246,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/shipping-returns': typeof ShippingReturnsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/towing': typeof TowingRoute
   '/track': typeof TrackRoute
@@ -271,6 +279,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/shipping-returns': typeof ShippingReturnsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/towing': typeof TowingRoute
   '/track': typeof TrackRoute
@@ -304,6 +313,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/refund-policy'
     | '/shipping-returns'
+    | '/sitemap.xml'
     | '/terms'
     | '/towing'
     | '/track'
@@ -335,6 +345,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/refund-policy'
     | '/shipping-returns'
+    | '/sitemap.xml'
     | '/terms'
     | '/towing'
     | '/track'
@@ -366,6 +377,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/refund-policy'
     | '/shipping-returns'
+    | '/sitemap.xml'
     | '/terms'
     | '/towing'
     | '/track'
@@ -399,6 +411,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   RefundPolicyRoute: typeof RefundPolicyRoute
   ShippingReturnsRoute: typeof ShippingReturnsRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   TowingRoute: typeof TowingRoute
   TrackRoute: typeof TrackRoute
@@ -482,6 +495,13 @@ declare module '@tanstack/react-router' {
       path: '/shipping-returns'
       fullPath: '/shipping-returns'
       preLoaderRoute: typeof ShippingReturnsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -674,6 +694,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   RefundPolicyRoute: RefundPolicyRoute,
   ShippingReturnsRoute: ShippingReturnsRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   TowingRoute: TowingRoute,
   TrackRoute: TrackRoute,
