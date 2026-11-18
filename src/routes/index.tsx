@@ -4,7 +4,7 @@ import { NewArrivalCarousel } from "@/components/new-arrival-carousel";
 import { ProductCard } from "@/components/product-card";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
 import { imageFor } from "@/lib/shop";
-import { SITE_ORIGIN, shareImageMeta } from "@/lib/share-image";
+import { HOME_SHARE_ALT, HOME_SHARE_IMAGE, SITE_ORIGIN, shareImageMeta } from "@/lib/share-image";
 import { Testimonials } from "@/components/testimonials";
 import { WelcomeBanner, WelcomePopup } from "@/components/welcome-offer";
 import partner1 from "@/assets/mita-ventures-logo.png.asset.json";
@@ -15,13 +15,9 @@ const CAT_IMG: Record<string, string> = { "jerseys-t-shirts": "tee", stickers: "
 
 export const Route = createFileRoute("/")({ staticData: { sitemap: true },
   loader: async ({ context }) => {
-    const [products] = await Promise.all([context.queryClient.ensureQueryData(productsQuery), context.queryClient.ensureQueryData(categoriesQuery)]);
-    // Share preview uses the same photo as the first homepage slide.
-    const arrivals = products.filter((p) => p.is_new_arrival);
-    const lead = (arrivals.length ? arrivals : products.slice(-6))[0];
-    return { shareImage: lead ? imageFor(lead.images[0]) : null, shareAlt: lead?.name ?? "Kopi Malay Route 1 merchandise" };
+    await Promise.all([context.queryClient.ensureQueryData(productsQuery), context.queryClient.ensureQueryData(categoriesQuery)]);
   },
-  head: ({ loaderData }) => ({
+  head: () => ({
     meta: [
       { title: "Kopi Malay — Route 1 Official Merchandise" },
       { name: "description", content: "Official Route 1 merch for coffee lovers and riders: Mae Hong Son Loop stickers, riding jackets, tees and kopi tumblers." },
@@ -30,7 +26,9 @@ export const Route = createFileRoute("/")({ staticData: { sitemap: true },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:url", content: SITE_ORIGIN },
-      ...shareImageMeta(loaderData?.shareImage, loaderData?.shareAlt ?? "Kopi Malay Route 1 merchandise"),
+      ...shareImageMeta(HOME_SHARE_IMAGE, HOME_SHARE_ALT),
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
     ],
     links: [{ rel: "canonical", href: SITE_ORIGIN }],
   }),

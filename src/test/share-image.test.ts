@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { shareImageMeta, shareImageUrl } from "@/lib/share-image";
+import { HOME_SHARE_IMAGE, shareImageMeta, shareImageUrl } from "@/lib/share-image";
 
 describe("share preview images", () => {
   it("makes hosted CDN photos absolute on kopimalay.com", () => {
@@ -22,5 +22,9 @@ describe("share preview images", () => {
     const tw = meta.find((m) => "name" in m && m.name === "twitter:image")?.content;
     expect(og).toBe("https://kopimalay.com/__l5e/assets-v1/abc/tee.jpg");
     expect(tw).toBe(og);
+  });
+  it("uses the fixed Kopi Malay x Tak Route 1 brand card for homepage shares", () => {
+    expect(HOME_SHARE_IMAGE).toMatch(/^\/__l5e\/assets-v1\/.+\/kopi-malay-share-card\.jpg$/);
+    expect(shareImageUrl(HOME_SHARE_IMAGE)).toBe(`https://kopimalay.com${HOME_SHARE_IMAGE}`);
   });
 });

@@ -1,5 +1,11 @@
+import homeShareCard from "@/assets/kopi-malay-share-card.jpg.asset.json";
+
 /** Public site origin used for absolute share-preview and sitemap URLs. */
 export const SITE_ORIGIN = "https://kopimalay.com";
+
+/** Fixed 1200x630 brand card (Kopi Malay x Tak Route 1 logos, centred for square crops) used for homepage shares. */
+export const HOME_SHARE_IMAGE = homeShareCard.url;
+export const HOME_SHARE_ALT = "Kopi Malay x Tak Route 1 official merchandise";
 
 /**
  * Absolute URL for a social share preview (WhatsApp, Telegram, Facebook), or null.
