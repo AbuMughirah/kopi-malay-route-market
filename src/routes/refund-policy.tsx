@@ -25,9 +25,10 @@ function RefundPolicy() {
 
       <h2>2. Order Cancellation & Modification (Before Dispatch)</h2>
       <ul>
-        <li>You may request an order cancellation, address change, or size change before your parcel is packed and dispatched by contacting us immediately with your order reference.</li>
+        <li><strong>In-app size changes for registered customers:</strong> If you placed an apparel order (T-shirt or Jersey) while signed in to your account, you can change your selected size free of charge in My Profile while your order is still "Pending Verification" (up to 2 size changes per order, subject to stock availability).</li>
+        <li><strong>Manual changes &amp; guest orders:</strong> If you checked out as a guest, or need to cancel or change your delivery address, contact us on WhatsApp (<a href={SUPPORT_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className={link}>{SUPPORT_WHATSAPP_PHONE}</a>) immediately with your order reference, before your parcel is packed and dispatched.</li>
+        <li><strong>Lock after verification:</strong> Once your payment is verified, in-app size changes are no longer available. Once an order has been packed, processed, or handed to the courier, it cannot be cancelled or modified.</li>
         <li>For approved pre-dispatch cancellations, refunds will be issued directly to your original bank account via manual transfer.</li>
-        <li>Once an order has been packed, processed, or handed to the courier, it cannot be cancelled.</li>
       </ul>
 
       <h2>3. Return & Exchange Eligibility (After Delivery)</h2>
