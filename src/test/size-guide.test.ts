@@ -7,8 +7,8 @@ describe("apparel size guide", () => {
   });
   it("keeps the official chart measurements", () => {
     const by = Object.fromEntries(SIZE_GUIDE.map((r) => [r.size, r]));
-    expect(by.S).toMatchObject({ chestCm: 96.5, chestIn: 38, lengthCm: 68.6, lengthIn: 27 });
-    expect(by.L).toMatchObject({ chestCm: 106.7, chestIn: 42, lengthCm: 73.7, lengthIn: 29 });
+    expect(by["S"]).toMatchObject({ chestCm: 96.5, chestIn: 38, lengthCm: 68.6, lengthIn: 27 });
+    expect(by["L"]).toMatchObject({ chestCm: 106.7, chestIn: 42, lengthCm: 73.7, lengthIn: 29 });
     expect(by["5XL"]).toMatchObject({ chestCm: 132.1, chestIn: 52, lengthCm: 86.4, lengthIn: 34 });
   });
   it("formats each unit with one decimal like the printed chart", () => {

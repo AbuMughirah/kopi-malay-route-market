@@ -15,7 +15,7 @@ const UNITS: { value: SizeUnit; label: string }[] = [
   { value: "in", label: "Inches" },
 ];
 
-export function SizeGuideTable({ selected }: { selected?: string }) {
+export function SizeGuideTable({ selected }: { selected?: string | undefined }) {
   const [unit, setUnit] = useState<SizeUnit>("both");
   return (
     <div className="space-y-3">
@@ -64,7 +64,7 @@ export function SizeGuideTable({ selected }: { selected?: string }) {
   );
 }
 
-export function ApparelSizeGuide({ selected }: { selected?: string }) {
+export function ApparelSizeGuide({ selected }: { selected?: string | undefined }) {
   return <Dialog>
     <DialogTrigger asChild><Button variant="outline" size="sm"><Ruler className="mr-2 size-4" />Size guide</Button></DialogTrigger>
     <DialogContent className="max-h-[90vh] w-[calc(100%-2rem)] max-w-lg overflow-auto p-5">
