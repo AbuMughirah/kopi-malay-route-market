@@ -17,6 +17,7 @@ export const Route = createFileRoute("/shipping-returns")({
         <li>Jerseys & T-shirts: RM 20 for every block of 2 shirts.</li>
         <li>Tumblers: RM 20 for every block of 2 tumblers.</li>
         <li>Accessories (stickers, magnets, patches, lanyards, other merch): RM 20 for every block of 20 units.</li>
+        <li>Big-item bonus: each jersey, T-shirt or tumbler ships up to 20 accessories free. Only accessories beyond that allowance are charged at RM 20 per block of 20 (e.g. 1 shirt + 20 stickers = RM 20; 1 shirt + 21 stickers = RM 40).</li>
       </ul>
       <h2>Sabah & Sarawak</h2>
       <p>The Peninsular Malaysia rate applies, plus a flat RM 10 surcharge once per order.</p>
