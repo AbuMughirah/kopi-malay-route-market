@@ -309,7 +309,7 @@ function Checkout() {
           <Button type="submit" disabled={busy || promoBusy || compressing || unavailable || ship == null} className="mt-5 h-auto w-full py-3 font-display font-semibold uppercase">
             {busy ? "Submitting…" : "Confirm Order & Submit Receipt"}
           </Button>
-          <p className="mt-2 text-center text-xs text-muted-foreground">{country === "Thailand" ? "Thailand: apparel and accessories free; tumblers THB 60 per started kilogram." : "Malaysia: RM 20 per 2 tumblers, RM 20 per 2 apparel items, and RM 20 per 20 accessories. Each apparel or tumbler item ships up to 20 accessories free. Sabah & Sarawak: add RM 10 per order."}</p>
+          <p className="mt-2 text-center text-xs text-muted-foreground">{country === "Thailand" ? "Thailand: apparel and accessories free; tumblers THB 60 per started kilogram." : "Malaysia: RM 20 per 2 tumblers, RM 20 per 2 apparel items, and RM 20 per 20 accessories. Each block of 2 apparel items or 2 tumblers ships up to 20 accessories free. Sabah & Sarawak: add RM 10 per order."}</p>
         </aside>
       </form>
       <AlertDialog open={confirming} onOpenChange={setConfirming}>
