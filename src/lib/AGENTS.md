@@ -1,3 +1,3 @@
 - Courier/tracking links come only from `src/lib/tracking.ts`; public `lookupOrder` returns status/tracking/items only and rate-limits failed guesses via service-only hashed logs, since order numbers are guessable.
-- `one_per_customer` promos require sign-in and are rejected via `hasUsedPromo` when a prior non-rejected order shares account, email or phone.
+- `one_per_customer` promos require sign-in and are rejected via `hasUsedPromo` when a prior non-rejected, non-refunded order shares account, email or phone.
 - Customer size changes go through `changeItemSize` → service-only `customer_change_item_size` (Pending Verification only, ownership, capped, history + stock/receipt snapshots in one transaction); verified orders need staff Undo Verify, so Loyverse sales never drift.

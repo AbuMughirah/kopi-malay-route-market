@@ -48,11 +48,11 @@ export function normPhone(p: string | null | undefined): string {
 }
 
 export type PriorOrder = { user_id: string | null; guest_email: string | null; phone: string | null; status: string };
-/** True when a non-rejected earlier order by this user, email or phone already used the code. */
+/** True when a non-rejected, non-refunded earlier order by this user, email or phone already used the code. */
 export function hasUsedPromo(orders: PriorOrder[], who: { userId: string | null; email?: string | null | undefined; phone?: string | null | undefined }): boolean {
   const email = normEmail(who.email);
   const phone = normPhone(who.phone);
-  return orders.some((o) => o.status !== "rejected" && (
+  return orders.some((o) => o.status !== "rejected" && o.status !== "refunded" && (
     (who.userId != null && o.user_id === who.userId)
     || (email !== "" && normEmail(o.guest_email) === email)
     || (phone.length >= 7 && normPhone(o.phone) === phone)));

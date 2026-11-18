@@ -24,3 +24,10 @@ describe("limit 1 per customer", () => {
   it("allows a new customer", () => expect(used(prior, { userId: "u2", email: "b@x.com", phone: "0199999999" })).toBe(false));
   it("ignores rejected orders", () => expect(used([{ ...prior[0]!, status: "rejected" }], { userId: "u1" })).toBe(false));
 });
+
+describe("limit 1 per customer: cancelled orders", () => {
+  const base = { user_id: "u1", guest_email: "a@x.com", phone: null };
+  it("refunded order does not count", () => expect(used([{ ...base, status: "refunded" }], { userId: "u1" })).toBe(false));
+  it("rejected order does not count", () => expect(used([{ ...base, status: "rejected" }], { userId: "u1" })).toBe(false));
+  it("pending order still counts", () => expect(used([{ ...base, status: "pending_verification" }], { userId: "u1" })).toBe(true));
+});
