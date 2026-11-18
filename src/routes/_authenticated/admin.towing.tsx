@@ -113,7 +113,7 @@ function Details({ t, saving, onStatus }: { t: Row; saving: boolean; onStatus: (
           <section>
             <h3 className="font-display text-xs font-bold uppercase">Photos</h3>
             <div className="mt-2 flex flex-wrap gap-2">
-              {t.photo_urls.map((u, i) => <a key={u} href={u} target="_blank" rel="noreferrer"><img src={u} alt={`Photo ${i + 1}`} className="h-20 w-20 rounded-md border object-cover" /></a>)}
+              {t.photo_urls.map((u, i) => <a key={u} href={u} target="_blank" rel="noreferrer"><img src={u} alt={`Photo ${i + 1}`} loading="lazy" decoding="async" className="h-20 w-20 rounded-md border object-cover" /></a>)}
             </div>
           </section>
         )}

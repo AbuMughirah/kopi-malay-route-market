@@ -52,7 +52,7 @@ export function Testimonials() {
               className="w-44 shrink-0 snap-start overflow-hidden rounded-md border bg-muted md:w-56"
               aria-label={`Open rider review ${i + 1}`}
             >
-              <img src={r.url} alt={`Rider review ${i + 1}`} loading="lazy" className="aspect-[3/5] w-full object-cover object-top" />
+              <img src={r.url} alt={`Rider review ${i + 1}`} loading="lazy" decoding="async" className="aspect-[3/5] w-full object-cover object-top" />
             </button>
           ))}
         </div>
@@ -76,7 +76,7 @@ export function Testimonials() {
                   onTransform={(_, s) => i === current && setZoomed(s.scale > 1.01)}
                 >
                   <TransformComponent wrapperClass="!w-full" contentClass="!w-full">
-                    <img src={r.url} alt={`Rider review ${i + 1}`} loading="lazy" className="max-h-[78vh] w-full object-contain" />
+                    <img src={r.url} alt={`Rider review ${i + 1}`} loading="lazy" decoding="async" className="max-h-[78vh] w-full object-contain" />
                   </TransformComponent>
                 </TransformWrapper>
               </div>

@@ -26,7 +26,7 @@ function Contact() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       <h1 className="font-display text-3xl font-bold uppercase md:text-5xl">Contact us</h1>
-      <img src={shop.url} alt="Kopi Malay shop in Tak" className="mt-6 aspect-[16/9] w-full rounded-lg object-cover" />
+      <img src={shop.url} alt="Kopi Malay shop in Tak" loading="lazy" decoding="async" className="mt-6 aspect-[16/9] w-full rounded-lg object-cover" />
       <div className="mt-8 grid gap-6 md:grid-cols-2">
         <div className="space-y-5">
           <p className={row}><MapPin className="mt-0.5 size-5 shrink-0" /><span><strong className="block">Kopi Malay</strong>{ADDRESS}</span></p>

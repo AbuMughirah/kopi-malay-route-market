@@ -258,7 +258,7 @@ function Checkout() {
           <ul className="mt-4 space-y-3">
             {lines.map((i) => (
               <li key={i.productId + i.variant} className="flex gap-3 text-sm">
-                <img src={imageFor(i.product?.images[0] ?? i.image)} alt="" className="size-14 rounded border object-contain" />
+                <img src={imageFor(i.product?.images[0] ?? i.image)} alt="" loading="lazy" decoding="async" className="size-14 rounded border object-contain" />
                 <div className="flex-1"><p className="font-medium">{i.name}</p><p className="text-muted-foreground">{i.variant && `${i.variant} · `}Qty {i.quantity}</p></div>
                 <span>{i.price == null ? "Unavailable" : money(i.price * i.quantity)}</span>
               </li>

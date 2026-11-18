@@ -28,7 +28,7 @@ export function CartDrawer() {
             <ul className="flex-1 divide-y overflow-y-auto px-4">
               {items.map((i) => (
                 <li key={i.productId + i.variant} className="flex gap-3 py-4">
-                  <img src={imageFor(i.image)} alt={i.name} className="size-20 rounded-md border object-cover" />
+                  <img src={imageFor(i.image)} alt={i.name} loading="lazy" decoding="async" className="size-20 rounded-md border object-cover" />
                   <div className="flex flex-1 flex-col">
                     <p className="font-medium leading-tight">{i.name}</p>
                     {i.variant && <p className="text-xs text-muted-foreground">Size: {i.variant}</p>}

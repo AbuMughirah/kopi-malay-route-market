@@ -260,6 +260,13 @@
       "when": 1794922228580,
       "tag": "0036_traffic_events",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1794990752281,
+      "tag": "0037_deprecate_legacy_stripe_columns",
+      "breakpoints": true
     }
   ]
 }

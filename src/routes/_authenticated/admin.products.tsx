@@ -138,7 +138,7 @@ function ProductsAdmin() {
                     onDragEnd={() => setDragIdx(null)}
                     onDragOver={(e) => { if (dragIdx !== null) e.preventDefault(); }}
                     onDrop={(e) => { if (dragIdx === null || dragIdx === i) return; e.preventDefault(); e.stopPropagation(); const next = [...arr]; const [m] = next.splice(dragIdx, 1); next.splice(i, 0, m!); setD({ ...d, images: next.join("\n") }); setDragIdx(null); }}>
-                    <img src={imageFor(url)} alt="" className="size-16 rounded border bg-muted object-contain" />
+                    <img src={imageFor(url)} alt="" loading="lazy" decoding="async" className="size-16 rounded border bg-muted object-contain" />
                     <button type="button" aria-label="Remove photo" onClick={() => setD({ ...d, images: arr.filter((_, j) => j !== i).join("\n") })} className="absolute -right-1 -top-1 rounded-full bg-primary px-1.5 text-xs text-primary-foreground">×</button>
                   </div>
                 ))}
@@ -167,7 +167,7 @@ function ProductsAdmin() {
           <tbody>
             {rows.map((p) => (
               <tr key={p.id} className={`border-t align-top ${p.is_active ? "" : "opacity-50"}`}>
-                <td className="px-3 py-2"><img src={imageFor(p.images[0])} alt="" className="size-12 rounded bg-muted object-contain" /></td>
+                <td className="px-3 py-2"><img src={imageFor(p.images[0])} alt="" loading="lazy" decoding="async" className="size-12 rounded bg-muted object-contain" /></td>
                 <td className="px-3 py-2 font-medium">{p.name}</td>
                 <td className="px-3 py-2">{cat(p.category_id)}</td>
                 <td className="px-3 py-2">{p.sale_price != null ? <><s>{p.price.toFixed(2)}</s> {p.sale_price.toFixed(2)}</> : p.price.toFixed(2)}</td>

@@ -14,7 +14,7 @@ export function ProductImageViewer({ images, name }: { images: string[]; name: s
       <img src={imageFor(gallery[index])} alt={name} width={1024} height={1024} className="size-full object-contain" />
       <span className="absolute bottom-3 right-3 rounded-md bg-card p-2 text-foreground"><ZoomIn className="size-5" /></span>
     </Button>
-    {gallery.length > 1 && <div className="mt-3 flex flex-wrap gap-2">{gallery.map((g, i) => <Button key={g} variant="outline" aria-label={`View photo ${i + 1}`} aria-pressed={i === index} onClick={() => setIndex(i)} className={`size-20 overflow-hidden p-0 ${i === index ? "border-primary" : ""}`}><img src={imageFor(g)} alt="" className="size-full object-contain" /></Button>)}</div>}
+    {gallery.length > 1 && <div className="mt-3 flex flex-wrap gap-2">{gallery.map((g, i) => <Button key={g} variant="outline" aria-label={`View photo ${i + 1}`} aria-pressed={i === index} onClick={() => setIndex(i)} className={`size-20 overflow-hidden p-0 ${i === index ? "border-primary" : ""}`}><img src={imageFor(g)} alt="" loading="lazy" decoding="async" className="size-full object-contain" /></Button>)}</div>}
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="w-[calc(100%-2rem)] max-w-5xl gap-3 p-4">
         <DialogTitle className="pr-8 text-base">{name}</DialogTitle>

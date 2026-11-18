@@ -1,0 +1,2 @@
+COMMENT ON COLUMN public.orders.stripe_session_id IS 'DEPRECATED: Stripe removed; payments are manual regional QR.';
+COMMENT ON COLUMN public.orders.stripe_payment_intent_id IS 'DEPRECATED: Stripe removed; payments are manual regional QR.';

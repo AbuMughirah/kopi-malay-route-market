@@ -57,7 +57,7 @@ function Home() {
         <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-7">
           {categories.map((c) => (
             <Link key={c.slug} to="/shop/$category" params={{ category: c.slug }} className="group relative aspect-[4/5] overflow-hidden rounded-lg border bg-muted">
-              <img src={imageFor(products.find((p) => p.category_slug === c.slug)?.images[0] ?? CAT_IMG[c.slug])} alt={c.name} loading="lazy" className="size-full object-contain transition-transform duration-500 group-hover:scale-105" />
+              <img src={imageFor(products.find((p) => p.category_slug === c.slug)?.images[0] ?? CAT_IMG[c.slug])} alt={c.name} loading="lazy" decoding="async" className="size-full object-contain transition-transform duration-500 group-hover:scale-105" />
               <span className="absolute inset-x-2 bottom-2 rounded-sm bg-ink px-2 py-1.5 text-center font-display text-sm font-semibold uppercase text-ink-foreground">{c.name}</span>
             </Link>
           ))}

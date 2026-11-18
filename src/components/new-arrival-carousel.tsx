@@ -22,7 +22,7 @@ export function NewArrivalCarousel({ products }: { products: Product[] }) {
     <section className="relative border-b bg-background text-foreground" aria-roledescription="carousel" aria-label="New arrivals">
       <div className="overflow-hidden" ref={ref}>
         <div className="flex">
-          {products.map((p) => (
+          {products.map((p, i) => (
             <div key={p.id} className="min-w-0 shrink-0 grow-0 basis-full">
               <div className="mx-auto grid min-h-[520px] max-w-7xl items-center gap-6 px-6 py-10 md:grid-cols-2 md:px-16">
                 <div className="order-2 md:order-1">
@@ -32,7 +32,7 @@ export function NewArrivalCarousel({ products }: { products: Product[] }) {
                   <Link to="/product/$slug" params={{ slug: p.slug }} className="mt-6 inline-block rounded-md bg-brand px-6 py-3 font-display font-semibold uppercase text-brand-foreground hover:opacity-90">Shop now</Link>
                 </div>
                 <Link to="/product/$slug" params={{ slug: p.slug }} className="order-1 md:order-2">
-                  <img src={imageFor(p.images[0])} alt={p.name} className="mx-auto aspect-square w-full max-w-md rounded-lg bg-muted object-contain" />
+                  <img src={imageFor(p.images[0])} alt={p.name} width={448} height={448} loading={i === 0 ? "eager" : "lazy"} fetchPriority={i === 0 ? "high" : "auto"} decoding={i === 0 ? "sync" : "async"} className="mx-auto aspect-square w-full max-w-md rounded-lg bg-muted object-contain" />
                 </Link>
               </div>
             </div>
