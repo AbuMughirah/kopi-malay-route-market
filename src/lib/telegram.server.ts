@@ -5,16 +5,44 @@ const GATEWAY_URL = "https://connector-gateway.lovable.dev/telegram";
 type Ctx = { headers: Record<string, string>; chatId: string; baseUrl: string; direct?: boolean };
 
 async function resolveCtx(tag: string): Promise<Ctx | null> {
-  // All alerts go only to Sapey's two bots: towing → towing bot/chat, everything else → orders bot/chat.
-  // Never fall back to any other bot or chat, so alerts never reach the old recipient.
-  const towing = tag === "towing";
-  const token = process.env[towing ? "SAPEY_TOWING_BOT_TOKEN" : "SAPEY_ORDERS_BOT_TOKEN"]?.trim();
-  const chatId = process.env[towing ? "SAPEY_TOWING_CHAT_ID" : "SAPEY_ORDERS_CHAT_ID"]?.trim();
-  if (!token || !chatId) {
-    console.error(`[telegram:${tag}] Sapey ${towing ? "towing" : "orders"} bot is not configured; alert NOT delivered.`);
+  // A separately configured bot is used only for rescue notifications.
+  // Never fall back after a delivery error: it may already have delivered,
+  // and forwarding passports to the store chat would break separation.
+  const towingToken = tag === "towing" ? process.env["TELEGRAM_TOWING_BOT_TOKEN"]?.trim() : "";
+  if (towingToken) {
+    const chatId = process.env["TELEGRAM_TOWING_CHAT_ID"]?.trim();
+    if (!chatId) {
+      console.error("[telegram:towing] Dedicated bot chat is not configured; alert NOT delivered.");
+      return null;
+    }
+    return { baseUrl: `https://api.telegram.org/bot${towingToken}`, headers: { "Content-Type": "application/json" }, chatId, direct: true };
+  }
+  const lovableKey = process.env["LOVABLE_API_KEY"];
+  const tgKey = process.env["TELEGRAM_API_KEY"];
+  if (!lovableKey || !tgKey) {
+    console.error(`[telegram:${tag}] Not configured (LOVABLE_API_KEY=${!!lovableKey}, TELEGRAM_API_KEY=${!!tgKey})`);
     return null;
   }
-  return { baseUrl: `https://api.telegram.org/bot${token}`, headers: { "Content-Type": "application/json" }, chatId, direct: true };
+  const headers = { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": tgKey, "Content-Type": "application/json" };
+  // Towing alerts go to their own chat when configured, else fall back to the store chat.
+  const towingChat = tag === "towing" ? process.env["TELEGRAM_TOWING_CHAT_ID"]?.trim() : "";
+  if (towingChat) return { headers, chatId: towingChat, baseUrl: GATEWAY_URL };
+  const envChat = process.env["TELEGRAM_CHAT_ID"]?.trim();
+  if (envChat) return { headers, chatId: envChat, baseUrl: GATEWAY_URL };
+  // Fallback: Telegram keeps updates only ~24h, so set TELEGRAM_CHAT_ID for reliability.
+  const r = await fetch(`${GATEWAY_URL}/getUpdates`, { method: "POST", headers, body: "{}" });
+  if (!r.ok) {
+    console.error(`[telegram:${tag}] getUpdates failed [${r.status}]: ${await r.text()}`);
+    return null;
+  }
+  const j = (await r.json()) as { result?: { message?: { chat?: { id: number } }; my_chat_member?: { chat?: { id: number } } }[] };
+  const last = [...(j.result ?? [])].reverse().find((u) => u.message?.chat?.id ?? u.my_chat_member?.chat?.id);
+  const id = last?.message?.chat?.id ?? last?.my_chat_member?.chat?.id;
+  if (!id) {
+    console.error(`[telegram:${tag}] No TELEGRAM_CHAT_ID set and no recent chat with the bot — alert NOT delivered. Message the bot, then save its chat ID.`);
+    return null;
+  }
+  return { headers, chatId: String(id), baseUrl: GATEWAY_URL };
 }
 
 async function call(tag: string, ctx: Ctx, method: string, body: Record<string, unknown>): Promise<boolean> {
