@@ -1,8 +1,9 @@
 import { z } from "zod";
 
-/** Browser-safe rules for the public "Track my order" lookup (order number + checkout email). */
-export const LOOKUP_LIMITS = { perClient: 10, perEmail: 10, perOrder: 5, windowMs: 3600_000 } as const;
-export const LOOKUP_NOT_FOUND = "We couldn't find an order with that order number and email. Check both and try again — use the email you entered at checkout.";
+/** Browser-safe rules for the public "Track my order" request (order number + checkout email). */
+export const LOOKUP_LIMITS = { perClient: 10, perEmail: 10, perOrder: 5, sendsPerOrder: 3, windowMs: 3600_000 } as const;
+/** Same reply whether or not the details match, so the form never confirms which orders or emails exist. */
+export const LOOKUP_SENT = "If that order number matches the email you used at checkout, we've just emailed you a private link to your order status and tracking. It can take a few minutes — check your spam folder too.";
 export const LOOKUP_LIMITED = "Too many attempts. Please wait an hour and try again, or open the status link in your order confirmation email.";
 
 /** Accepts "KM-12345", "km 12345" or just "12345". */
@@ -24,8 +25,10 @@ export function lookupBlocked(f: { client: number | null; email: number; order: 
 /** Case-insensitive comparison with the order's saved checkout email. */
 export const emailMatches = (saved: string | null | undefined, entered: string) => !!saved && saved.trim().toLowerCase() === entered.trim().toLowerCase();
 
-export type LookupOrder = {
-  order_number: string; created_at: string; status: string; currency: string; country: string | null; tracking_number: string | null;
-  items: { product_name: string; selected_variant: string | null; quantity: number }[];
-};
-export type LookupResult = { ok: true; order: LookupOrder } | { ok: false; message: string };
+/** A link is emailed only when the details match, the order has a private token, and the hourly send cap isn't reached. */
+export function shouldSendTrackingLink(f: { matched: boolean; hasToken: boolean; recentSends: number }): boolean {
+  return f.matched && f.hasToken && f.recentSends < LOOKUP_LIMITS.sendsPerOrder;
+}
+
+/** The lookup never returns order details; it only reports that the request was handled (or rate-limited). */
+export type LookupResult = { ok: true; message: string } | { ok: false; message: string };

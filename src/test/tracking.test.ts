@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { courierFor, trackingHint, trackingInfo, trackingStage } from "@/lib/tracking";
 import { buildShippedEmail, type ShippedOrder } from "@/lib/order-shipped";
-import { emailMatches, LOOKUP_LIMITS, lookupBlocked, normalizeOrderRef, OrderLookupSchema } from "@/lib/order-lookup";
+import { emailMatches, LOOKUP_LIMITS, lookupBlocked, normalizeOrderRef, OrderLookupSchema, shouldSendTrackingLink } from "@/lib/order-lookup";
 
 describe("courier by destination", () => {
   it("Malaysia ships with J&T Express", () => {
@@ -91,5 +91,14 @@ describe("order lookup rules", () => {
     expect(lookupBlocked({ client: 0, email: 10, order: 0 })).toBe(true);
     expect(lookupBlocked({ client: 0, email: 0, order: 5 })).toBe(true);
     expect(lookupBlocked({ client: null, email: 0, order: 0 })).toBe(false);
+  });
+});
+
+describe("tracking link emails", () => {
+  it("sends only on a match with a private token and under the hourly cap", () => {
+    expect(shouldSendTrackingLink({ matched: true, hasToken: true, recentSends: 0 })).toBe(true);
+    expect(shouldSendTrackingLink({ matched: false, hasToken: true, recentSends: 0 })).toBe(false);
+    expect(shouldSendTrackingLink({ matched: true, hasToken: false, recentSends: 0 })).toBe(false);
+    expect(shouldSendTrackingLink({ matched: true, hasToken: true, recentSends: LOOKUP_LIMITS.sendsPerOrder })).toBe(false);
   });
 });

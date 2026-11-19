@@ -1,11 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { MailCheck, Search } from "lucide-react";
 import { lookupOrder } from "@/lib/order-lookup.functions";
-import { OrderLookupSchema, type LookupOrder } from "@/lib/order-lookup";
-import { customerStatus } from "@/lib/order-flow";
-import { OrderTracking } from "@/components/order-tracking";
+import { OrderLookupSchema } from "@/lib/order-lookup";
 import { buildOrderWhatsAppUrl } from "@/lib/whatsapp";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 
@@ -14,7 +12,7 @@ export const Route = createFileRoute("/track")({ staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Track your order — Kopi Malay x Route 1" },
-      { name: "description", content: "Check your Kopi Malay order status and J&T or Flash Express tracking number with your order number and email." },
+      { name: "description", content: "Get a private link to your Kopi Malay order status and J&T or Flash Express tracking number, sent to your checkout email." },
       { property: "og:title", content: "Track your order — Kopi Malay x Route 1" },
       { property: "og:description", content: "Order status and courier tracking for Kopi Malay merchandise." },
       { property: "og:type", content: "website" },
@@ -33,17 +31,17 @@ function TrackPage() {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [order, setOrder] = useState<LookupOrder | null>(null);
+  const [sent, setSent] = useState<string | null>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (busy) return;
     const parsed = OrderLookupSchema.safeParse({ ref, email });
     if (!parsed.success) { setError(parsed.error.issues[0]?.message ?? "Check your details."); return; }
-    setBusy(true); setError(null); setOrder(null);
+    setBusy(true); setError(null); setSent(null);
     try {
       const r = await lookup({ data: { ref: parsed.data.ref, email: parsed.data.email } });
-      if (r.ok) setOrder(r.order); else setError(r.message);
+      if (r.ok) setSent(r.message); else setError(r.message);
     } catch {
       setError("Something went wrong. Please try again in a moment.");
     } finally {
@@ -54,7 +52,7 @@ function TrackPage() {
   return (
     <div className="mx-auto max-w-xl px-4 py-10">
       <h1 className="font-display text-3xl font-bold uppercase md:text-4xl">Track your order</h1>
-      <p className="mt-2 text-muted-foreground">Enter your order number and the email you used at checkout. Members can also see every order under <Link to="/profile" className="underline">My profile</Link>.</p>
+      <p className="mt-2 text-muted-foreground">Enter your order number and the email you used at checkout — we'll email you a private link to its status and tracking. Members can also see every order under <Link to="/profile" className="underline">My profile</Link>.</p>
       <form onSubmit={submit} className="mt-6 space-y-4 rounded-lg border p-5" noValidate>
         <div className="space-y-1.5">
           <label htmlFor="tr-ref" className="text-sm font-medium">Order number</label>
@@ -66,27 +64,15 @@ function TrackPage() {
         </div>
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         <button disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-md bg-primary py-3 font-display font-semibold uppercase text-primary-foreground disabled:opacity-50">
-          <Search className="size-4" />{busy ? "Checking…" : "Track order"}
+          <Search className="size-4" />{busy ? "Sending…" : "Email me my tracking link"}
         </button>
       </form>
 
-      {order && (
-        <section className="mt-6 space-y-4 rounded-lg border p-5" aria-live="polite">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <p className="font-mono text-lg font-bold">{order.order_number}</p>
-              <p className="text-xs text-muted-foreground">Placed {new Date(order.created_at).toLocaleDateString()}</p>
-            </div>
-            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${order.status === "refunded" ? "border border-foreground" : "bg-accent text-accent-foreground"}`}>{customerStatus(order.status)}</span>
-          </div>
-          <OrderTracking status={order.status} country={order.country} currency={order.currency} tracking_number={order.tracking_number} />
-          {order.items.length > 0 && (
-            <ul className="divide-y border-t text-sm">
-              {order.items.map((i, idx) => <li key={idx} className="py-1.5">{i.product_name}{i.selected_variant ? ` (Size ${i.selected_variant})` : ""} × {i.quantity}</li>)}
-            </ul>
-          )}
-          <a href={buildOrderWhatsAppUrl(order.order_number)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium underline"><WhatsAppIcon className="size-4" />Ask on WhatsApp about this order</a>
-          <p className="text-xs text-muted-foreground">For your full receipt and delivery address, open the private link in your order email.</p>
+      {sent && (
+        <section className="mt-6 space-y-3 rounded-lg border p-5" aria-live="polite">
+          <p className="flex items-center gap-2 font-semibold"><MailCheck className="size-5" />Check your email</p>
+          <p className="text-sm text-muted-foreground">{sent}</p>
+          <a href={buildOrderWhatsAppUrl(ref)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium underline"><WhatsAppIcon className="size-4" />No email? Ask us on WhatsApp</a>
         </section>
       )}
 
