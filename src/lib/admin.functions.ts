@@ -59,6 +59,10 @@ async function loadRoleIndex(admin: Awaited<ReturnType<typeof adminClient>>): Pr
   return buildRoleIndex(roles ?? [], (users?.users ?? []).map((u) => u.id));
 }
 
+// Staff file links (slips, courier labels, towing photos) expire quickly so access ends soon after a role is removed;
+// admin queries refetch on focus/mount, so fresh links are issued while staff keep working.
+const ADMIN_FILE_LINK_SECONDS = 300;
+
 async function loadOrders(admin: Awaited<ReturnType<typeof adminClient>>): Promise<AdminOrder[]> {
   const idx = await loadRoleIndex(admin);
   const { data, error } = await admin.from("orders")
@@ -68,7 +72,7 @@ async function loadOrders(admin: Awaited<ReturnType<typeof adminClient>>): Promi
   const { data: posRows, error: posError } = await admin.from("order_pos_operations").select("order_id,cycle,kind,receipt_number,total_thb,promo_thb,confirmed_by,created_at").in("order_id", (data ?? []).map((o) => o.id)).order("cycle").order("created_at");
   if (posError) throw new Error(posError.message);
   const paths = (data ?? []).flatMap((o) => [o.receipt_path, o.tracking_label_path]).filter((p): p is string => !!p);
-  const signed = paths.length ? (await admin.storage.from("payment-receipts").createSignedUrls(paths, 3600)).data ?? [] : [];
+  const signed = paths.length ? (await admin.storage.from("payment-receipts").createSignedUrls(paths, ADMIN_FILE_LINK_SECONDS)).data ?? [] : [];
   return (data ?? []).map((o) => ({
     id: o.id, order_number: o.order_number, created_at: o.created_at, status: o.status, currency: o.currency,
     total_amount: Number(o.total_amount), subtotal: Number(o.subtotal), shipping_fee: Number(o.shipping_fee), discount_amount: Number(o.discount_amount), sticker_bundle_discount: Number(o.sticker_bundle_discount ?? 0), sale_discount: Number(o.sale_discount ?? 0),
@@ -396,7 +400,7 @@ export const listTowing = createServerFn({ method: "POST" }).middleware([require
   if (error) throw new Error(error.message);
   const rows = data ?? [];
   const paths = rows.flatMap((r) => r.photo_paths ?? []);
-  const signed = paths.length ? (await admin.storage.from("payment-receipts").createSignedUrls(paths, 3600)).data ?? [] : [];
+  const signed = paths.length ? (await admin.storage.from("payment-receipts").createSignedUrls(paths, ADMIN_FILE_LINK_SECONDS)).data ?? [] : [];
   const url = new Map(signed.map((s) => [s.path, s.signedUrl]));
   return rows.map((r) => ({ ...r, photo_urls: (r.photo_paths ?? []).map((p) => url.get(p)).filter(Boolean) as string[] }));
 });
@@ -460,7 +464,7 @@ export const getUserOrders = createServerFn({ method: "POST" }).middleware([requ
     if (guest.error) throw new Error(guest.error.message);
     const rows = [...(mine.data ?? []), ...(guest.data ?? [])].filter((o) => orderSource(o, { id: u.id, email })).sort((a, b) => b.created_at.localeCompare(a.created_at));
     const paths = rows.map((o) => o.receipt_path).filter((p): p is string => !!p);
-    const signed = paths.length ? (await admin.storage.from("payment-receipts").createSignedUrls(paths, 3600)).data ?? [] : [];
+    const signed = paths.length ? (await admin.storage.from("payment-receipts").createSignedUrls(paths, ADMIN_FILE_LINK_SECONDS)).data ?? [] : [];
     const orders = rows.map((o) => ({
       id: o.id, order_number: o.order_number, created_at: o.created_at, status: o.status, currency: o.currency,
       total_amount: Number(o.total_amount), subtotal: Number(o.subtotal), shipping_fee: Number(o.shipping_fee),
