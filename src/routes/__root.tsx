@@ -19,7 +19,6 @@ import { CartProvider } from "@/hooks/use-cart";
 import { MarqueeBanner, SiteHeader } from "@/components/site-header";
 import { WishlistProvider } from "@/hooks/use-wishlist";
 import { CartDrawer } from "@/components/cart-drawer";
-import { I18nProvider } from "@/i18n/provider";
 
 function NotFoundComponent() {
   return (
@@ -87,7 +86,6 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <I18nProvider>
       <CartProvider>
       <WishlistProvider>
         <div className="flex min-h-screen flex-col">
@@ -101,7 +99,6 @@ function RootComponent() {
         <Toaster position="top-center" richColors />
       </WishlistProvider>
       </CartProvider>
-      </I18nProvider>
     </QueryClientProvider>
   );
 }

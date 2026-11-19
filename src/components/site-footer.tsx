@@ -4,8 +4,6 @@ import { Phone } from "lucide-react";
 import { OFFICE_PHONE, OFFICE_TEL_URL, SUPPORT_WHATSAPP_PHONE, SUPPORT_WHATSAPP_URL as WHATSAPP_URL } from "@/lib/whatsapp";
 import route1 from "@/assets/tak-route-1-badge.png.asset.json";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
-import { useT } from "@/i18n/provider";
-import type { Key } from "@/i18n/dictionary";
 
 function FacebookIcon() {
   return (
@@ -32,14 +30,14 @@ function TikTokIcon() {
 }
 
 const legal = [
-  { to: "/privacy", label: "Privacy Policy", key: "footer.privacy" as Key },
-  { to: "/accessibility", label: "Accessibility Statement", key: "footer.access" as Key },
-  { to: "/terms", label: "Terms & Conditions", key: "footer.terms" as Key },
-  { to: "/refund-policy", label: "Refund Policy", key: "footer.refund" as Key },
-  { to: "/shipping-returns", label: "Shipping & Returns", key: "footer.shipping" as Key },
-  { to: "/faq", label: "FAQ", key: "footer.faq" as Key },
-  { to: "/contact", label: "Contact Us", key: "nav.contact" as Key },
-  { to: "/track", label: "Track Your Order", key: "nav.track" as Key },
+  { to: "/privacy", label: "Privacy Policy" },
+  { to: "/accessibility", label: "Accessibility Statement" },
+  { to: "/terms", label: "Terms & Conditions" },
+  { to: "/refund-policy", label: "Refund Policy" },
+  { to: "/shipping-returns", label: "Shipping & Returns" },
+  { to: "/faq", label: "FAQ" },
+  { to: "/contact", label: "Contact Us" },
+  { to: "/track", label: "Track Your Order" },
 ] as const;
 
 const socials = [
@@ -53,28 +51,27 @@ const iconBtn =
   "inline-flex h-10 w-10 items-center justify-center rounded-full border border-foreground/30 text-foreground transition-colors hover:bg-foreground hover:text-background";
 
 export function SiteFooter() {
-  const { t } = useT();
   return (
     <footer className="no-print border-t bg-background text-foreground">
       <div className="flex flex-col items-center px-4 pt-12 text-center">
-        <button type="button" aria-label={t("footer.top")} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="transition-transform hover:-translate-y-1">
+        <button type="button" aria-label="Back to top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="transition-transform hover:-translate-y-1">
           <img src={route1.url} alt="Tak Route 1" className="size-36 object-contain md:size-44" loading="lazy" />
         </button>
-        <p className="mt-4 font-display text-sm font-bold uppercase tracking-[0.25em] md:text-base">{t("footer.tagline")}</p>
+        <p className="mt-4 font-display text-sm font-bold uppercase tracking-[0.25em] md:text-base">Crafted with care, made to perfection</p>
       </div>
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 text-sm text-muted-foreground md:grid-cols-3">
         <nav aria-label="Legal">
-          <h2 className={heading}>{t("footer.legal")}</h2>
+          <h2 className={heading}>Legal</h2>
           <ul className="space-y-2">
             {legal.map((l) => (
               <li key={l.to}>
-                <Link to={l.to} className="hover:text-foreground hover:underline">{t(l.key)}</Link>
+                <Link to={l.to} className="hover:text-foreground hover:underline">{l.label}</Link>
               </li>
             ))}
           </ul>
         </nav>
         <div>
-          <h2 className={heading}>{t("footer.social")}</h2>
+          <h2 className={heading}>Social</h2>
           <div className="flex gap-3">
             {socials.map(({ href, label, Icon }) => (
               <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={`Kopi Malay on ${label}`} className={iconBtn}>
@@ -84,12 +81,12 @@ export function SiteFooter() {
           </div>
         </div>
         <address className="not-italic">
-          <h2 className={heading}>{t("footer.contact")}</h2>
+          <h2 className={heading}>Contact</h2>
           <p className="font-semibold text-foreground">Kopi Malay</p>
           <p className="mt-1">3, 13 Chomphon, Tambon Rahaeng,<br />Mueang Tak District, Tak 63000</p>
           <a href={OFFICE_TEL_URL} aria-label="Call Kopi Malay office" className="mt-4 flex items-center gap-3 hover:text-foreground">
             <span className={iconBtn}><Phone className="size-5" /></span>
-            <span>{OFFICE_PHONE} <span className="text-xs">({t("footer.office")})</span></span>
+            <span>{OFFICE_PHONE} <span className="text-xs">(office)</span></span>
           </a>
           <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" aria-label="Chat with Kopi Malay on WhatsApp" className="mt-3 flex items-center gap-3 hover:text-foreground">
             <span className={iconBtn}><WhatsAppIcon /></span>
