@@ -15,6 +15,7 @@ beforeEach(() => {
   vi.stubEnv("TELEGRAM_CHAT_ID", "store-chat");
   vi.stubEnv("TELEGRAM_TOWING_BOT_TOKEN", "test-rescue-token");
   vi.stubEnv("TELEGRAM_TOWING_CHAT_ID", "rescue-chat");
+  vi.stubEnv("TELEGRAM_BOT_TOKEN", "");
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "log").mockImplementation(() => {});
 });
@@ -29,7 +30,7 @@ describe("Telegram bot separation", () => {
     expect(init.headers).toEqual({ "Content-Type": "application/json" });
     expect(JSON.parse(init.body).chat_id).toBe("rescue-chat");
   });
-  it("keeps store orders on the original gateway and chat", async () => {
+  it("keeps store orders on the gateway when no store bot token is set", async () => {
     await sendTelegram("Order test", "order");
     const [url, init] = firstCall();
     expect(url).toBe("https://connector-gateway.lovable.dev/telegram/sendMessage");
@@ -57,6 +58,44 @@ describe("Telegram bot separation", () => {
     fetchMock.mockRejectedValue(new Error("https://api.telegram.org/bottest-rescue-token/sendMessage"));
     expect(await sendTelegram("Rescue test", "towing")).toBe(false);
     expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain("test-rescue-token");
+  });
+});
+describe("Direct store bot (TELEGRAM_BOT_TOKEN)", () => {
+  beforeEach(() => { vi.stubEnv("TELEGRAM_BOT_TOKEN", "111:store-token"); });
+  it("sends order alerts through the store bot to the store chat", async () => {
+    expect(await sendTelegram("Order test", "order")).toBe(true);
+    const [url, init] = firstCall();
+    expect(url).toBe("https://api.telegram.org/bot111:store-token/sendMessage");
+    expect(init.headers).toEqual({ "Content-Type": "application/json" });
+    expect(JSON.parse(init.body).chat_id).toBe("store-chat");
+  });
+  it("keeps towing on the towing bot and towing chat", async () => {
+    await sendTelegram("Rescue test", "towing");
+    const [url, init] = firstCall();
+    expect(url).toBe("https://api.telegram.org/bottest-rescue-token/sendMessage");
+    expect(JSON.parse(init.body).chat_id).toBe("rescue-chat");
+  });
+  it("uses the store bot for towing when no towing bot is set, still only to the towing chat", async () => {
+    vi.stubEnv("TELEGRAM_TOWING_BOT_TOKEN", "");
+    await sendTelegram("Rescue test", "towing");
+    const [url, init] = firstCall();
+    expect(url).toBe("https://api.telegram.org/bot111:store-token/sendMessage");
+    expect(JSON.parse(init.body).chat_id).toBe("rescue-chat");
+  });
+  it("does not fall back to the gateway when the store chat is missing", async () => {
+    vi.stubEnv("TELEGRAM_CHAT_ID", "");
+    expect(await sendTelegram("Order test", "order")).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+  it("refuses a chat ID that is the bot's own ID", async () => {
+    vi.stubEnv("TELEGRAM_CHAT_ID", "111");
+    expect(await sendTelegram("Order test", "order")).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+  it("redacts the token from logged errors", async () => {
+    fetchMock.mockRejectedValue(new Error("https://api.telegram.org/bot111:store-token/sendMessage"));
+    expect(await sendTelegram("Order test", "order")).toBe(false);
+    expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain("store-token");
   });
 });
 describe("Towing photo hybrid delivery", () => {

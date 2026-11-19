@@ -1,21 +1,34 @@
-// Server-only Telegram text alert via the connector gateway.
-// Never throws: failures are logged with full detail so order/towing saves are never blocked.
+// Server-only Telegram alerts. Uses a direct BotFather bot when its token is set,
+// otherwise the connector gateway. Never throws: failures are logged (tokens redacted)
+// so order/towing saves are never blocked.
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/telegram";
 
-type Ctx = { headers: Record<string, string>; chatId: string; baseUrl: string; direct?: boolean };
+type Ctx = { headers: Record<string, string>; chatId: string; baseUrl: string; token?: string };
+
+/** Direct bot context; null (with a clear log) when the target chat is unusable. */
+function directCtx(tag: string, token: string, chatVar: string): Ctx | null {
+  const chatId = process.env[chatVar]?.trim();
+  if (!chatId) {
+    console.error(`[telegram:${tag}] ${chatVar} is not set; alert NOT delivered.`);
+    return null;
+  }
+  // A bot cannot message itself: the number before ":" in the token is the bot's own ID.
+  if (chatId === token.split(":")[0]) {
+    console.error(`[telegram:${tag}] ${chatVar} is the bot's own ID, not a group or person chat; alert NOT delivered.`);
+    return null;
+  }
+  return { baseUrl: `https://api.telegram.org/bot${token}`, headers: { "Content-Type": "application/json" }, chatId, token };
+}
 
 async function resolveCtx(tag: string): Promise<Ctx | null> {
-  // A separately configured bot is used only for rescue notifications.
-  // Never fall back after a delivery error: it may already have delivered,
-  // and forwarding passports to the store chat would break separation.
-  const towingToken = tag === "towing" ? process.env["TELEGRAM_TOWING_BOT_TOKEN"]?.trim() : "";
-  if (towingToken) {
-    const chatId = process.env["TELEGRAM_TOWING_CHAT_ID"]?.trim();
-    if (!chatId) {
-      console.error("[telegram:towing] Dedicated bot chat is not configured; alert NOT delivered.");
-      return null;
-    }
-    return { baseUrl: `https://api.telegram.org/bot${towingToken}`, headers: { "Content-Type": "application/json" }, chatId, direct: true };
+  const mainToken = process.env["TELEGRAM_BOT_TOKEN"]?.trim() ?? "";
+  if (tag === "towing") {
+    // Rescue alerts use the towing bot (or the main bot) and only the towing chat.
+    // Never fall back to the store chat: forwarding passports there would break separation.
+    const towingToken = process.env["TELEGRAM_TOWING_BOT_TOKEN"]?.trim() || mainToken;
+    if (towingToken) return directCtx(tag, towingToken, "TELEGRAM_TOWING_CHAT_ID");
+  } else if (mainToken) {
+    return directCtx(tag, mainToken, "TELEGRAM_CHAT_ID");
   }
   const lovableKey = process.env["LOVABLE_API_KEY"];
   const tgKey = process.env["TELEGRAM_API_KEY"];
@@ -45,17 +58,19 @@ async function resolveCtx(tag: string): Promise<Ctx | null> {
   return { headers, chatId: String(id), baseUrl: GATEWAY_URL };
 }
 
+const redact = (s: string, ctx: Ctx) => (ctx.token ? s.split(ctx.token).join("***") : s);
+
 async function call(tag: string, ctx: Ctx, method: string, body: Record<string, unknown>): Promise<boolean> {
   try {
     const res = await fetch(`${ctx.baseUrl}/${method}`, { method: "POST", headers: ctx.headers, body: JSON.stringify({ chat_id: ctx.chatId, ...body }) });
-    const txt = await res.text();
-    if (!res.ok) { console.error(`[telegram:${tag}] ${method} failed [${res.status}]: ${ctx.direct ? "Dedicated bot delivery failed" : txt}`); return false; }
+    const txt = redact(await res.text(), ctx);
+    if (!res.ok) { console.error(`[telegram:${tag}] ${method} failed [${res.status}]: ${txt}`); return false; }
     const j = JSON.parse(txt) as { ok?: boolean; description?: string };
-    if (j.ok === false) { console.error(`[telegram:${tag}] ${method} rejected: ${ctx.direct ? "Dedicated bot delivery rejected" : j.description}`); return false; }
+    if (j.ok === false) { console.error(`[telegram:${tag}] ${method} rejected: ${j.description}`); return false; }
     console.log(`[telegram:${tag}] ${method} delivered`);
     return true;
   } catch (e) {
-    console.error(`[telegram:${tag}] ${method} network error`, ctx.direct ? "Dedicated bot connection failed" : e);
+    console.error(`[telegram:${tag}] ${method} network error`, redact(String(e), ctx));
     return false;
   }
 }
