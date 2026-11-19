@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { TowingRequest, TOWING_MAX_PHOTOS, photoError, phoneDigits, rateLimited, RATE_LIMIT_MESSAGE, towingAlert } from "./towing";
+import { allVehicles, TowingRequest, TOWING_MAX_PHOTOS, photoError, phoneDigits, rateLimited, RATE_LIMIT_MESSAGE, towingAlert } from "./towing";
 
 export const submitTowingRequest = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => {
@@ -31,7 +31,7 @@ export const submitTowingRequest = createServerFn({ method: "POST" })
     for (let i = 0; i < 5; i++) {
       reference = `TW-${Math.floor(10000 + Math.random() * 90000)}`;
       const { data: row, error } = await supabaseAdmin.from("towing_requests").insert({
-        reference, name: d.name, phone: d.phone, phone_digits: digits, plate_number: d.plate_number, motorcycle_model: d.motorcycle_model,
+        reference, name: d.name, phone: d.phone, phone_digits: digits, plate_number: d.plate_number, motorcycle_model: d.motorcycle_model, vehicles: allVehicles(d),
         rider_type: d.rider_type, nationality: foreign ? d.nationality : null, passport_number: foreign ? d.passport_number : null,
         urgency: d.urgency, rider_transport: d.rider_transport,
         pickup_region: d.pickup_region, pickup_town: d.pickup_town, breakdown_location: d.breakdown_location, maps_link: d.maps_link || null,

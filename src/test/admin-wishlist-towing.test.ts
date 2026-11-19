@@ -136,3 +136,21 @@ describe("towing town-only picker", () => {
     expect(regionForTown("Nowhere")).toBe("");
   });
 });
+
+describe("multi-motorcycle towing", () => {
+  const base = { rider_type: "thai", name: "Ali", phone: "+66 81 234 5678", plate_number: "WXY1", motorcycle_model: "CB500X", urgency: "urgent", rider_transport: "with_pickup",
+    pickup_region: "Northern", pickup_town: "Tak", breakdown_location: "KM 42", maps_link: "", pickup_lat: null, pickup_lng: null, destination_region: "Northern", destination_town: "Tak", destination: "Shop A" };
+  const extra = (n: number) => Array.from({ length: n }, (_, i) => ({ plate_number: `P${i}`, motorcycle_model: `M${i}` }));
+  it("allows 30 motorcycles in total", () => { expect(towingErrors({ ...base, extra_vehicles: extra(29) })).toEqual({}); });
+  it("rejects 31 motorcycles", () => { expect(towingErrors({ ...base, extra_vehicles: extra(30) })).toHaveProperty("extra_vehicles"); });
+  it("flags a missing plate on motorcycle 2", () => {
+    expect(towingErrors({ ...base, extra_vehicles: [{ plate_number: "", motorcycle_model: "GS" }] })).toHaveProperty("extra_vehicles.0.plate_number");
+  });
+  it("Telegram alert lists every motorcycle", () => {
+    const d = TowingRequest.parse({ ...base, extra_vehicles: [{ plate_number: "ABC2", motorcycle_model: "GS" }] });
+    const t = towingAlert(d, "TW-1", "now", []);
+    expect(t).toContain("Motorcycles: 2");
+    expect(t).toContain("1. CB500X [WXY1]");
+    expect(t).toContain("2. GS [ABC2]");
+  });
+});

@@ -3,7 +3,7 @@ import { compressImage } from "@/lib/image-compress";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { towingErrors, photoError, cleanPassport, TOWING_MAX_PHOTOS, RESCUE_PHONE } from "@/lib/towing";
+import { towingErrors, photoError, cleanPassport, TOWING_MAX_PHOTOS, TOWING_MAX_VEHICLES, RESCUE_PHONE } from "@/lib/towing";
 import { submitTowingRequest } from "@/lib/towing.functions";
 import { THAI_REGIONS, regionForTown } from "@/lib/thai-regions";
 import { loadMyProfile } from "@/lib/profile";
@@ -29,8 +29,9 @@ type Form = {
   urgency: "" | "urgent" | "not_urgent"; rider_transport: "" | "with_pickup" | "own_transport";
   pickup_region: string; pickup_town: string; breakdown_location: string; maps_link: string;
   destination_region: string; destination_town: string; destination: string;
+  extra_vehicles: { plate_number: string; motorcycle_model: string }[];
 };
-const EMPTY: Form = { rider_type: "thai", nationality: "", passport_number: "", name: "", phone: "", plate_number: "", motorcycle_model: "", urgency: "", rider_transport: "", pickup_region: "", pickup_town: "", breakdown_location: "", maps_link: "", destination_region: "", destination_town: "", destination: "" };
+const EMPTY: Form = { rider_type: "thai", nationality: "", passport_number: "", name: "", phone: "", plate_number: "", motorcycle_model: "", urgency: "", rider_transport: "", pickup_region: "", pickup_town: "", breakdown_location: "", maps_link: "", destination_region: "", destination_town: "", destination: "", extra_vehicles: [] };
 const ORDER = ["nationality", "passport_number", "name", "phone", "plate_number", "motorcycle_model", "urgency", "rider_transport", "pickup_town", "pickup_region", "breakdown_location", "maps_link", "destination_town", "destination_region", "destination"];
 const field = "w-full rounded-md border bg-card px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-ring";
 
@@ -45,7 +46,14 @@ function TowingPage() {
   const [gpsBusy, setGpsBusy] = useState(false);
   const [done, setDone] = useState<{ ref: string; photoNote?: string | undefined } | null>(null);
   const [limited, setLimited] = useState<string | null>(null);
-  const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: capitalizeFormValue(k, v) }));
+  const setCount = (n: number) => setForm((f) => {
+    const extra = f.extra_vehicles.slice(0, n - 1);
+    while (extra.length < n - 1) extra.push({ plate_number: "", motorcycle_model: "" });
+    return { ...f, extra_vehicles: extra };
+  });
+  const setExtra = (i: number, k: "plate_number" | "motorcycle_model", v: string) =>
+    setForm((f) => ({ ...f, extra_vehicles: f.extra_vehicles.map((m, j) => j === i ? { ...m, [k]: capitalizeFormValue(k, v) } : m) }));
+  const set = <K extends Exclude<keyof Form, "extra_vehicles">>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: capitalizeFormValue(k, v) }));
 
   useEffect(() => {
     loadMyProfile().then((p) => {
@@ -90,10 +98,11 @@ function TowingPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (busy) return;
-    const payload = { ...capitalizeFormDetails(form), passport_number: cleanPassport(form.passport_number), pickup_lat: coords?.lat ?? null, pickup_lng: coords?.lng ?? null };
+    const { extra_vehicles, ...rest } = form;
+    const payload = { ...capitalizeFormDetails(rest), extra_vehicles,  passport_number: cleanPassport(form.passport_number), pickup_lat: coords?.lat ?? null, pickup_lng: coords?.lng ?? null };
     const errs = towingErrors(payload);
     setErrors(errs);
-    const first = ORDER.find((k) => errs[k]);
+    const first = ORDER.find((k) => errs[k]) ?? Object.keys(errs).find((k) => k.startsWith("extra_vehicles."));
     if (first) { document.getElementById(`tow-${first}`)?.focus(); return; }
     setBusy(true);
     try {
@@ -123,7 +132,7 @@ function TowingPage() {
   const err = (k: string) => errors[k] && <p className="text-sm text-destructive">{errors[k]}</p>;
   const inv = (k: string) => (errors[k] ? "border-destructive" : "");
   const Label = ({ k, children }: { k: string; children: React.ReactNode }) => <label htmlFor={`tow-${k}`} className="text-sm font-medium">{children}</label>;
-  const text = (k: keyof Form, label: string, ph: string, type = "text") => (
+  const text = (k: Exclude<keyof Form, "extra_vehicles">, label: string, ph: string, type = "text") => (
     <div className="space-y-1.5">
       <Label k={k}>{label} *</Label>
       <input id={`tow-${k}`} type={type} autoCapitalize={type === "text" ? "characters" : "none"} value={form[k]} placeholder={ph} onChange={(e) => set(k, e.target.value as never)} aria-invalid={!!errors[k]} className={`${field} ${inv(k)}`} />
@@ -183,8 +192,32 @@ function TowingPage() {
             </>}
             {text("name", "Your name", "AHMAD BIN ALI")}
             {text("phone", "Phone number (reachable now)", "+66 81 234 5678", "tel")}
+            <div className="space-y-1.5 sm:col-span-2">
+              <label htmlFor="tow-vehicle_count" className="text-sm font-medium">Number of motorcycles *</label>
+              <select id="tow-vehicle_count" value={form.extra_vehicles.length + 1} onChange={(e) => setCount(Number(e.target.value))} className={field}>
+                {Array.from({ length: TOWING_MAX_VEHICLES }, (_, i) => <option key={i + 1} value={i + 1}>{i + 1}</option>)}
+              </select>
+              {form.extra_vehicles.length >= 2 && <p className="text-xs text-muted-foreground">Group request: more than 2 motorcycles may need several rescue trucks. Our team will confirm.</p>}
+            </div>
+            {form.extra_vehicles.length > 0 && <p className="font-display text-sm font-bold uppercase sm:col-span-2">Motorcycle 1</p>}
             {text("plate_number", "Motorcycle plate number", "WXY 1234")}
             {text("motorcycle_model", "Motorcycle model", "HONDA CB500X")}
+            {form.extra_vehicles.map((m, i) => (
+              <div key={i} className="contents">
+                <p className="font-display text-sm font-bold uppercase sm:col-span-2">Motorcycle {i + 2}</p>
+                {(["plate_number", "motorcycle_model"] as const).map((k) => {
+                  const id = `extra_vehicles.${i}.${k}`;
+                  return (
+                    <div key={k} className="space-y-1.5">
+                      <label htmlFor={`tow-${id}`} className="text-sm font-medium">{k === "plate_number" ? "Motorcycle plate number" : "Motorcycle model"} *</label>
+                      <input id={`tow-${id}`} value={m[k]} autoCapitalize="characters" placeholder={k === "plate_number" ? "WXY 1234" : "HONDA CB500X"}
+                        onChange={(e) => setExtra(i, k, e.target.value)} aria-invalid={!!errors[id]} className={`${field} ${errors[id] ? "border-destructive" : ""}`} />
+                      {errors[id] && <p className="text-sm text-destructive">{errors[id]}</p>}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
           {choice("urgency", "Urgency level", [["urgent", "Urgent"], ["not_urgent", "Not urgent"]])}
           {choice("rider_transport", "Rider transport", [["with_pickup", "Ride with pick-up"], ["own_transport", "Arrange own transport"]])}

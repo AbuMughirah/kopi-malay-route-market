@@ -6,6 +6,7 @@ export const TOWING_PHOTO_MAX_BYTES = 5 * 1024 * 1024;
 export const TOWING_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
 export const TOWING_PER_PHONE_PER_HOUR = 5;
 export const TOWING_GLOBAL_PER_HOUR = 40;
+export const TOWING_MAX_VEHICLES = 30;
 export const RESCUE_PHONE = "+66 97 009 8182";
 export const RATE_LIMIT_MESSAGE = `You have sent several requests recently. If this is an urgent roadside emergency, please call or WhatsApp us directly at ${RESCUE_PHONE}.`;
 
@@ -37,6 +38,11 @@ export const TowingRequest = z.object({
   ),
   plate_number: req("Please enter the plate number.", 20),
   motorcycle_model: req("Please enter the motorcycle model.", 80),
+  /** Motorcycles 2..N; motorcycle 1 stays in plate_number / motorcycle_model. */
+  extra_vehicles: z.array(z.object({
+    plate_number: req("Please enter the plate number.", 20),
+    motorcycle_model: req("Please enter the motorcycle model.", 80),
+  })).max(TOWING_MAX_VEHICLES - 1, `Up to ${TOWING_MAX_VEHICLES} motorcycles per request.`).optional().default([]),
   urgency: z.enum(["urgent", "not_urgent"], { message: "Please choose the urgency." }),
   rider_transport: z.enum(["with_pickup", "own_transport"], { message: "Please choose how the rider travels." }),
   pickup_region: req("Please select your breakdown region.", 60),
@@ -59,7 +65,7 @@ export type TowingData = z.output<typeof TowingRequest>;
 export function towingErrors(input: unknown): Record<string, string> {
   const r = TowingRequest.safeParse(input);
   const out: Record<string, string> = {};
-  if (!r.success) for (const i of r.error.issues) { const k = String(i.path[0]); out[k] ??= i.message; }
+  if (!r.success) for (const i of r.error.issues) { const k = i.path[0] === "extra_vehicles" && i.path.length >= 3 ? i.path.join(".") : String(i.path[0]); out[k] ??= i.message; }
   return out;
 }
 
@@ -79,6 +85,10 @@ export const TRANSPORT_LABEL = { with_pickup: "Rider rides with pick-up", own_tr
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
+export function allVehicles(d: Pick<TowingData, "plate_number" | "motorcycle_model" | "extra_vehicles">) {
+  return [{ plate_number: d.plate_number, motorcycle_model: d.motorcycle_model }, ...(d.extra_vehicles ?? [])];
+}
+
 export function towingAlert(d: TowingData, reference: string, time: string, photoUrls: string[]): string {
   const tel = d.phone.replace(/[^\d+]/g, "");
   const coords = d.pickup_lat != null && d.pickup_lng != null ? `https://maps.google.com/?q=${d.pickup_lat},${d.pickup_lng}` : "";
@@ -88,7 +98,11 @@ export function towingAlert(d: TowingData, reference: string, time: string, phot
     `👤 Rider: ${esc(d.name)} (${d.rider_type === "foreign" ? "Foreign rider" : "Thai local"})`,
     ...(d.rider_type === "foreign" ? [`🌐 Nationality: ${esc(d.nationality)}`, `🛂 Passport: <code>${esc(d.passport_number)}</code>`] : []),
     `📞 Phone: <a href="tel:${esc(tel)}">${esc(d.phone)}</a>${tel ? ` · <a href="https://wa.me/${esc(tel.replace("+", ""))}">WhatsApp</a>` : ""}`,
-    `🏍️ ${esc(d.motorcycle_model)} (Plate: ${esc(d.plate_number)})`,
+    ...(() => {
+      const v = allVehicles(d);
+      if (v.length === 1) return [`🏍️ ${esc(d.motorcycle_model)} (Plate: ${esc(d.plate_number)})`];
+      return [`🏍️ <b>Motorcycles: ${v.length}</b>`, ...v.map((m, i) => `   ${i + 1}. ${esc(m.motorcycle_model)} [${esc(m.plate_number)}]`)];
+    })(),
     `🧍 ${TRANSPORT_LABEL[d.rider_transport]}`,
     "",
     `📍 From: ${esc(d.pickup_town)}, ${esc(d.pickup_region)}`,

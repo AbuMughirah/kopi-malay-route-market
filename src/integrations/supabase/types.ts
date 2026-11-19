@@ -730,6 +730,7 @@ export type Database = {
           status: string
           urgency: string
           user_id: string | null
+          vehicles: Json
         }
         Insert: {
           breakdown_location: string
@@ -757,6 +758,7 @@ export type Database = {
           status?: string
           urgency?: string
           user_id?: string | null
+          vehicles?: Json
         }
         Update: {
           breakdown_location?: string
@@ -784,6 +786,7 @@ export type Database = {
           status?: string
           urgency?: string
           user_id?: string | null
+          vehicles?: Json
         }
         Relationships: []
       }

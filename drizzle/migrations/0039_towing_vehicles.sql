@@ -1,0 +1,2 @@
+ALTER TABLE public.towing_requests ADD COLUMN vehicles jsonb NOT NULL DEFAULT '[]'::jsonb;
+UPDATE public.towing_requests SET vehicles = jsonb_build_array(jsonb_build_object('plate_number', plate_number, 'motorcycle_model', motorcycle_model));

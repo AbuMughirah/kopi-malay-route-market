@@ -96,7 +96,11 @@ function Details({ t, saving, onStatus }: { t: Row; saving: boolean; onStatus: (
             {row("Nationality", t.nationality)}
             {row("Passport", <span className="font-mono">{t.passport_number} <button className="ml-2 underline" onClick={() => { navigator.clipboard.writeText(t.passport_number ?? ""); toast.success("Passport copied"); }}>Copy</button></span>)}
           </>}
-          {row("Motorcycle", `${t.motorcycle_model} (${t.plate_number})`)}
+          {(() => {
+            const v = Array.isArray(t.vehicles) && t.vehicles.length ? (t.vehicles as { plate_number: string; motorcycle_model: string }[]) : [{ plate_number: t.plate_number, motorcycle_model: t.motorcycle_model }];
+            return v.length === 1 ? row("Motorcycle", `${v[0]!.motorcycle_model} (${v[0]!.plate_number})`)
+              : row(`Motorcycles (${v.length})`, <ol className="list-decimal pl-4">{v.map((m, i) => <li key={i}>{m.motorcycle_model} ({m.plate_number})</li>)}</ol>);
+          })()}
           {row("Urgency", URGENCY_LABEL[t.urgency as keyof typeof URGENCY_LABEL] ?? t.urgency)}
           {row("Transport", TRANSPORT_LABEL[t.rider_transport as keyof typeof TRANSPORT_LABEL] ?? t.rider_transport)}
         </section>
