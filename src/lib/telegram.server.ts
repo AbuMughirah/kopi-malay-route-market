@@ -8,7 +8,17 @@ async function resolveCtx(tag: string): Promise<Ctx | null> {
   // A separately configured bot is used only for rescue notifications.
   // Never fall back after a delivery error: it may already have delivered,
   // and forwarding passports to the store chat would break separation.
-  const towingToken = tag === "towing" ? process.env["TELEGRAM_TOWING_BOT_TOKEN"]?.trim() : "";
+  // Sapey bot (direct token) handles every alert when configured; chats stay separate.
+  const sapey = process.env["TELEGRAM_SAPEY_BOT_TOKEN"]?.trim();
+  if (sapey && tag !== "towing") {
+    const chatId = process.env["TELEGRAM_CHAT_ID"]?.trim();
+    if (!chatId) {
+      console.error(`[telegram:${tag}] Store chat is not configured; alert NOT delivered.`);
+      return null;
+    }
+    return { baseUrl: `https://api.telegram.org/bot${sapey}`, headers: { "Content-Type": "application/json" }, chatId, direct: true };
+  }
+  const towingToken = tag === "towing" ? (sapey || process.env["TELEGRAM_TOWING_BOT_TOKEN"]?.trim()) : "";
   if (towingToken) {
     const chatId = process.env["TELEGRAM_TOWING_CHAT_ID"]?.trim();
     if (!chatId) {

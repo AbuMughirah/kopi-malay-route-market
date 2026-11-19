@@ -15,6 +15,7 @@ beforeEach(() => {
   vi.stubEnv("TELEGRAM_CHAT_ID", "store-chat");
   vi.stubEnv("TELEGRAM_TOWING_BOT_TOKEN", "test-rescue-token");
   vi.stubEnv("TELEGRAM_TOWING_CHAT_ID", "rescue-chat");
+  vi.stubEnv("TELEGRAM_SAPEY_BOT_TOKEN", "");
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "log").mockImplementation(() => {});
 });
@@ -57,6 +58,22 @@ describe("Telegram bot separation", () => {
     fetchMock.mockRejectedValue(new Error("https://api.telegram.org/bottest-rescue-token/sendMessage"));
     expect(await sendTelegram("Rescue test", "towing")).toBe(false);
     expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain("test-rescue-token");
+  });
+});
+describe("Sapey bot", () => {
+  it("sends orders through Sapey to the store chat", async () => {
+    vi.stubEnv("TELEGRAM_SAPEY_BOT_TOKEN", "sapey-token");
+    await sendTelegram("Order test", "order");
+    const [url, init] = firstCall();
+    expect(url).toBe("https://api.telegram.org/botsapey-token/sendMessage");
+    expect(JSON.parse(init.body).chat_id).toBe("store-chat");
+  });
+  it("sends towing through Sapey to the towing chat", async () => {
+    vi.stubEnv("TELEGRAM_SAPEY_BOT_TOKEN", "sapey-token");
+    await sendTelegram("Rescue test", "towing");
+    const [url, init] = firstCall();
+    expect(url).toBe("https://api.telegram.org/botsapey-token/sendMessage");
+    expect(JSON.parse(init.body).chat_id).toBe("rescue-chat");
   });
 });
 describe("Towing photo hybrid delivery", () => {
