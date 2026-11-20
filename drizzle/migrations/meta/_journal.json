@@ -281,6 +281,13 @@
       "when": 1795060102370,
       "tag": "0039_towing_vehicles",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1795147263003,
+      "tag": "0040_has_role_self_only",
+      "breakpoints": true
     }
   ]
 }
