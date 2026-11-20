@@ -19,3 +19,11 @@ describe("traffic analytics rules", () => {
     expect(s.checkoutDropOff).toBe(50);
   });
 });
+
+import { isFreshOrder } from "@/lib/analytics";
+describe("placed-order counting window", () => {
+  const now = Date.parse("2026-11-20T05:00:00Z");
+  it("counts an order placed 5 minutes ago", () => expect(isFreshOrder("2026-11-20T04:55:00Z", now)).toBe(true));
+  it("ignores a revisit 2 hours after the order", () => expect(isFreshOrder("2026-11-20T03:00:00Z", now)).toBe(false));
+  it("ignores invalid dates", () => expect(isFreshOrder("nope", now)).toBe(false));
+});

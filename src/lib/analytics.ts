@@ -16,6 +16,13 @@ export function eventFor(path: string): { event: EventType; product: string | nu
   return { event: "page_view", product: null };
 }
 
+/** A confirmation counts as a placed order only within this window after checkout. */
+export const ORDER_CONFIRM_WINDOW_MS = 30 * 60_000;
+export const isFreshOrder = (createdAt: string, now = Date.now()) => {
+  const t = Date.parse(createdAt);
+  return Number.isFinite(t) && now - t >= -60_000 && now - t <= ORDER_CONFIRM_WINDOW_MS;
+};
+
 export function deviceFor(ua: string): "mobile" | "tablet" | "desktop" {
   if (/ipad|tablet/i.test(ua)) return "tablet";
   if (/mobi|android|iphone/i.test(ua)) return "mobile";

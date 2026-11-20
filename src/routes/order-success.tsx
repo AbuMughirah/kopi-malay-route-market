@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Clock } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
+import { recordVisit } from "@/lib/analytics.functions";
 import { getOrderByReference } from "@/lib/checkout.functions";
 import { formatMoney } from "@/lib/shop";
 import { buildOrderWhatsAppUrl } from "@/lib/whatsapp";
@@ -38,6 +39,10 @@ function OrderSuccess() {
     enabled: !!ref && !!t,
   });
   useEffect(() => { if (order) void clear(); }, [order, clear]);
+  const placed = !!order;
+  useEffect(() => {
+    if (placed) void recordVisit({ data: { path: "/order-success", referrer: "", ref, token: t } }).catch(() => {});
+  }, [placed, ref, t]);
 
   if (isLoading) return <p className="p-24 text-center text-muted-foreground">Loading your order…</p>;
   if (!order) return <div className="p-24 text-center"><p>We couldn't find that order.</p><Link to="/shop" className="text-primary underline">Back to shop</Link></div>;

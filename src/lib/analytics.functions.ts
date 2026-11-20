@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { countryFor, deviceFor, eventFor, isBot, isTrackablePath, rangeStart, referrerFor, summarize, type Row } from "./analytics";
+import { countryFor, deviceFor, eventFor, isBot, isFreshOrder, isTrackablePath, rangeStart, referrerFor, summarize, type Row } from "./analytics";
 
 async function sha256(s: string) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
@@ -11,7 +11,7 @@ async function sha256(s: string) {
 
 /** Public, anonymous visit recorder. Never stores IPs; visitor id is a daily-salted hash. */
 export const recordVisit = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ path: z.string().max(300), referrer: z.string().max(500) }))
+  .inputValidator(z.object({ path: z.string().max(300), referrer: z.string().max(500), ref: z.string().max(40).optional(), token: z.string().max(64).optional() }))
   .handler(async ({ data }) => {
     try {
       const ua = getRequestHeader("user-agent") ?? "";
@@ -29,7 +29,17 @@ export const recordVisit = createServerFn({ method: "POST" })
       const ip = getRequestHeader("cf-connecting-ip") ?? getRequestHeader("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
       const day = new Date(Date.now() + 7 * 3600_000).toISOString().slice(0, 10);
       const visitor_hash = (await sha256(`${ip}|${ua}|${day}|${process.env["SUPABASE_URL"] ?? ""}`)).slice(0, 32);
-      const { event, product } = eventFor(path);
+      const { event } = eventFor(path);
+      let { product } = eventFor(path);
+      if (event === "order_completed") {
+        // Count only a real, just-placed order, once per order (email/status revisits ignored).
+        if (!data.ref || !data.token) return { ok: true };
+        const { data: order } = await supabaseAdmin.from("orders").select("id, created_at").eq("order_number", data.ref).eq("access_token", data.token).maybeSingle();
+        if (!order || !isFreshOrder(order.created_at)) return { ok: true };
+        product = `order:${(await sha256(order.id)).slice(0, 16)}`;
+        const { data: seen } = await supabaseAdmin.from("traffic_events").select("id").eq("event_type", "order_completed").eq("product_slug", product).limit(1);
+        if (seen?.length) return { ok: true };
+      }
       // Debounce: same visitor + same path within 10s is one hit.
       const since = new Date(Date.now() - 10_000).toISOString();
       const { data: dup } = await supabaseAdmin.from("traffic_events").select("id").eq("visitor_hash", visitor_hash).eq("path", path).gte("created_at", since).limit(1);
