@@ -29,7 +29,7 @@ export const checkAdmin = createServerFn({ method: "GET" }).middleware([requireS
 });
 
 // ---------- Orders ----------
-export type AdminOrder = AdminOrderRow & { id: string; receipt_url: string | null; label_url: string | null; subtotal: number; shipping_fee: number; discount_amount: number; sticker_bundle_discount: number; promo_code: string | null; stock_status: StockStatus; placed_by: PlacedBy | null };
+export type AdminOrder = AdminOrderRow & { id: string; has_receipt: boolean; label_url: string | null; subtotal: number; shipping_fee: number; discount_amount: number; sticker_bundle_discount: number; promo_code: string | null; stock_status: StockStatus; placed_by: PlacedBy | null };
 
 const FilterSchema = z.object({
   q: z.string().max(200).optional(), status: z.string().max(50).optional(), currency: z.enum(["myr", "thb"]).optional(),
@@ -67,7 +67,8 @@ async function loadOrders(admin: Awaited<ReturnType<typeof adminClient>>): Promi
   if (error) throw new Error(error.message);
   const { data: posRows, error: posError } = await admin.from("order_pos_operations").select("order_id,cycle,kind,receipt_number,total_thb,promo_thb,confirmed_by,created_at").in("order_id", (data ?? []).map((o) => o.id)).order("cycle").order("created_at");
   if (posError) throw new Error(posError.message);
-  const paths = (data ?? []).flatMap((o) => [o.receipt_path, o.tracking_label_path]).filter((p): p is string => !!p);
+  // Payment slips are never pre-signed in listings: staff fetch a short-lived link per click (getReceiptLink).
+  const paths = (data ?? []).map((o) => o.tracking_label_path).filter((p): p is string => !!p);
   const signed = paths.length ? (await admin.storage.from("payment-receipts").createSignedUrls(paths, 3600)).data ?? [] : [];
   return (data ?? []).map((o) => ({
     id: o.id, order_number: o.order_number, created_at: o.created_at, status: o.status, currency: o.currency,
@@ -78,7 +79,7 @@ async function loadOrders(admin: Awaited<ReturnType<typeof adminClient>>): Promi
     pos_history: (posRows ?? []).filter((p) => p.order_id === o.id).map((p) => ({ cycle: p.cycle, kind: p.kind, receipt_number: p.receipt_number, total_thb: p.total_thb == null ? null : Number(p.total_thb), promo_thb: p.promo_thb == null ? null : Number(p.promo_thb), confirmed_by: p.confirmed_by, created_at: p.created_at })),
     stock_status: o.stock_status as StockStatus,
     placed_by: orderPlacer(o.user_id, idx),
-    receipt_url: signed.find((s) => s.path === o.receipt_path)?.signedUrl ?? null,
+    has_receipt: !!o.receipt_path,
     label_url: o.tracking_label_path ? signed.find((s) => s.path === o.tracking_label_path)?.signedUrl ?? null : null,
   }));
 }
@@ -389,6 +390,22 @@ export const linkStock = createServerFn({ method: "POST" }).middleware([requireS
     return { ok: true };
   });
 
+/** Seconds a payment-slip link stays valid; kept short so removing a staff role cuts off slip access almost at once. */
+export const RECEIPT_LINK_TTL_SECONDS = 60;
+
+/** Admin-only: re-checks the role on every click, then returns a short-lived link to one order's payment slip. */
+export const getReceiptLink = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ order_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const admin = await adminClient(context as unknown as Ctx);
+    const { data: order, error } = await admin.from("orders").select("receipt_path").eq("id", data.order_id).maybeSingle();
+    if (error) throw new Error("Could not load the payment slip");
+    if (!order?.receipt_path) throw new Error("This order has no payment slip");
+    const { data: signed, error: sErr } = await admin.storage.from("payment-receipts").createSignedUrl(order.receipt_path, RECEIPT_LINK_TTL_SECONDS);
+    if (sErr || !signed?.signedUrl) throw new Error("Could not open the payment slip");
+    return { url: signed.signedUrl };
+  });
+
 // ---------- Towing ----------
 export const listTowing = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const admin = await adminClient(context as unknown as Ctx);
@@ -459,8 +476,6 @@ export const getUserOrders = createServerFn({ method: "POST" }).middleware([requ
     if (mine.error) throw new Error(mine.error.message);
     if (guest.error) throw new Error(guest.error.message);
     const rows = [...(mine.data ?? []), ...(guest.data ?? [])].filter((o) => orderSource(o, { id: u.id, email })).sort((a, b) => b.created_at.localeCompare(a.created_at));
-    const paths = rows.map((o) => o.receipt_path).filter((p): p is string => !!p);
-    const signed = paths.length ? (await admin.storage.from("payment-receipts").createSignedUrls(paths, 3600)).data ?? [] : [];
     const orders = rows.map((o) => ({
       id: o.id, order_number: o.order_number, created_at: o.created_at, status: o.status, currency: o.currency,
       total_amount: Number(o.total_amount), subtotal: Number(o.subtotal), shipping_fee: Number(o.shipping_fee),
@@ -469,7 +484,7 @@ export const getUserOrders = createServerFn({ method: "POST" }).middleware([requ
       country: ((o.shipping_address ?? {}) as { country?: string }).country ?? null,
       source: orderSource(o, { id: u.id, email })!,
       items: (o.order_items ?? []).map((i) => ({ ...i, unit_price: Number(i.unit_price) })),
-      receipt_url: signed.find((x) => x.path === o.receipt_path)?.signedUrl ?? null,
+      has_receipt: !!o.receipt_path,
     }));
     return {
       user: { id: u.id, email: u.email ?? "", created_at: u.created_at, email_confirmed: !!u.email_confirmed_at },

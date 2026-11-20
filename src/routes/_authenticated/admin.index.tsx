@@ -9,6 +9,7 @@ import { incomeDates, type DatePreset } from "@/lib/income";
 import { canRefund, canUndoVerify, salesTotals, type OrderAction } from "@/lib/order-flow";
 import { getOwnerPinStatus } from "@/lib/owner.functions";
 import { QRCodeSVG } from "qrcode.react";
+import { ReceiptLink } from "@/components/receipt-link";
 import { exportOrdersCsv, getOrderHistory, listOrders, markOrderStock, reverseOrder, setTrackingLabel, updateOrder, type AdminOrder } from "@/lib/admin.functions";
 import { STOCK_LABEL } from "@/lib/order-stock";
 import { filterOrders, fullAddress, itemsText, money, orderTotals, statusOptions, type AdminOrderRow, type OrderFilters } from "@/lib/admin-csv";
@@ -155,7 +156,7 @@ function OrdersAdmin() {
                     <div className="font-medium">{money(o.currency, o.total_amount)}</div>
                     <PosNumbers o={o} />
                     <div className="text-xs text-muted-foreground">{o.payment_method}{o.promo_code ? ` · ${o.promo_code}` : ""}</div>
-                    {o.receipt_url ? <a href={o.receipt_url} target="_blank" rel="noreferrer" className="text-xs font-medium underline">View receipt</a> : <span className="text-xs text-muted-foreground">No receipt</span>}
+                    {o.has_receipt ? <ReceiptLink orderId={o.id} className="text-xs font-medium underline">View receipt</ReceiptLink> : <span className="text-xs text-muted-foreground">No receipt</span>}
                   </td>
                   <td className="max-w-[260px] px-3 py-2">{itemsText(o.items)}<button onClick={() => setDetails(o)} className="mt-1 block text-xs font-medium underline">View details</button></td>
                   <td className="min-w-[180px] px-3 py-2"><Totals o={o} /></td>
@@ -229,7 +230,7 @@ function OrdersAdmin() {
             <div className="space-y-1">
               <div>Payment: {details.payment_method}</div>
               <div className="space-y-1"><div className="font-semibold">POS receipt history</div>{details.pos_history?.filter((p) => p.receipt_number).map((p) => <div key={`${p.cycle}-${p.kind}`} className="border-b py-1 text-xs"><div className="flex flex-wrap justify-between gap-2"><span className="capitalize">{p.kind} {p.cycle} · <span className="font-mono">{p.receipt_number}</span></span><span>{money("thb", Number(p.total_thb ?? 0))}</span></div>{p.confirmed_by && <div className="break-all text-muted-foreground">THB promo {Number(p.promo_thb ?? 0).toFixed(2)} confirmed by admin {p.confirmed_by}</div>}</div>)}{!details.pos_history?.some((p) => p.receipt_number) && <span className="text-muted-foreground">—</span>}</div>
-              {details.receipt_url ? <a href={details.receipt_url} target="_blank" rel="noreferrer" className="font-medium underline">View receipt</a> : <span className="text-muted-foreground">No receipt</span>}
+              {details.has_receipt ? <ReceiptLink orderId={details.id} className="font-medium underline">View receipt</ReceiptLink> : <span className="text-muted-foreground">No receipt</span>}
               <div>Tracking no.: {details.tracking_number ?? "—"}</div>
               {details.label_url && <img src={details.label_url} alt={`Courier label for ${details.order_number}`} className="max-h-48 rounded border object-contain" />}
             </div>
@@ -280,7 +281,7 @@ function OrderCard({ o, updating, onDetails, onVerify, onReject, onRestored, chi
     <div className="flex flex-wrap items-center gap-2 text-xs"><span className={`rounded border px-2 py-0.5 ${o.stock_status === "deducted" ? "bg-primary text-primary-foreground" : o.stock_status === "unknown" ? "border-dashed" : "text-muted-foreground"}`}>{STOCK_LABEL[o.stock_status]}</span><PosNumbers o={o} inline /></div>
     {o.status === "pending_verification" && <div className="grid grid-cols-2 gap-2"><Button disabled={!!updating} onClick={onVerify}>{updating === o.id ? "Working…" : "Verify"}</Button><Button variant="outline" disabled={!!updating} onClick={onReject}>Reject</Button></div>}
     {o.stock_status === "unknown" && o.status === "rejected" && <Button size="sm" variant="outline" onClick={onRestored}>Mark restored</Button>}
-    <div className="grid grid-cols-2 gap-2"><Button variant="outline" onClick={onDetails}>View details</Button>{o.receipt_url ? <Button variant="outline" asChild><a href={o.receipt_url} target="_blank" rel="noreferrer">Payment slip</a></Button> : <span className="grid place-items-center text-xs text-muted-foreground">No slip</span>}</div>
+    <div className="grid grid-cols-2 gap-2"><Button variant="outline" onClick={onDetails}>View details</Button>{o.has_receipt ? <Button variant="outline" asChild><ReceiptLink orderId={o.id}>Payment slip</ReceiptLink></Button> : <span className="grid place-items-center text-xs text-muted-foreground">No slip</span>}</div>
     <details className="rounded-md border" open={needsCourier && !o.tracking_number ? true : undefined}><summary className="px-3 py-2 text-xs font-semibold">Courier label & tracking{o.tracking_number ? ` · ${o.tracking_number}` : ""}</summary><div className="border-t p-3">{children}</div></details>
   </article>;
 }

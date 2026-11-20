@@ -5,6 +5,7 @@ import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-quer
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ReceiptLink, useReceiptLink } from "@/components/receipt-link";
 import { getUserOrders, listRoleChanges, listUsers, setAdminRole } from "@/lib/admin.functions";
 import { filterByRole, roleCounts, ROLE_CHANGE_PAGE, ROLE_LABEL, type UserKind } from "@/lib/roles";
 
@@ -139,7 +140,16 @@ function CustomerOrdersDialog() {
   const navigate = useNavigate({ from: "/admin/users" });
   const fetchOrders = useServerFn(getUserOrders);
   const [filter, setFilter] = useState<(typeof ORDER_FILTERS)[number][0]>("all");
-  const [slip, setSlip] = useState<string | null>(null);
+  const [slip, setSlip] = useState<{ id: string; url: string } | null>(null);
+  const [slipBusy, setSlipBusy] = useState<string | null>(null);
+  const getSlipLink = useReceiptLink();
+  const toggleSlip = async (id: string) => {
+    if (slip?.id === id) { setSlip(null); return; }
+    setSlipBusy(id);
+    try { setSlip({ id, url: await getSlipLink(id) }); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Could not open the payment slip"); }
+    finally { setSlipBusy(null); }
+  };
   const { data, isLoading, error } = useQuery({ queryKey: ["admin", "user-orders", viewUser], queryFn: () => fetchOrders({ data: { user_id: viewUser! } }), enabled: !!viewUser });
   const close = () => { setFilter("all"); navigate({ search: ({ viewUser: _v, ...rest }) => rest }); };
   const p = data?.profile;
@@ -180,9 +190,9 @@ function CustomerOrdersDialog() {
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2 text-xs">
                       {t ? <a href={t.url} target="_blank" rel="noreferrer" className="rounded border px-2 py-1 font-semibold underline-offset-2 hover:underline">{t.courier}: {t.trackingNumber} ↗</a> : <span className="text-muted-foreground">No tracking yet</span>}
-                      {o.receipt_url && <button aria-expanded={slip === o.id} onClick={() => setSlip(slip === o.id ? null : o.id)} className={`rounded border px-2 py-1 font-semibold ${slip === o.id ? "bg-primary text-primary-foreground" : ""}`}>{slip === o.id ? "Hide payment slip" : "View payment slip"}</button>}
+                      {o.has_receipt && <button aria-expanded={slip?.id === o.id} disabled={slipBusy === o.id} onClick={() => { void toggleSlip(o.id); }} className={`rounded border px-2 py-1 font-semibold ${slip?.id === o.id ? "bg-primary text-primary-foreground" : ""}`}>{slipBusy === o.id ? "Loading…" : slip?.id === o.id ? "Hide payment slip" : "View payment slip"}</button>}
                     </div>
-                    {slip === o.id && o.receipt_url && <div className="mt-2 rounded-md border p-2"><button type="button" onClick={() => setSlip(null)} aria-label="Close payment slip" className="block w-full cursor-pointer"><img src={o.receipt_url} alt={`Payment slip for ${o.order_number}`} className="max-h-[420px] w-full rounded bg-muted object-contain" /></button><div className="mt-1 flex justify-between text-xs"><span className="text-muted-foreground">Tap image to close</span><a href={o.receipt_url} target="_blank" rel="noreferrer" className="underline">Open full size ↗</a></div></div>}
+                    {slip?.id === o.id && <div className="mt-2 rounded-md border p-2"><button type="button" onClick={() => setSlip(null)} aria-label="Close payment slip" className="block w-full cursor-pointer"><img src={slip.url} alt={`Payment slip for ${o.order_number}`} className="max-h-[420px] w-full rounded bg-muted object-contain" /></button><div className="mt-1 flex justify-between text-xs"><span className="text-muted-foreground">Tap image to close</span><ReceiptLink orderId={o.id} className="underline">Open full size ↗</ReceiptLink></div></div>}
                   </li>
                 );
               })}</ul>

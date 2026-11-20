@@ -1,3 +1,4 @@
 - Courier/tracking links come only from `src/lib/tracking.ts`; public `lookupOrder` never returns order data: on a match it emails the private status link to the order's saved address (identical reply either way, capped sends) and rate-limits failed guesses via service-only hashed logs, since an email is not proof of identity.
 - `one_per_customer` promos require sign-in and are rejected via `hasUsedPromo` when a prior non-rejected, non-refunded order shares account, email or phone.
 - Customer size changes go through `changeItemSize` → service-only `customer_change_item_size` (Pending Verification only, ownership, capped, history + stock/receipt snapshots in one transaction); verified orders need staff Undo Verify, so Loyverse sales never drift.
+- Payment-slip links are never pre-signed in admin listings; staff fetch a 60-second link per click via `getReceiptLink` (role re-checked), so removing a staff role cuts slip access almost immediately.
