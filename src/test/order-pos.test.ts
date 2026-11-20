@@ -31,7 +31,7 @@ function client() {
 beforeEach(() => {
  vi.resetAllMocks(); posts = 0; ops = [];
  order = { id: "order", order_number: "KM-73679", status: "pending_verification", currency: "myr", subtotal: 19.5, shipping_fee: 20, total_amount: 38, discount_amount: 0, sticker_bundle_discount: 1.5, promo_code: null, promo_snapshot: null, stock_deductions: [{ variantId: variant, quantity: 3 }], order_items: [{ product_id: "p", product_name: "STICKER (8x8cm) - A", selected_variant: "", quantity: 3 }], stock_deducted_at: null, stock_restored_at: null };
- vi.mocked(lv.posSettings).mockResolvedValue({ storeId: "store", paymentId: "web", taxes: [{ id: "vat" }] });
+ vi.mocked(lv.posSettings).mockResolvedValue({ storeId: "store", paymentId: "web", taxes: [{ id: "vat" }], employeeId: "owner-emp", posDeviceId: "merch-pos" });
  vi.mocked(lv.findPosReceipt).mockResolvedValue(null);
  vi.mocked(lv.fetchLevels).mockResolvedValue([{ variant_id: variant, store_id: "store", in_stock: 10 }]);
  vi.mocked(lv.posRequest).mockImplementation(async (_path, body) => { if (body) posts++; return receipt as any; });
@@ -44,6 +44,8 @@ describe("durable POS receipt flow", () => {
   expect(posts).toBe(1); expect(lv.adjustStock).not.toHaveBeenCalled();
   expect(ops[0].payload.line_items.reduce((s: number, l: any) => s + Math.round(l.price * 100) * l.quantity, 0)).toBe(14700);
   expect(ops[0].payload.total_discounts.map((d: any) => d.money_amount)).toEqual([7]);
+  expect(ops[0].payload.employee_id).toBe("owner-emp");
+  expect(ops[0].payload.pos_device_id).toBe("merch-pos");
  });
  it("shortfall prevents a receipt", async () => {
   vi.mocked(lv.fetchLevels).mockResolvedValue([{ variant_id: variant, store_id: "store", in_stock: 2 }]);

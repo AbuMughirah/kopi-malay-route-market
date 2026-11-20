@@ -97,10 +97,13 @@ export async function findPosReceipt(ref: string, source: string, kind: "sale" |
 }
 
 export async function posSettings() {
-  const [stores, payments, taxes] = await Promise.all([
+  const [stores, payments, taxes, employees, devices] = await Promise.all([
     posRequest<{ stores: { id: string; name: string; deleted_at: string | null }[] }>("/stores"),
     posRequest<{ payment_types: { id: string; name: string; stores: string[]; deleted_at: string | null }[] }>("/payment_types"),
     posRequest<{ taxes: { id: string; type: string; rate: number; stores: string[]; deleted_at: string | null }[] }>("/taxes"),
+    // Attribution only: a lookup failure must never block verification.
+    posRequest<{ employees: { id: string; is_owner: boolean; stores: string[]; deleted_at: string | null }[] }>("/employees").catch(() => ({ employees: [] })),
+    posRequest<{ pos_devices: { id: string; name: string; store_id: string; deleted_at: string | null }[] }>("/pos_devices").catch(() => ({ pos_devices: [] })),
   ]);
   const store = stores.stores.find((s) => s.name === "KOPI MALAY" && !s.deleted_at);
   const payment = payments.payment_types.find((p) => p.name === "MERCHANDISE QR (WEB)" && !p.deleted_at && store && p.stores.includes(store.id));
@@ -108,7 +111,10 @@ export async function posSettings() {
   // Only included VAT: never let an added tax increase discounted merchandise prices.
   const vat = taxes.taxes.find((t) => t.type === "INCLUDED" && t.rate === 7 && !t.deleted_at && t.stores.includes(store.id));
   if (!vat) throw new Error("The store's 7% included VAT is unavailable. Order not verified.");
-  return { storeId: store.id, paymentId: payment.id, taxes: [{ id: vat.id }] };
+  // Web receipts are credited to the Loyverse owner and the merchandise POS instead of "Not tracked".
+  const owner = employees.employees.find((e) => e.is_owner && !e.deleted_at && e.stores.includes(store.id));
+  const device = devices.pos_devices.find((d) => d.name === "POS Merchandise" && !d.deleted_at && d.store_id === store.id);
+  return { storeId: store.id, paymentId: payment.id, taxes: [{ id: vat.id }], employeeId: owner?.id ?? null, posDeviceId: device?.id ?? null };
 }
 
 export async function writeoffTargets(deltas: StockDelta[], storeId: string) {
