@@ -21,6 +21,8 @@ import { capitalizeFormDetails, capitalizeFormValue } from "@/lib/form-capitals"
 import { compressImage } from "@/lib/image-compress";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
+const DRAFT_KEY = "km_checkout_draft";
+
 export const Route = createFileRoute("/checkout/")({ staticData: { sitemap: false },
   loader: ({ context }) => context.queryClient.ensureQueryData(productsQuery),
   validateSearch: (s: Record<string, unknown>): { cancelled?: number | undefined } => (s["cancelled"] ? { cancelled: 1 } : {}),
@@ -66,7 +68,20 @@ function Checkout() {
   };
   const [touched, setTouched] = useState<Partial<Record<CheckoutField, boolean>>>({});
   const [attempted, setAttempted] = useState(false);
-  useEffect(() => { setRef(makeOrderRef()); }, []);
+  const [draftReady, setDraftReady] = useState(false);
+  useEffect(() => {
+    // Restore an unsent checkout draft if the phone reloaded the page while the customer was in their bank app.
+    try {
+      const raw = sessionStorage.getItem(DRAFT_KEY);
+      const d = raw ? JSON.parse(raw) : null;
+      if (d && typeof d === "object") {
+        if (typeof d.ref === "string" && d.ref) setRef(d.ref); else setRef(makeOrderRef());
+        if (d.f && typeof d.f === "object") setF((prev) => ({ ...prev, ...Object.fromEntries(Object.entries(d.f).filter(([k, v]) => k in prev && typeof v === "string" && v)) }));
+        if (d.country === "Thailand" || d.country === "Malaysia") setCountry(d.country);
+      } else setRef(makeOrderRef());
+    } catch { setRef(makeOrderRef()); }
+    setDraftReady(true);
+  }, []);
   const [f, setF] = useState({ email: "", name: "", phone: "", address: "", city: "", state: "", postcode: "" });
   const [country, setCountry] = useState<Country>("Malaysia");
   const errors = checkoutErrors({ ...f, country }, receipt);
@@ -145,6 +160,11 @@ function Checkout() {
     return () => { live = false; };
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (!draftReady || !ref) return;
+    try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ ref, f, country })); } catch { /* storage full or blocked */ }
+  }, [draftReady, ref, f, country]);
+
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF((prev) => ({ ...prev, [k]: capitalizeFormValue(k, e.target.value) }));
 
   const submit = async (e: React.FormEvent) => {
@@ -175,6 +195,7 @@ function Checkout() {
       fd.append("payload", JSON.stringify({ ...capitalizeFormDetails(f), country, ref, promoCode: promo?.code, items: items.map((i) => ({ productId: i.productId, variant: i.variant, quantity: i.quantity })) }));
       fd.append("receipt", receipt);
       const res = await create({ data: fd });
+      try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
       await navigate({ to: "/order-success", search: { ref: res.ref, t: res.token } });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not submit your order");
@@ -230,6 +251,7 @@ function Checkout() {
               <h2 className="font-display text-lg font-semibold uppercase">{country === "Thailand" ? "Pay with Thai PromptPay QR" : "Pay with DuitNow / Touch 'n Go QR"}</h2>
               <div className="grid gap-5 sm:grid-cols-[220px_1fr]">
                 <img src={country === "Thailand" ? thaiQrAsset.url : qrAsset.url} alt={country === "Thailand" ? "Kopi Malay Thai PromptPay payment QR code" : "Kopi Malay DuitNow / Touch 'n Go payment QR code"} className="mx-auto w-full max-w-[220px] rounded-md border bg-background" />
+                <a href={country === "Thailand" ? thaiQrAsset.url : qrAsset.url} download={country === "Thailand" ? "kopi-malay-promptpay-qr.png" : "kopi-malay-duitnow-qr.jpg"} target="_blank" rel="noreferrer" className="mx-auto -mt-3 block w-full max-w-[220px] rounded-md border px-3 py-2 text-center text-xs font-semibold uppercase sm:col-start-1">Save QR code</a>
                 <div className="space-y-3 text-sm">
                   <div className="rounded-md border bg-background p-3">
                     <p className="text-muted-foreground">Amount to pay</p>
@@ -243,14 +265,36 @@ function Checkout() {
                   {country === "Thailand" ? <p><strong>Thailand / ประเทศไทย:</strong> Scan the Thai PromptPay QR with K-Bank, SCB, Krungthai or another Thai bank app. Enter the exact THB amount shown above. สแกนผ่านแอปธนาคารไทยและชำระตามยอดเงินบาทที่แสดง</p> : <p><strong>Malaysia:</strong> Scan the DuitNow QR with Touch 'n Go eWallet, MAE, CIMB or another Malaysian banking app. Enter the exact MYR amount shown above.</p>}
                 </div>
               </div>
-              <label className="block space-y-1.5">
-                <span className="font-medium">Upload payment proof / receipt *</span>
-                <input {...inputProps("receipt")} type="file" accept="image/png,image/jpeg,application/pdf" onChange={(e) => { void pickReceipt(e.target.files?.[0] ?? null); }} />
-                <span className="block text-xs text-muted-foreground">PNG, JPG or PDF, up to 5MB.</span>
-                {compressing && <span className="block text-xs text-muted-foreground">Preparing your receipt…</span>}
-                {receipt && !compressing && !receiptMsg && <span className="block text-xs">Selected: {receipt.name} ({Math.max(1, Math.round(receipt.size / 1024))} KB)</span>}
+              <div className="space-y-2">
+                <p className="font-medium">Upload payment proof / receipt *</p>
+                <ul className="space-y-0.5 text-xs text-muted-foreground">
+                  <li>✓ Shows the bank reference or transaction ID</li>
+                  <li>✓ Matches the amount to pay ({unavailable || ship == null ? "—" : money(payable)})</li>
+                  <li>✓ Clear, uncropped screenshot of the transfer slip (not the QR code)</li>
+                </ul>
+                <input {...inputProps("receipt")} className="sr-only" required={false} type="file" accept="image/png,image/jpeg,application/pdf" onChange={(e) => { void pickReceipt(e.target.files?.[0] ?? null); e.target.value = ""; }} />
+                {!receipt ? (
+                  <label htmlFor="checkout-receipt" className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed p-6 text-center ${receiptMsg ? "border-destructive" : "border-border"}`}>
+                    <span className="text-2xl" aria-hidden>📄</span>
+                    <span className="text-sm font-semibold">{compressing ? "Preparing your receipt…" : "Tap to upload your transfer slip"}</span>
+                    <span className="text-xs text-muted-foreground">PNG, JPG or PDF, up to 5MB</span>
+                  </label>
+                ) : (
+                  <div className="flex items-center gap-3 rounded-lg border p-3">
+                    {receiptPreview ? <img src={receiptPreview} alt="Your uploaded payment slip" className="h-20 w-16 shrink-0 rounded border object-cover" /> : <div className="flex h-20 w-16 shrink-0 items-center justify-center rounded border text-xs font-bold">PDF</div>}
+                    <div className="min-w-0 flex-1 text-xs">
+                      <p className="font-semibold">Receipt selected</p>
+                      <p className="truncate text-muted-foreground">{receipt.name} ({Math.max(1, Math.round(receipt.size / 1024))} KB)</p>
+                      <p className="mt-1 text-muted-foreground">Check this is your bank slip, not the QR code.</p>
+                      <div className="mt-2 flex gap-2">
+                        <label htmlFor="checkout-receipt" className="cursor-pointer rounded border px-2 py-1 font-medium">Replace</label>
+                        <button type="button" onClick={() => { void pickReceipt(null); }} className="rounded border px-2 py-1 font-medium">Remove</button>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {errorPrompt("receipt")}
-              </label>
+              </div>
           </section>
         </div>
         <aside className="h-fit rounded-lg border bg-card p-5">
