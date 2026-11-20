@@ -6,7 +6,7 @@ export const Route = createFileRoute("/shipping-returns")({ staticData: { sitema
   head: () => legalHead("/shipping-returns", "Shipping & Returns", "Shipping rates from Tak to Malaysia and Thailand, tumbler weight fees, East Malaysia surcharge and returns."),
   component: () => (
     <LegalPage title="Shipping & Returns">
-      <p>All orders are packed and dispatched from Tak, Thailand. We currently deliver to Malaysia and Thailand only; Singapore customers may arrange collection through a contact in Peninsular Malaysia.</p>
+      <p>All orders are packed and dispatched from Tak, Thailand. We deliver within Malaysia and Thailand only.</p>
       <h2>Thailand</h2>
       <ul>
         <li>Accessories, stickers, patches, magnets and apparel ship free.</li>
@@ -21,8 +21,18 @@ export const Route = createFileRoute("/shipping-returns")({ staticData: { sitema
       </ul>
       <h2>Sabah & Sarawak</h2>
       <p>The Peninsular Malaysia rate applies, plus a flat RM 10 surcharge once per order.</p>
-      <h2>Processing & tracking</h2>
-      <p>Orders ship after payment verification, usually within 1–3 working days. You will receive a courier tracking number once dispatched. Cross-border delivery typically takes 5–10 working days.</p>
+      <h2>Order processing & daily cut-off</h2>
+      <ul>
+        <li>Daily dispatch cut-off: 2:00 PM Thailand time (GMT+7) / 3:00 PM Malaysia time (GMT+8).</li>
+        <li>Orders with payment verified before the cut-off are packed and handed to the courier the same day.</li>
+        <li>Orders verified after the cut-off, or on courier public holidays, are dispatched on the next operating day.</li>
+      </ul>
+      <h2>Delivery & tracking</h2>
+      <ul>
+        <li>Malaysia (J&T Express): typically 5–10 working days.</li>
+        <li>Thailand (Flash Express): typically 1–3 working days.</li>
+        <li>You will receive a courier tracking number once your parcel is dispatched.</li>
+      </ul>
       <h2>Returns & exchanges</h2>
       <ul>
         <li>Apparel sizes can be changed free in My Profile while an order is still "Pending Verification".</li>
