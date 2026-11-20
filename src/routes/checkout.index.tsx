@@ -249,9 +249,11 @@ function Checkout() {
           </section>
           <section className="space-y-4 rounded-lg border bg-card p-5">
               <h2 className="font-display text-lg font-semibold uppercase">{country === "Thailand" ? "Pay with Thai PromptPay QR" : "Pay with DuitNow / Touch 'n Go QR"}</h2>
-              <div className="grid gap-5 sm:grid-cols-[220px_1fr]">
-                <img src={country === "Thailand" ? thaiQrAsset.url : qrAsset.url} alt={country === "Thailand" ? "Kopi Malay Thai PromptPay payment QR code" : "Kopi Malay DuitNow / Touch 'n Go payment QR code"} className="mx-auto w-full max-w-[220px] rounded-md border bg-background" />
-                <a href={country === "Thailand" ? thaiQrAsset.url : qrAsset.url} download={country === "Thailand" ? "kopi-malay-promptpay-qr.png" : "kopi-malay-duitnow-qr.jpg"} target="_blank" rel="noreferrer" className="mx-auto -mt-3 block w-full max-w-[220px] rounded-md border px-3 py-2 text-center text-xs font-semibold uppercase sm:col-start-1">Save QR code</a>
+              <div className="grid items-start gap-5 sm:grid-cols-[220px_1fr]">
+                <div className="mx-auto flex w-full max-w-[220px] flex-col gap-2 self-start">
+                  <img src={country === "Thailand" ? thaiQrAsset.url : qrAsset.url} alt={country === "Thailand" ? "Kopi Malay Thai PromptPay payment QR code" : "Kopi Malay DuitNow / Touch 'n Go payment QR code"} className="w-full rounded-md border bg-background" />
+                  <a href={country === "Thailand" ? thaiQrAsset.url : qrAsset.url} download={country === "Thailand" ? "kopi-malay-promptpay-qr.png" : "kopi-malay-duitnow-qr.jpg"} target="_blank" rel="noreferrer" className="block w-full rounded-md border bg-background px-3 py-2 text-center text-xs font-semibold uppercase hover:bg-muted">Save QR code</a>
+                </div>
                 <div className="space-y-3 text-sm">
                   <div className="rounded-md border bg-background p-3">
                     <p className="text-muted-foreground">Amount to pay</p>
@@ -276,7 +278,7 @@ function Checkout() {
                 {!receipt ? (
                   <label htmlFor="checkout-receipt" className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed p-6 text-center ${receiptMsg ? "border-destructive" : "border-border"}`}>
                     <span className="text-2xl" aria-hidden>📄</span>
-                    <span className="text-sm font-semibold">{compressing ? "Preparing your receipt…" : "Tap to upload your transfer slip"}</span>
+                    <span className="text-sm font-semibold">{compressing ? "Preparing your receipt…" : "Tap or click to upload your transfer slip"}</span>
                     <span className="text-xs text-muted-foreground">PNG, JPG or PDF, up to 5MB</span>
                   </label>
                 ) : (
