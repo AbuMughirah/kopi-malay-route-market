@@ -1,2 +1,3 @@
 - `router.tsx`: QueryClient uses a short default stale time for storefront reuse; `admin`, `owner-pin-status` and `order-ref` keys stay always-fresh so staff and payment screens never show cached state.
 - `lib/telegram.server.ts`: a set BotFather token (store or towing) means direct delivery only to its configured chat, with no gateway or cross-chat fallback, so alerts never duplicate or leak rescue data to store staff; logs redact tokens.
+- `lib/i18n/dictionary.ts` + `hooks/use-i18n.tsx`: UI text comes from one typed EN/MS/TH dictionary; SSR renders English and the saved choice (localStorage) applies after hydration to avoid mismatches. Product names and order statuses stay untranslated to match Loyverse and receipts.
