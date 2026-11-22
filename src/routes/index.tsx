@@ -1,3 +1,4 @@
+import { useI18n } from "@/hooks/use-i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { NewArrivalCarousel } from "@/components/new-arrival-carousel";
@@ -39,6 +40,7 @@ export const Route = createFileRoute("/")({ staticData: { sitemap: true },
 function Home() {
   const { data: products } = useSuspenseQuery(productsQuery);
   const { data: categories } = useSuspenseQuery(categoriesQuery);
+  const { t } = useI18n();
   const arrivals = products.filter((p) => p.is_new_arrival);
   const featured = products.filter((p) => p.is_featured).slice(0, 8);
 
@@ -50,16 +52,16 @@ function Home() {
         <Link to="/towing" className="grid overflow-hidden rounded-lg border bg-primary text-primary-foreground md:grid-cols-2">
           <img src={towingPoster.url} alt="Kopi Malay towing and rescue service" className="h-56 w-full object-cover md:h-full" loading="lazy" />
           <div className="flex flex-col justify-center gap-3 p-6 md:p-10">
-            <p className="font-display text-xs font-bold uppercase tracking-widest opacity-80">Route 1 · Thailand</p>
-            <h2 className="font-display text-2xl font-bold uppercase md:text-4xl">Broken down? Towing &amp; Rescue</h2>
-            <p className="opacity-90">Request motorcycle towing in minutes. We'll contact you with pricing before dispatch.</p>
-            <span className="mt-2 inline-block w-fit rounded-md bg-background px-5 py-2.5 font-display font-semibold uppercase text-foreground">Request a tow</span>
+            <p className="font-display text-xs font-bold uppercase tracking-widest opacity-80">{t("home.towKicker")}</p>
+            <h2 className="font-display text-2xl font-bold uppercase md:text-4xl">{t("home.towTitle")}</h2>
+            <p className="opacity-90">{t("home.towBody")}</p>
+            <span className="mt-2 inline-block w-fit rounded-md bg-background px-5 py-2.5 font-display font-semibold uppercase text-foreground">{t("home.towCta")}</span>
           </div>
         </Link>
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-12">
-        <h2 className="font-display text-2xl font-bold uppercase">Shop by category</h2>
+        <h2 className="font-display text-2xl font-bold uppercase">{t("home.byCategory")}</h2>
         <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-7">
           {categories.map((c) => (
             <Link key={c.slug} to="/shop/$category" params={{ category: c.slug }} className="group relative aspect-[4/5] overflow-hidden rounded-lg border bg-muted">
@@ -72,8 +74,8 @@ function Home() {
 
       <section className="mx-auto max-w-7xl px-4 pb-12">
         <div className="flex items-end justify-between">
-          <h2 className="font-display text-2xl font-bold uppercase">Best sellers</h2>
-          <Link to="/shop" className="text-sm font-medium text-primary">View all →</Link>
+          <h2 className="font-display text-2xl font-bold uppercase">{t("home.bestSellers")}</h2>
+          <Link to="/shop" className="text-sm font-medium text-primary">{t("home.viewAll")}</Link>
         </div>
         <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
           {featured.map((p) => <ProductCard key={p.id} p={p} />)}
@@ -86,7 +88,7 @@ function Home() {
 
       <section className="border-t bg-background">
         <div className="mx-auto max-w-7xl px-4 py-14 text-center">
-          <h2 className="font-display text-3xl font-bold uppercase md:text-5xl">Strategic Partners</h2>
+          <h2 className="font-display text-3xl font-bold uppercase md:text-5xl">{t("home.partners")}</h2>
           <div className="mx-auto mt-8 grid max-w-4xl grid-cols-2 items-center gap-6 md:gap-12">
             {[partner1, partner2].map((p, i) => (
               <img key={i} src={p.url} alt={`Strategic partner ${i + 1}`} loading="lazy" className="mx-auto max-h-40 w-full object-contain md:max-h-56" />

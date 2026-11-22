@@ -1,3 +1,4 @@
+import { useI18n } from "@/hooks/use-i18n";
 import { Link } from "@tanstack/react-router";
 import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useState } from "react";
@@ -6,6 +7,7 @@ import { effectivePrice, effectivePriceThb, formatRM, imageFor, type Product } f
 import newArrivalsRibbon from "@/assets/new-arrivals-ribbon.png.asset.json";
 
 export function NewArrivalCarousel({ products }: { products: Product[] }) {
+  const { t } = useI18n();
   const [ref, api] = useEmblaCarousel({ loop: true, align: "start" });
   const [index, setIndex] = useState(0);
   useEffect(() => {
@@ -30,7 +32,7 @@ export function NewArrivalCarousel({ products }: { products: Product[] }) {
                   <img src={newArrivalsRibbon.url} alt="New arrivals" width={600} height={357} className="w-40 md:w-52" />
                   <h2 className="mt-4 font-display text-4xl font-bold uppercase leading-[0.95] md:text-6xl">{p.name}</h2>
                   <p className="mt-3 text-lg text-muted-foreground">{formatRM(effectivePrice(p))}{p.price_thb != null && ` / THB ${effectivePriceThb(p)!.toFixed(2)}`}</p>
-                  <Link to="/product/$slug" params={{ slug: p.slug }} className="mt-6 inline-block rounded-md bg-brand px-6 py-3 font-display font-semibold uppercase text-brand-foreground hover:opacity-90">Shop now</Link>
+                  <Link to="/product/$slug" params={{ slug: p.slug }} className="mt-6 inline-block rounded-md bg-brand px-6 py-3 font-display font-semibold uppercase text-brand-foreground hover:opacity-90">{t("home.shopNow")}</Link>
                 </div>
                 <Link to="/product/$slug" params={{ slug: p.slug }} className="order-1 md:order-2">
                   <img src={imageFor(p.images[0])} alt={p.name} width={448} height={448} loading={i === 0 ? "eager" : "lazy"} fetchPriority={i === 0 ? "high" : "auto"} decoding={i === 0 ? "sync" : "async"} className="mx-auto aspect-square w-full max-w-md rounded-lg bg-muted object-cover object-top" />
@@ -40,8 +42,8 @@ export function NewArrivalCarousel({ products }: { products: Product[] }) {
           ))}
         </div>
       </div>
-      <button onClick={prev} aria-label="Previous slide" className="absolute left-2 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full border bg-background/80 text-foreground hover:bg-background md:left-4"><ChevronLeft /></button>
-      <button onClick={next} aria-label="Next slide" className="absolute right-2 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full border bg-background/80 text-foreground hover:bg-background md:right-4"><ChevronRight /></button>
+      <button onClick={prev} aria-label={t("home.prevSlide")} className="absolute left-2 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full border bg-background/80 text-foreground hover:bg-background md:left-4"><ChevronLeft /></button>
+      <button onClick={next} aria-label={t("home.nextSlide")} className="absolute right-2 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full border bg-background/80 text-foreground hover:bg-background md:right-4"><ChevronRight /></button>
       <div className="absolute inset-x-0 bottom-4 flex justify-center gap-2">
         {products.map((p, i) => (
           <button key={p.id} aria-label={`Go to slide ${i + 1}`} onClick={() => api?.scrollTo(i)} className={`h-2 rounded-full transition-all ${i === index ? "w-6 bg-foreground" : "w-2 bg-foreground/30"}`} />

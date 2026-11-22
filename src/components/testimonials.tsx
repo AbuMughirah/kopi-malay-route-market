@@ -1,3 +1,4 @@
+import { useI18n } from "@/hooks/use-i18n";
 import { useEffect, useRef, useState } from "react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -16,6 +17,7 @@ import r10 from "@/assets/review-10.jpg.asset.json";
 const reviews = [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10];
 
 export function Testimonials() {
+  const { t } = useI18n();
   const [open, setOpen] = useState<number | null>(null);
   const [current, setCurrent] = useState(0);
   const [zoomed, setZoomed] = useState(false);
@@ -41,8 +43,8 @@ export function Testimonials() {
   return (
     <section className="border-t bg-background">
       <div className="mx-auto max-w-7xl px-4 py-12">
-        <h2 className="font-display text-2xl font-bold uppercase md:text-3xl">What riders say</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Real feedback from riders</p>
+        <h2 className="font-display text-2xl font-bold uppercase md:text-3xl">{t("rev.title")}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{t("rev.subtitle")}</p>
         <div className="mt-5 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3 md:gap-5">
           {reviews.map((r, i) => (
             <button
@@ -83,11 +85,11 @@ export function Testimonials() {
             ))}
           </div>
           <div className="flex items-center justify-between px-1 pt-1">
-            <button type="button" onClick={() => go(current - 1)} disabled={current === 0} className="rounded-full border p-2 disabled:opacity-30" aria-label="Previous review">
+            <button type="button" onClick={() => go(current - 1)} disabled={current === 0} className="rounded-full border p-2 disabled:opacity-30" aria-label={t("rev.prev")}>
               <ChevronLeft className="h-4 w-4" />
             </button>
             <span className="text-xs text-muted-foreground">{current + 1} / {reviews.length}</span>
-            <button type="button" onClick={() => go(current + 1)} disabled={current === reviews.length - 1} className="rounded-full border p-2 disabled:opacity-30" aria-label="Next review">
+            <button type="button" onClick={() => go(current + 1)} disabled={current === reviews.length - 1} className="rounded-full border p-2 disabled:opacity-30" aria-label={t("rev.next")}>
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>

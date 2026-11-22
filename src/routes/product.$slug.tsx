@@ -1,3 +1,5 @@
+import { useI18n } from "@/hooks/use-i18n";
+import { fill } from "@/lib/i18n/dictionary";
 import { WishlistButton } from "@/components/wishlist-button";
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -46,6 +48,7 @@ function ProductPage() {
   const { slug } = Route.useParams();
   const { data: p } = useSuspenseQuery(productQuery(slug));
   const { add, setOpen } = useCart();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [size, setSize] = useState("");
   const [qty, setQty] = useState(1);
@@ -58,11 +61,11 @@ function ProductPage() {
   const ready = (!apparel || !!size) && !soldOut && !allSoldOut;
 
   const doAdd = async (buy: boolean) => {
-    if (!ready) { toast.warning(soldOut ? "This item is sold out" : "Please select a size first"); return; }
-    if (left !== null && qty > left) { toast.warning(`Only ${left} left`); return; }
+    if (!ready) { toast.warning(soldOut ? t("p.soldOutToast") : t("p.selectSizeFirst")); return; }
+    if (left !== null && qty > left) { toast.warning(fill(t("p.onlyLeft"), { n: left })); return; }
     await add(p, size, qty);
     if (buy) navigate({ to: "/checkout" });
-    else toast.success(`${p.name} added to cart`, { action: { label: "View cart", onClick: () => setOpen(true) } });
+    else toast.success(`${p.name} ${t("p.added")}`, { action: { label: t("p.viewCart"), onClick: () => setOpen(true) } });
   };
 
   const goBack = () => {
@@ -76,7 +79,7 @@ function ProductPage() {
     <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 md:grid-cols-2 md:gap-12">
       <div className="relative">
         <ProductImageViewer key={p.id} images={p.images} name={p.name} />
-        <button type="button" aria-label="Close and go back" onClick={(e) => { e.stopPropagation(); goBack(); }}
+        <button type="button" aria-label={t("p.closeBack")} onClick={(e) => { e.stopPropagation(); goBack(); }}
           className="absolute right-3 top-3 z-10 grid size-10 place-items-center rounded-full border border-foreground/15 bg-background/90 text-foreground shadow-md backdrop-blur-sm">
           <X className="size-5" />
         </button>
@@ -85,12 +88,12 @@ function ProductPage() {
         <Link to="/shop/$category" params={{ category: p.category_slug }} className="text-xs uppercase tracking-widest text-primary">{p.category_name}</Link>
         <div className="mt-2 flex items-start justify-between gap-3"><h1 className="font-display text-3xl font-bold md:text-4xl">{p.name}</h1><WishlistButton productId={p.id} name={p.name} className="shrink-0" /></div>
         <PriceTag p={p} className="mt-3 text-xl" />
-        {allSoldOut ? <p className="mt-2 text-sm font-semibold text-sale">Sold out</p>
-          : left !== null && left > 0 && left <= 10 ? <p role="status" className="mt-2 inline-flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-1.5 text-sm font-bold text-destructive"><span className="relative flex size-2.5"><span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive opacity-75 motion-reduce:animate-none" /><span className="relative inline-flex size-2.5 rounded-full bg-destructive" /></span><span className="animate-pulse motion-reduce:animate-none">Only {left} left in stock — order soon</span></p>
-          : left !== null && left > 10 ? <p className="mt-2 text-sm text-muted-foreground">In stock</p> : null}
+        {allSoldOut ? <p className="mt-2 text-sm font-semibold text-sale">{t("p.soldOut")}</p>
+          : left !== null && left > 0 && left <= 10 ? <p role="status" className="mt-2 inline-flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-1.5 text-sm font-bold text-destructive"><span className="relative flex size-2.5"><span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive opacity-75 motion-reduce:animate-none" /><span className="relative inline-flex size-2.5 rounded-full bg-destructive" /></span><span className="animate-pulse motion-reduce:animate-none">{fill(t("p.onlyLeftSoon"), { n: left })}</span></p>
+          : left !== null && left > 10 ? <p className="mt-2 text-sm text-muted-foreground">{t("p.inStock")}</p> : null}
         {apparel && (
           <div className="mt-6">
-            <div className="mb-3 flex items-center justify-between gap-3"><p className="font-display text-sm font-semibold uppercase">Size {size && <span className="text-muted-foreground">— {size}</span>}</p><ApparelSizeGuide selected={size} /></div>
+            <div className="mb-3 flex items-center justify-between gap-3"><p className="font-display text-sm font-semibold uppercase">{t("p.size")} {size && <span className="text-muted-foreground">— {size}</span>}</p><ApparelSizeGuide selected={size} /></div>
             <div className="flex flex-wrap gap-2">
               {(p.variants.sizes ?? []).map((s) => (
                 <Button variant="outline" key={s} disabled={availableStock(p, s) === 0} onClick={() => { setSize(s); setQty(1); }} className={`min-w-12 px-3 font-medium ${size === s ? "border-ink bg-ink text-ink-foreground" : "bg-card hover:border-ink"}`}>{s}</Button>
@@ -99,26 +102,26 @@ function ProductPage() {
           </div>
         )}
         <div className="mt-6 flex items-center gap-3">
-          <p className="font-display text-sm font-semibold uppercase">Qty</p>
+          <p className="font-display text-sm font-semibold uppercase">{t("p.qty")}</p>
           <div className="flex items-center rounded-md border bg-card">
-            <button aria-label="Decrease quantity" className="p-3" onClick={() => setQty(Math.max(1, qty - 1))}><Minus className="size-4" /></button>
+            <button aria-label={t("p.decQty")} className="p-3" onClick={() => setQty(Math.max(1, qty - 1))}><Minus className="size-4" /></button>
             <span className="w-8 text-center">{qty}</span>
-            <button aria-label="Increase quantity" className="p-3" onClick={() => setQty(left !== null ? Math.min(left, qty + 1) : qty + 1)}><Plus className="size-4" /></button>
+            <button aria-label={t("p.incQty")} className="p-3" onClick={() => setQty(left !== null ? Math.min(left, qty + 1) : qty + 1)}><Plus className="size-4" /></button>
           </div>
         </div>
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <button disabled={!ready} onClick={() => doAdd(false)} className="rounded-md bg-ink py-3 font-display font-semibold uppercase text-ink-foreground hover:bg-primary disabled:opacity-40">Add to cart</button>
-          <button disabled={!ready} onClick={() => doAdd(true)} className="rounded-md bg-sale py-3 font-display font-semibold uppercase text-sale-foreground hover:opacity-90 disabled:opacity-40">Buy now</button>
+          <button disabled={!ready} onClick={() => doAdd(false)} className="rounded-md bg-ink py-3 font-display font-semibold uppercase text-ink-foreground hover:bg-primary disabled:opacity-40">{t("p.addToCart")}</button>
+          <button disabled={!ready} onClick={() => doAdd(true)} className="rounded-md bg-sale py-3 font-display font-semibold uppercase text-sale-foreground hover:opacity-90 disabled:opacity-40">{t("p.buyNow")}</button>
         </div>
-        {!ready && <p className="mt-2 text-sm text-muted-foreground">{soldOut || allSoldOut ? "Sold out — check back soon." : "Select a size to continue."}</p>}
+        {!ready && <p className="mt-2 text-sm text-muted-foreground">{soldOut || allSoldOut ? t("p.soldOutSoon") : t("p.selectSize")}</p>}
         <Accordion type="single" collapsible defaultValue="desc" className="mt-8">
-          <AccordionItem value="desc"><AccordionTrigger className="font-display uppercase">Description</AccordionTrigger><AccordionContent>{p.description}</AccordionContent></AccordionItem>
+          <AccordionItem value="desc"><AccordionTrigger className="font-display uppercase">{t("p.description")}</AccordionTrigger><AccordionContent>{p.description}</AccordionContent></AccordionItem>
           {apparel && (
-            <AccordionItem value="size"><AccordionTrigger className="font-display uppercase">Size guide</AccordionTrigger>
+            <AccordionItem value="size"><AccordionTrigger className="font-display uppercase">{t("sg.button")}</AccordionTrigger>
               <AccordionContent><SizeGuideTable selected={size} /></AccordionContent>
             </AccordionItem>
           )}
-          <AccordionItem value="ship"><AccordionTrigger className="font-display uppercase">Shipping</AccordionTrigger>
+          <AccordionItem value="ship"><AccordionTrigger className="font-display uppercase">{t("p.shipping")}</AccordionTrigger>
             <AccordionContent>{shippingDescription(p.category_slug)}</AccordionContent>
           </AccordionItem>
         </Accordion>
