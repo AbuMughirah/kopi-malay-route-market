@@ -14,6 +14,20 @@ import towingPoster from "@/assets/towing-rescue-poster.jpg.asset.json";
 
 const CAT_IMG: Record<string, string> = { "jerseys-t-shirts": "tee", stickers: "chromium-black-yellow", tumblers: "tumbler-16oz", "fridge-magnets": "magnet-tak-city", patches: "patch", lanyard: "cap", "other-merch": "cap" };
 
+const ORG_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": ["Store", "Organization"],
+  "@id": `${SITE_ORIGIN}/#org`,
+  name: "Kopi Malay",
+  url: SITE_ORIGIN,
+  logo: `${SITE_ORIGIN}/favicon-192x192.png`,
+  image: HOME_SHARE_IMAGE.startsWith("https://") ? HOME_SHARE_IMAGE : `${SITE_ORIGIN}${HOME_SHARE_IMAGE}`,
+  telephone: "+66805898445",
+  address: { "@type": "PostalAddress", streetAddress: "3, 13 Chomphon, Tambon Rahaeng", addressLocality: "Mueang Tak District", addressRegion: "Tak", postalCode: "63000", addressCountry: "TH" },
+  openingHours: "Mo-Su 08:00-18:00",
+  sameAs: ["https://www.instagram.com/kopimalay", "https://www.facebook.com/kopimalay22/"],
+};
+
 export const Route = createFileRoute("/")({ staticData: { sitemap: true },
   loader: async ({ context }) => {
     await Promise.all([context.queryClient.ensureQueryData(productsQuery), context.queryClient.ensureQueryData(categoriesQuery)]);
@@ -32,6 +46,7 @@ export const Route = createFileRoute("/")({ staticData: { sitemap: true },
       { property: "og:image:height", content: "630" },
     ],
     links: [{ rel: "canonical", href: SITE_ORIGIN }],
+    scripts: [{ type: "application/ld+json", children: JSON.stringify(ORG_JSON_LD) }],
   }),
   component: Home,
   errorComponent: ({ error }) => <p className="p-8 text-sale">{error instanceof Error ? error.message : "Something went wrong"}</p>,
