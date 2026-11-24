@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useI18n } from "@/hooks/use-i18n";
+import { fill } from "@/lib/i18n/dictionary";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +40,7 @@ function ProfilePage() {
   const [busy, setBusy] = useState(false);
   const [orders, setOrders] = useState<MyOrder[]>([]);
   const [shown, setShown] = useState(ORDERS_PAGE);
+  const { t } = useI18n();
 
   const reload = () => {
     supabase.from("orders").select(ORDER_COLUMNS).order("created_at", { ascending: false }).limit(200)
@@ -65,45 +68,45 @@ function ProfilePage() {
     const trimmed = Object.fromEntries(Object.entries(capitalizeFormDetails(p)).map(([k, v]) => [k, v.trim()])) as Profile;
     const { error } = await supabase.from("profiles").upsert({ id: user.id, ...trimmed, updated_at: new Date().toISOString() });
     setBusy(false);
-    if (error) toast.error(error.message); else toast.success("Profile saved");
+    if (error) toast.error(error.message); else toast.success(t("pf.saved"));
   };
 
-  if (loading) return <p className="mx-auto max-w-3xl px-4 py-10 text-muted-foreground">Loading…</p>;
+  if (loading) return <p className="mx-auto max-w-3xl px-4 py-10 text-muted-foreground">{t("pf.loading")}</p>;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="font-display text-3xl font-bold uppercase md:text-4xl">My Profile</h1>
-      <p className="mt-2 text-muted-foreground">Signed in as {email}. These details pre-fill checkout and towing requests.</p>
+      <h1 className="font-display text-3xl font-bold uppercase md:text-4xl">{t("pf.title")}</h1>
+      <p className="mt-2 text-muted-foreground">{fill(t("pf.signedIn"), { email })}</p>
       <form onSubmit={save} className="mt-6 space-y-8">
         <section className="space-y-4 rounded-lg border p-5">
-          <h2 className="font-display text-lg font-bold uppercase">Personal &amp; contact</h2>
+          <h2 className="font-display text-lg font-bold uppercase">{t("pf.personal")}</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            {input("full_name", "Full name", "AHMAD BIN ALI")}
-            {input("phone", "Phone number", "+60 12-345 6789", "tel")}
+            {input("full_name", t("pf.fullName"), "AHMAD BIN ALI")}
+            {input("phone", t("pf.phone"), "+60 12-345 6789", "tel")}
             <div className="space-y-1.5">
-              <label htmlFor="pf-preferred_contact" className="text-sm font-medium">Preferred contact</label>
+              <label htmlFor="pf-preferred_contact" className="text-sm font-medium">{t("pf.prefContact")}</label>
               <select id="pf-preferred_contact" value={p.preferred_contact} onChange={set("preferred_contact")} className={`${field} uppercase`}>
                 {CONTACT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
-            {input("contact_handle", "Contact handle (optional)", "@telegram or alternate number")}
+            {input("contact_handle", t("pf.handle"), t("pf.handlePh"))}
           </div>
         </section>
         <section className="space-y-4 rounded-lg border p-5">
-          <h2 className="font-display text-lg font-bold uppercase">Default delivery address</h2>
+          <h2 className="font-display text-lg font-bold uppercase">{t("pf.delivery")}</h2>
           <div className="space-y-1.5">
-            <label htmlFor="pf-address" className="text-sm font-medium">Address</label>
+            <label htmlFor="pf-address" className="text-sm font-medium">{t("pf.address")}</label>
             <textarea id="pf-address" rows={2} autoCapitalize="characters" value={p.address} maxLength={300} onChange={set("address")} className={field} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            {input("city", "City")}
+            {input("city", t("pf.city"))}
             <div className="space-y-1.5">
-              <label htmlFor="pf-state" className="text-sm font-medium">{p.country === "thailand" ? "Province" : "State"}</label>
-              <PlacePicker uppercase id="pf-state" value={p.state} options={p.country === "thailand" ? TH_PROVINCES : MY_STATES} onValueChange={(v) => setP((prev) => ({ ...prev, state: v }))} placeholder={p.country === "thailand" ? "Type to search province" : "Type to search state"} className={field} />
+              <label htmlFor="pf-state" className="text-sm font-medium">{p.country === "thailand" ? t("pf.province") : t("pf.state")}</label>
+              <PlacePicker uppercase id="pf-state" value={p.state} options={p.country === "thailand" ? TH_PROVINCES : MY_STATES} onValueChange={(v) => setP((prev) => ({ ...prev, state: v }))} placeholder={p.country === "thailand" ? t("pf.searchProvince") : t("pf.searchState")} className={field} />
             </div>
-            {input("postcode", "Postcode")}
+            {input("postcode", t("pf.postcode"))}
             <div className="space-y-1.5">
-              <label htmlFor="pf-country" className="text-sm font-medium">Country</label>
+              <label htmlFor="pf-country" className="text-sm font-medium">{t("pf.country")}</label>
               <select id="pf-country" value={p.country} onChange={(e) => setP({ ...p, country: e.target.value, state: "" })} className={`${field} uppercase`}>
                 <option value="malaysia">Malaysia</option>
                 <option value="thailand">Thailand</option>
@@ -112,28 +115,28 @@ function ProfilePage() {
           </div>
         </section>
         <section className="space-y-4 rounded-lg border p-5">
-          <h2 className="font-display text-lg font-bold uppercase">Motorcycle garage</h2>
+          <h2 className="font-display text-lg font-bold uppercase">{t("pf.garage")}</h2>
           <div className="grid gap-4 sm:grid-cols-3">
-            {input("motorcycle_make", "Make", "HONDA")}
-            {input("motorcycle_model", "Model", "CB500X")}
-            {input("motorcycle_plate", "Plate number", "WXY 1234")}
+            {input("motorcycle_make", t("pf.make"), "HONDA")}
+            {input("motorcycle_model", t("pf.model"), "CB500X")}
+            {input("motorcycle_plate", t("pf.plate"), "WXY 1234")}
           </div>
         </section>
-        <button disabled={busy} className="w-full rounded-md bg-primary py-3 font-display font-semibold uppercase text-primary-foreground hover:opacity-90 disabled:opacity-50">{busy ? "Saving…" : "Save profile"}</button>
+        <button disabled={busy} className="w-full rounded-md bg-primary py-3 font-display font-semibold uppercase text-primary-foreground hover:opacity-90 disabled:opacity-50">{busy ? t("pf.saving") : t("pf.save")}</button>
       </form>
       <section className="mt-8 space-y-3 rounded-lg border p-5">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-display text-lg font-bold uppercase">My orders{orders.length ? ` (${orders.length})` : ""}</h2>
-          {orders.length > 0 && <p className="text-xs text-muted-foreground">Tap an order to see items and tracking.</p>}
+          <h2 className="font-display text-lg font-bold uppercase">{t("pf.orders")}{orders.length ? ` (${orders.length})` : ""}</h2>
+          {orders.length > 0 && <p className="text-xs text-muted-foreground">{t("pf.tapOrder")}</p>}
         </div>
-        {!orders.length ? <p className="text-sm text-muted-foreground">No orders yet.</p> : (
+        {!orders.length ? <p className="text-sm text-muted-foreground">{t("pf.noOrders")}</p> : (
           <>
             <ul className="space-y-3">
               {orders.slice(0, shown).map((o) => <li key={o.id}><OrderCard o={o} open={o.id === firstTrackable(orders)} onChanged={reload} /></li>)}
             </ul>
             {shown < orders.length && (
               <button type="button" onClick={() => setShown((n) => n + ORDERS_PAGE)} className="w-full rounded-md border py-2.5 font-display text-sm font-semibold uppercase">
-                Show more orders ({orders.length - shown} more)
+                {fill(t("pf.showMore"), { n: orders.length - shown })}
               </button>
             )}
           </>
@@ -170,6 +173,7 @@ function toMyOrder(o: Record<string, unknown>): MyOrder {
 const firstTrackable = (orders: MyOrder[]) => orders.find((o) => trackingStage(o.status) === "shipped" && o.tracking_number)?.id;
 
 function OrderCard({ o, open, onChanged }: { o: MyOrder; open: boolean; onChanged: () => void }) {
+  const { t } = useI18n();
   const money = (v: number) => formatMoney(v, o.currency);
   const count = o.items.reduce((s, i) => s + i.quantity, 0);
   const a = o.address;
@@ -179,10 +183,10 @@ function OrderCard({ o, open, onChanged }: { o: MyOrder; open: boolean; onChange
       <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2 p-3 text-sm [&::-webkit-details-marker]:hidden">
         <span className="min-w-0">
           <span className="font-mono font-semibold">{o.order_number}</span>
-          <span className="text-muted-foreground"> · {new Date(o.created_at).toLocaleDateString()} · {count} item{count === 1 ? "" : "s"}</span>
+          <span className="text-muted-foreground"> · {new Date(o.created_at).toLocaleDateString()} · {fill(t(count === 1 ? "pf.item" : "pf.items"), { n: count })}</span>
         </span>
         <span className="flex flex-wrap items-center gap-2">
-          {inTransit && <span className="rounded-full border border-foreground px-2 py-0.5 text-[11px] font-semibold uppercase">Tracking ready</span>}
+          {inTransit && <span className="rounded-full border border-foreground px-2 py-0.5 text-[11px] font-semibold uppercase">{t("pf.trackingReady")}</span>}
           <span className={`rounded-full px-3 py-0.5 text-xs font-semibold ${o.status === "refunded" ? "border border-foreground" : "bg-accent text-accent-foreground"}`}>{customerStatus(o.status)}</span>
           <span className="font-semibold tabular-nums">{money(o.total_amount)}</span>
           <span aria-hidden className="text-lg leading-none transition-transform group-open:rotate-45">+</span>
@@ -193,25 +197,25 @@ function OrderCard({ o, open, onChanged }: { o: MyOrder; open: boolean; onChange
         <ul className="divide-y">
           {o.items.map((i, idx) => (
             <li key={idx} className="flex justify-between gap-3 py-1.5">
-              <span className="min-w-0 break-words">{i.product_name}{i.selected_variant ? ` (Size ${i.selected_variant})` : ""} × {i.quantity}</span>
+              <span className="min-w-0 break-words">{i.product_name}{i.selected_variant ? ` (${t("cart.size")} ${i.selected_variant})` : ""} × {i.quantity}</span>
               <span className="shrink-0 tabular-nums">{money(i.unit_price * i.quantity)}</span>
             </li>
           ))}
         </ul>
         <dl className="space-y-1 border-t pt-2">
-          <div className="flex justify-between"><dt>Subtotal{o.sale_discount > 0 ? " (regular price)" : ""}</dt><dd>{money(o.subtotal + o.sale_discount)}</dd></div>
-          {o.sale_discount > 0 && <div className="flex justify-between"><dt>Sale</dt><dd>- {money(o.sale_discount)}</dd></div>}
-          {o.sticker_bundle_discount > 0 && <div className="flex justify-between"><dt>Sticker bundle savings</dt><dd>- {money(o.sticker_bundle_discount)}</dd></div>}
-          {o.discount_amount > 0 && <div className="flex justify-between"><dt>Promo {o.promo_code}</dt><dd>- {money(o.discount_amount)}</dd></div>}
-          <div className="flex justify-between"><dt>Shipping</dt><dd>{o.shipping_fee === 0 ? "Free" : money(o.shipping_fee)}</dd></div>
-          <div className="flex justify-between font-display font-bold"><dt>Total</dt><dd>{money(o.total_amount)}</dd></div>
+          <div className="flex justify-between"><dt>{t("cart.subtotal")}{o.sale_discount > 0 ? t("pf.regular") : ""}</dt><dd>{money(o.subtotal + o.sale_discount)}</dd></div>
+          {o.sale_discount > 0 && <div className="flex justify-between"><dt>{t("card.sale")}</dt><dd>- {money(o.sale_discount)}</dd></div>}
+          {o.sticker_bundle_discount > 0 && <div className="flex justify-between"><dt>{t("pf.bundle")}</dt><dd>- {money(o.sticker_bundle_discount)}</dd></div>}
+          {o.discount_amount > 0 && <div className="flex justify-between"><dt>{t("pf.promo")} {o.promo_code}</dt><dd>- {money(o.discount_amount)}</dd></div>}
+          <div className="flex justify-between"><dt>{t("p.shipping")}</dt><dd>{o.shipping_fee === 0 ? t("pf.free") : money(o.shipping_fee)}</dd></div>
+          <div className="flex justify-between font-display font-bold"><dt>{t("pf.total")}</dt><dd>{money(o.total_amount)}</dd></div>
         </dl>
         <div className="flex flex-col gap-3 border-t pt-3 sm:flex-row sm:items-center sm:justify-between">
           {canChangeSize(o.status) && o.items.some((i) => i.selected_variant) && <SizeChange orderId={o.id} onChanged={onChanged} />}
-          <a href={buildOrderWhatsAppUrl(o.order_number)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 sm:ml-auto"><WhatsAppIcon className="size-4" />Ask on WhatsApp about this order</a>
+          <a href={buildOrderWhatsAppUrl(o.order_number)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 sm:ml-auto"><WhatsAppIcon className="size-4" />{t("pf.askWa")}</a>
         </div>
         {a.address && (
-          <p className="break-words text-muted-foreground"><span className="font-semibold text-foreground">Ship to:</span> {[a.name, a.address, [a.postcode, a.city].filter(Boolean).join(" "), a.state, a.country].filter(Boolean).join(", ")}</p>
+          <p className="break-words text-muted-foreground"><span className="font-semibold text-foreground">{t("pf.shipTo")}</span> {[a.name, a.address, [a.postcode, a.city].filter(Boolean).join(" "), a.state, a.country].filter(Boolean).join(", ")}</p>
         )}
       </div>
     </details>

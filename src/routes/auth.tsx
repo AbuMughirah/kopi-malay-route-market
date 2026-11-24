@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useI18n } from "@/hooks/use-i18n";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +34,7 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
+  const { t } = useI18n();
   // Returning from Google sign-in lands here; send members on to their profile once the session exists.
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => { if (data.session) navigate({ to: "/profile", replace: true }); });
@@ -42,7 +44,7 @@ function AuthPage() {
 
   const google = async () => {
     const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/auth` });
-    if (result.error) { toast.error(result.error.message ?? "Google sign-in failed"); return; }
+    if (result.error) { toast.error(result.error.message ?? t("au.googleFail")); return; }
     if (result.redirected) return;
     navigate({ to: "/profile" });
   };
@@ -54,38 +56,38 @@ function AuthPage() {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       setBusy(false);
       if (error) { toast.error(error.message); return; }
-      toast.success("Welcome back! Your cart has been synced.");
+      toast.success(t("au.welcomeBack"));
       navigate({ to: "/profile" });
     } else {
       const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
       setBusy(false);
       if (error) { toast.error(error.message); return; }
-      if (data.session) { toast.success("Account created!"); navigate({ to: "/profile" }); }
-      else toast.success("Check your email to confirm your account.");
+      if (data.session) { toast.success(t("au.created")); navigate({ to: "/profile" }); }
+      else toast.success(t("au.confirm"));
     }
   };
 
   return (
     <div className="mx-auto max-w-sm px-4 py-16">
-      <h1 className="font-display text-3xl font-bold uppercase">{mode === "login" ? "Login" : "Become a member"}</h1>
-      {mode === "signup" && <p className="mt-2 text-sm text-muted-foreground">Register today to receive special member offers.</p>}
+      <h1 className="font-display text-3xl font-bold uppercase">{mode === "login" ? t("au.login") : t("au.become")}</h1>
+      {mode === "signup" && <p className="mt-2 text-sm text-muted-foreground">{t("au.registerToday")}</p>}
       <button
         type="button" onClick={google}
         className="mt-6 flex h-10 w-full items-center justify-center gap-2.5 rounded-md border px-3 text-sm font-medium"
         style={{ background: "#FFFFFF", borderColor: "#747775", color: "#1F1F1F", fontFamily: "'Google Sans', 'DM Sans', sans-serif" }}
       >
-        <GoogleG /> Continue with Google
+        <GoogleG /> {t("au.google")}
       </button>
-      <div className="my-5 flex items-center gap-3 text-xs uppercase text-muted-foreground"><span className="h-px flex-1 bg-border" />or<span className="h-px flex-1 bg-border" /></div>
+      <div className="my-5 flex items-center gap-3 text-xs uppercase text-muted-foreground"><span className="h-px flex-1 bg-border" />{t("au.or")}<span className="h-px flex-1 bg-border" /></div>
       <form onSubmit={submit} className="space-y-3">
-        <input required type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className={field} />
-        <input required type="password" minLength={6} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className={field} />
+        <input required type="email" placeholder={t("au.email")} value={email} onChange={(e) => setEmail(e.target.value)} className={field} />
+        <input required type="password" minLength={6} placeholder={t("au.password")} value={password} onChange={(e) => setPassword(e.target.value)} className={field} />
         <button disabled={busy} className="w-full rounded-md bg-primary py-3 font-display font-semibold uppercase text-primary-foreground hover:opacity-90 disabled:opacity-50">
-          {mode === "login" ? "Login" : "Sign up"}
+          {mode === "login" ? t("au.login") : t("au.signUp")}
         </button>
       </form>
       <button onClick={() => setMode(mode === "login" ? "signup" : "login")} className="mt-4 text-sm underline">
-        {mode === "login" ? "New here? Become a member" : "Already have an account? Login"}
+        {mode === "login" ? t("au.newHere") : t("au.haveAccount")}
       </button>
     </div>
   );
