@@ -194,6 +194,7 @@ export const updateOrder = createServerFn({ method: "POST" }).middleware([requir
     const { data: ok, error } = await admin.rpc("transition_order_status", { _id: data.id, _from: "verifying", _to: "verified", ...actor, ...(op?.receipt_number ? { _pos_receipt: op.receipt_number } : {}), _claim: claim, _deltas: deltas as unknown as never });
     if (error || !ok) { await revert(); throw new Error(error?.message ?? conflict); }
     await alertIfReverified(admin, data.id, actor._actor_email, ctx.userId, op?.receipt_number ?? null);
+    await (await import("./loyverse.server")).pullStock(admin).catch((e) => console.error("POS stock refresh failed", e));
     return { ok: true };
   });
 
@@ -595,7 +596,7 @@ export const reverseOrder = createServerFn({ method: "POST" }).middleware([requi
         if (!sent) throw new Error("Telegram not delivered");
       },
     });
-    if (res.ok) return { ok: true };
+    if (res.ok) { await (await import("./loyverse.server")).pullStock(admin!).catch((e) => console.error("POS stock refresh failed", e)); return { ok: true }; }
     if ("pin" in res) {
       const r = res.pin.reason;
       return { ok: false, error: r === "not_set" ? "Set your Owner PIN first." : r === "locked" ? `PIN locked after 5 wrong tries. Try again after ${new Date(res.pin.lockedUntil ?? "").toLocaleTimeString()}.` : "Wrong PIN. Nothing was changed." };

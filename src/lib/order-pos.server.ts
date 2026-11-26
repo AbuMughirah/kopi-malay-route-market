@@ -147,6 +147,6 @@ export async function processOrderPos(admin: Admin, input: { id: string; action:
     await saveOp(admin, op.id, { writeoff_state: "completed" });
   }
   await saveOp(admin, op.id, { state: "completed", completed_at: new Date().toISOString(), error: null });
-  await lv.pullStock(admin).catch((e) => console.error("POS stock refresh failed", e));
+  // Stock refresh runs after the order status is saved (see callers) so a slow sync cannot strand an order mid-verification.
   return { ok: true, deltas: receiptDeltas };
 }

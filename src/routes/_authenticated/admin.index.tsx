@@ -166,6 +166,7 @@ function OrdersAdmin() {
                   </td>
                   <td className="px-3 py-2">
                     <span className="inline-block rounded border px-2 py-0.5 text-xs font-semibold capitalize">{o.status === "verifying" ? "Verifying…" : label(o.status)}</span>
+                    {o.status === "verifying" && <Button size="sm" variant="outline" className="mt-2" disabled={!!updating} onClick={() => void patch(o.id, { action: "verify" })}>{updating === o.id ? "Working…" : "Resume verify"}</Button>}
                     {o.status === "pending_verification" && <div className="mt-2 flex flex-col gap-1">
                       <Button size="sm" disabled={!!updating} onClick={() => void patch(o.id, { action: "verify" })}>{updating === o.id ? "Working…" : "Verify"}</Button>
                       <Button size="sm" variant="outline" disabled={!!updating} onClick={() => { setRejectReason(""); setRejecting(o); }}>Reject</Button>
@@ -280,6 +281,7 @@ function OrderCard({ o, updating, onDetails, onVerify, onReject, onRestored, chi
     <div className="flex flex-wrap items-baseline justify-between gap-2"><span className="font-display text-lg font-semibold tabular-nums">{money(o.currency, o.total_amount)}</span><span className="text-xs text-muted-foreground">{o.payment_method}{o.promo_code ? ` · ${o.promo_code}` : ""}</span></div>
     <div className="flex flex-wrap items-center gap-2 text-xs"><span className={`rounded border px-2 py-0.5 ${o.stock_status === "deducted" ? "bg-primary text-primary-foreground" : o.stock_status === "unknown" ? "border-dashed" : "text-muted-foreground"}`}>{STOCK_LABEL[o.stock_status]}</span><PosNumbers o={o} inline /></div>
     {o.status === "pending_verification" && <div className="grid grid-cols-2 gap-2"><Button disabled={!!updating} onClick={onVerify}>{updating === o.id ? "Working…" : "Verify"}</Button><Button variant="outline" disabled={!!updating} onClick={onReject}>Reject</Button></div>}
+    {o.status === "verifying" && <Button variant="outline" disabled={!!updating} onClick={onVerify}>{updating === o.id ? "Working…" : "Resume verify"}</Button>}
     {o.stock_status === "unknown" && o.status === "rejected" && <Button size="sm" variant="outline" onClick={onRestored}>Mark restored</Button>}
     <div className="grid grid-cols-2 gap-2"><Button variant="outline" onClick={onDetails}>View details</Button>{o.has_receipt ? <Button variant="outline" asChild><ReceiptLink orderId={o.id}>Payment slip</ReceiptLink></Button> : <span className="grid place-items-center text-xs text-muted-foreground">No slip</span>}</div>
     <details className="rounded-md border" open={needsCourier && !o.tracking_number ? true : undefined}><summary className="px-3 py-2 text-xs font-semibold">Courier label & tracking{o.tracking_number ? ` · ${o.tracking_number}` : ""}</summary><div className="border-t p-3">{children}</div></details>
