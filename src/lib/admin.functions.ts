@@ -59,6 +59,9 @@ async function loadRoleIndex(admin: Awaited<ReturnType<typeof adminClient>>): Pr
   return buildRoleIndex(roles ?? [], (users?.users ?? []).map((u) => u.id));
 }
 
+/** Courier-label previews expire quickly so a revoked staff member cannot keep reusing a copied link. */
+const LABEL_LINK_TTL_SECONDS = 300;
+
 async function loadOrders(admin: Awaited<ReturnType<typeof adminClient>>): Promise<AdminOrder[]> {
   const idx = await loadRoleIndex(admin);
   const { data, error } = await admin.from("orders")
@@ -69,7 +72,7 @@ async function loadOrders(admin: Awaited<ReturnType<typeof adminClient>>): Promi
   if (posError) throw new Error(posError.message);
   // Payment slips are never pre-signed in listings: staff fetch a short-lived link per click (getReceiptLink).
   const paths = (data ?? []).map((o) => o.tracking_label_path).filter((p): p is string => !!p);
-  const signed = paths.length ? (await admin.storage.from("payment-receipts").createSignedUrls(paths, 3600)).data ?? [] : [];
+  const signed = paths.length ? (await admin.storage.from("payment-receipts").createSignedUrls(paths, LABEL_LINK_TTL_SECONDS)).data ?? [] : [];
   return (data ?? []).map((o) => ({
     id: o.id, order_number: o.order_number, created_at: o.created_at, status: o.status, currency: o.currency,
     total_amount: Number(o.total_amount), subtotal: Number(o.subtotal), shipping_fee: Number(o.shipping_fee), discount_amount: Number(o.discount_amount), sticker_bundle_discount: Number(o.sticker_bundle_discount ?? 0), sale_discount: Number(o.sale_discount ?? 0),
