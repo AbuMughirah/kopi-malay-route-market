@@ -382,13 +382,15 @@ function OwnerActions({ o, onDone }: { o: AdminOrder; onDone: () => void }) {
   const statusFn = useServerFn(getOwnerPinStatus);
   const { data: owner } = useQuery({ queryKey: ["owner-pin-status"], queryFn: () => statusFn() });
   const [kind, setKind] = useState<"undo_verify" | "refund" | null>(null);
-  if (!owner?.isOwner || (!canUndoVerify(o.status) && !canRefund(o.status))) return null;
+  // An interrupted reversal stays "reversing"; offer the same actions as its earlier status so the owner can resume it.
+  const st = o.status === "reversing" ? o.pre_claim_status ?? "" : o.status;
+  if (!owner?.isOwner || (!canUndoVerify(st) && !canRefund(st))) return null;
   return (
     <div className="space-y-2 rounded-md border p-3">
       <div className="font-semibold">Owner actions</div>
       <div className="flex flex-wrap gap-2">
-        {canUndoVerify(o.status) && <Button size="sm" variant="outline" onClick={() => setKind("undo_verify")}>Undo Verify</Button>}
-        {canRefund(o.status) && <Button size="sm" variant="destructive" onClick={() => setKind("refund")}>Refund Order</Button>}
+        {canUndoVerify(st) && <Button size="sm" variant="outline" onClick={() => setKind("undo_verify")}>Undo Verify</Button>}
+        {canRefund(st) && <Button size="sm" variant="destructive" onClick={() => setKind("refund")}>Refund Order</Button>}
       </div>
       {kind && <ReverseForm o={o} kind={kind} onCancel={() => setKind(null)} onDone={onDone} />}
     </div>
