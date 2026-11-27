@@ -53,10 +53,16 @@ async function bearerUser(admin: Admin): Promise<string | null> {
 async function perCustomerError(admin: Admin, promo: Promo & { one_per_customer?: boolean }, who: { userId: string | null; email?: string | null | undefined; phone?: string | null | undefined }): Promise<string | null> {
   if (!promo.one_per_customer) return null;
   if (!who.userId) return "Sign in or create an account to use this code";
+  // Match only identities the signed-in account owns; caller-typed email/phone are never probed.
+  const { data: acct } = await admin.auth.admin.getUserById(who.userId);
+  const { data: own } = await admin.from("orders").select("shipping_address").eq("user_id", who.userId).limit(50);
+  const ownPhones = (own ?? []).map((o) => (o.shipping_address as { phone?: string } | null)?.phone).filter((p): p is string => !!p);
+  if (acct.user?.phone) ownPhones.push(acct.user.phone);
   const { data, error } = await admin.from("orders").select("user_id,guest_email,shipping_address,status").ilike("promo_code", promo.code.replace(/[%_\\]/g, ""));
   if (error) return "Could not check this code. Please try again.";
   const rows = (data ?? []).map((o) => ({ user_id: o.user_id, guest_email: o.guest_email, status: o.status, phone: (o.shipping_address as { phone?: string } | null)?.phone ?? null }));
-  return hasUsedPromo(rows, who) ? "You have already used this promo code on a previous order" : null;
+  const ids = [{ userId: who.userId, email: acct.user?.email ?? null }, ...ownPhones.map((phone) => ({ userId: who.userId, phone }))];
+  return ids.some((id) => hasUsedPromo(rows, id)) ? "You have already used this promo code on a previous order" : null;
 }
 
 const PromoInput = z.object({
