@@ -11,7 +11,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { PriceTag } from "@/components/product-card";
 import { useCart } from "@/hooks/use-cart";
 import { productQuery } from "@/lib/queries";
-import { availableStock, imageFor, isApparel, shippingDescription } from "@/lib/shop";
+import { availableStock, imageFor, isApparel } from "@/lib/shop";
 import { SITE_ORIGIN, shareImageMeta } from "@/lib/share-image";
 import { ProductImageViewer } from "@/components/product-image-viewer";
 import { ApparelSizeGuide, SizeGuideTable } from "@/components/apparel-size-guide";
@@ -122,7 +122,12 @@ function ProductPage() {
             </AccordionItem>
           )}
           <AccordionItem value="ship"><AccordionTrigger className="font-display uppercase">{t("p.shipping")}</AccordionTrigger>
-            <AccordionContent>{shippingDescription(p.category_slug)}</AccordionContent>
+            <AccordionContent className="space-y-2">
+              <p>{t(p.category_slug === "tumblers" ? "ship.productTH" : "ship.productFreeTH")}</p>
+              <p>{t(p.category_slug === "tumblers" ? "ship.productTumblerMY" : apparel ? "ship.productApparelMY" : "ship.productAccessoryMY")}</p>
+              <p>{t("ship.productAllowance")}</p>
+              {apparel && <p>{t("co.crossBorder")}</p>}
+            </AccordionContent>
           </AccordionItem>
         </Accordion>
       </div>

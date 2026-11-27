@@ -1,4 +1,5 @@
 import { useI18n } from "@/hooks/use-i18n";
+import { fill } from "@/lib/i18n/dictionary";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
@@ -14,7 +15,7 @@ import { useNavigate } from "@tanstack/react-router";
 import qrAsset from "@/assets/qr-touch-n-go.jpeg.asset.json";
 import thaiQrAsset from "@/assets/qr-thai-promptpay.jpg.asset.json";
 import { checkoutErrors, type CheckoutField } from "@/lib/checkout-validation";
-import { destinationPrice, eastMalaysiaSurcharge, formatMoney, formatParcelWeight, parcelWeight, imageFor, MY_STATES, TH_PROVINCES, profileToCheckout, shippingFee, malaysiaShippingBreakdown, thailandTumblerShipping, type Country , saleSavingUnit } from "@/lib/shop";
+import { destinationPrice, eastMalaysiaSurcharge, formatMoney, parcelWeight, imageFor, MY_STATES, TH_PROVINCES, profileToCheckout, shippingFee, malaysiaShippingBreakdown, thailandTumblerShipping, type Country , saleSavingUnit } from "@/lib/shop";
 import { stickerBundle } from "@/lib/sticker-bundle";
 import { PlacePicker } from "@/components/PlacePicker";
 import { loadMyProfile } from "@/lib/profile";
@@ -102,6 +103,7 @@ function Checkout() {
   const errorPrompt = (key: CheckoutField) => visibleError(key) ? <p id={`checkout-${key}-error`} role="alert" className="text-sm text-destructive">{visibleError(key)}</p> : null;
   const currency = country === "Thailand" ? "thb" : "myr";
   const money = (value: number) => formatMoney(value, currency);
+  const displayWeight = (value: { kg: number; complete: boolean }) => `${value.kg.toFixed(3)} kg${value.complete ? "" : ` ${t("ship.knownWeight")}`}`;
   const lines = items.map((item) => {
     const product = products.find((p) => p.id === item.productId);
     return { ...item, product, price: product ? destinationPrice(product, country) : null };
@@ -183,7 +185,7 @@ function Checkout() {
       return;
     }
     if (unavailable) { toast.warning("Some items are unavailable for this destination."); return; }
-    if (ship == null) { toast.warning("Tumbler weight is unavailable. Please contact Kopi Malay for shipping."); return; }
+    if (ship == null) { toast.warning(t("ship.weightUnavailable")); return; }
     if (!receipt || compressing) return;
     setConfirming(true);
   };
@@ -331,33 +333,33 @@ function Checkout() {
             </div>
             <div className="flex justify-between"><dt>{t("co.subtotal")}{sale > 0 ? t("co.regular") : ""}</dt><dd>{unavailable ? "—" : money(subtotal + sale)}</dd></div>
             {!unavailable && sale > 0 && <div className="flex justify-between text-primary"><dt>{t("co.sale")}</dt><dd>- {money(sale)}</dd></div>}
-            {bundle.groups > 0 && <div className="flex justify-between gap-3 text-primary"><dt>3x Sticker Bundle Discount Applied ({bundle.groups} × 3 for {money(bundle.bundle)})</dt><dd className="shrink-0">- {money(bundle.discount)}</dd></div>}
-            <div className="flex justify-between gap-3"><dt>{t("co.weight")}</dt><dd className="text-right">{formatParcelWeight(weight)}</dd></div>
+            {bundle.groups > 0 && <div className="flex justify-between gap-3 text-primary"><dt>{fill(t("ship.bundle"), { n: bundle.groups, price: money(bundle.bundle) })}</dt><dd className="shrink-0">- {money(bundle.discount)}</dd></div>}
+            <div className="flex justify-between gap-3"><dt>{t("co.weight")}</dt><dd className="text-right">{displayWeight(weight)}</dd></div>
             {promo && discount > 0 && <div className="flex justify-between text-primary"><dt>{t("co.discount")} ({promo.code}{promo.label ? ` · ${promo.label}` : ""})</dt><dd>- {money(discount)}</dd></div>}
             <div className="flex justify-between"><dt>{t("co.shipping")}</dt><dd>{ship == null ? t("co.quote") : ship === 0 ? t("co.free") : money(ship)}</dd></div>
             {((thaiShipping && thaiShipping.blocks > 0) || (country === "Malaysia" && (malaysiaShipping.groups.some((g) => g.units > 0) || surcharge > 0))) && (
               <div className="ml-2 space-y-1 rounded-r-md border-l-2 border-muted-foreground/30 bg-muted/20 px-2.5 py-2 text-xs text-muted-foreground">
-                <p className="font-medium">↳ {country} shipping breakdown (included above)</p>
+                <p className="font-medium">↳ {fill(t("ship.breakdown"), { country: t(country === "Thailand" ? "ship.countryTH" : "ship.countryMY") })}</p>
                 {thaiShipping && thaiShipping.blocks > 0 && <>
-                  <div className="flex justify-between gap-3"><dt>Tumbler weight</dt><dd className="text-right">{formatParcelWeight(thaiShipping.weight)}</dd></div>
-                  <div className="flex justify-between gap-3"><dt>Base tier (first 1kg)</dt><dd>{money(thaiShipping.base)}</dd></div>
-                  {thaiShipping.surcharge > 0 && <div className="flex justify-between gap-3"><dt>Extra weight ({thaiShipping.blocks - 1} × 1kg tier)</dt><dd>{money(thaiShipping.surcharge)}</dd></div>}
+                  <div className="flex justify-between gap-3"><dt className="min-w-0">{t("ship.tumblerWeight")}</dt><dd className="shrink-0 text-right">{displayWeight(thaiShipping.weight)}</dd></div>
+                  <div className="flex justify-between gap-3"><dt className="min-w-0">{t("ship.baseTier")}</dt><dd className="shrink-0">{money(thaiShipping.base)}</dd></div>
+                  {thaiShipping.surcharge > 0 && <div className="flex justify-between gap-3"><dt className="min-w-0">{fill(t("ship.extraTier"), { n: thaiShipping.blocks - 1 })}</dt><dd className="shrink-0">{money(thaiShipping.surcharge)}</dd></div>}
                 </>}
                 {country === "Malaysia" && malaysiaShipping.groups.filter((g) => g.units > 0).map((g) => (
-                  <div key={g.label} className="flex justify-between gap-3"><dt>{g.label}: {g.units} {g.units === 1 ? "unit" : "units"}{g.included > 0 ? ` (${g.included} free with apparel/tumbler${g.units > g.included ? `, ${g.units - g.included} charged` : ""})` : ""}{g.blocks > 0 ? ` (${g.blocks} ${g.blocks === 1 ? "block" : "blocks"} of ${g.size})` : ""}</dt><dd className="shrink-0">{money(g.fee)}</dd></div>
+                  <div key={g.label} className="flex justify-between gap-3"><dt className="min-w-0">{fill(t(g.label === "Tumblers" ? "ship.tumblers" : g.label === "Apparel" ? "ship.apparel" : "ship.accessories"), { n: g.units, unit: t(g.units === 1 ? "ship.unit" : "ship.units") })}{g.included > 0 ? ` ${fill(t("ship.allowance"), { n: g.included })}${g.units > g.included ? ` ${fill(t("ship.charged"), { n: g.units - g.included })}` : ""}` : ""}{g.blocks > 0 ? ` ${fill(t(g.blocks === 1 ? "ship.block" : "ship.blocks"), { n: g.blocks, size: g.size })}` : ""}</dt><dd className="shrink-0">{money(g.fee)}</dd></div>
                 ))}
-                {country === "Malaysia" && surcharge > 0 && <div className="flex justify-between gap-3"><dt>Sabah &amp; Sarawak surcharge</dt><dd>{money(surcharge)}</dd></div>}
+                {country === "Malaysia" && surcharge > 0 && <div className="flex justify-between gap-3"><dt className="min-w-0">{t("ship.eastSurcharge")}</dt><dd className="shrink-0">{money(surcharge)}</dd></div>}
               </div>
             )}
             <div className="flex justify-between pt-2 font-display text-lg font-bold"><dt>{t("co.total")}</dt><dd>{unavailable || ship == null ? "—" : money(payable)}</dd></div>
             <p className="text-right text-xs text-muted-foreground">{t("co.vat")}</p>
           </dl>
           {unavailable && <p role="alert" className="mt-3 text-sm text-sale">Some items have no price for {country} or are no longer available. Remove them or choose another destination.</p>}
-          {ship == null && <p role="alert" className="mt-3 text-sm text-sale">Tumbler weight is unavailable. Please contact Kopi Malay for shipping.</p>}
+          {ship == null && <p role="alert" className="mt-3 text-sm text-sale">{t("ship.weightUnavailable")}</p>}
           <Button type="submit" disabled={busy || promoBusy || compressing || unavailable || ship == null} className="mt-5 h-auto w-full py-3 font-display font-semibold uppercase">
             {busy ? t("co.submitting") : t("co.confirm")}
           </Button>
-          <p className="mt-2 text-center text-xs text-muted-foreground">{country === "Thailand" ? "Thailand: apparel and accessories free; tumblers THB 60 per started kilogram." : "Malaysia: RM 20 per 2 tumblers, RM 20 per 2 apparel items, and RM 20 per 20 accessories. Each block of 2 apparel items or 2 tumblers ships up to 20 accessories free. Sabah & Sarawak: add RM 10 per order."}</p>
+          <p className="mt-2 text-center text-xs text-muted-foreground">{t(country === "Thailand" ? "ship.noteTH" : "ship.noteMY")}</p>
         </aside>
       </form>
       <AlertDialog open={confirming} onOpenChange={setConfirming}>
