@@ -11,6 +11,7 @@ const en = {
   "nav.menu": "Menu", "nav.language": "Language",
   "cat.all": "Shop All", "cat.jerseys-t-shirts": "Jerseys & T-shirts", "cat.stickers": "Stickers", "cat.tumblers": "Tumblers",
   "cat.fridge-magnets": "Fridge Magnets", "cat.patches": "Patches", "cat.lanyard": "Lanyard", "cat.other-merch": "Other Merch",
+  "pe.member": "{link} to activate your {code} 5% discount.", "pe.memberLink": "Sign in or create an account", "pe.auth": "Sign in or create an account to use this code", "pe.used": "You have already used this promo code on a previous order", "pe.invalid": "Invalid or expired promo code", "pe.limit": "This promo code has reached its usage limit", "pe.min": "Minimum order {amt} not met", "pe.region": "This promo code isn't available for your destination", "pe.check": "Could not check this code. Please try again.",
   "header.search": "Search", "header.searchPlaceholder": "Search stickers, jerseys, tumblers…", "header.wishlist": "Wishlist",
   "header.account": "Account", "header.login": "Login", "header.profile": "My profile", "header.signOut": "Sign out",
   "header.openCart": "Open cart", "header.signedInAs": "Signed in as",
@@ -228,6 +229,7 @@ const ms: Record<MsgKey, string> = {
   "nav.menu": "Menu", "nav.language": "Bahasa",
   "cat.all": "Semua Produk", "cat.jerseys-t-shirts": "Jersi & T-shirt", "cat.stickers": "Pelekat", "cat.tumblers": "Tumbler",
   "cat.fridge-magnets": "Magnet Peti Sejuk", "cat.patches": "Patch", "cat.lanyard": "Lanyard", "cat.other-merch": "Barangan Lain",
+  "pe.member": "{link} untuk aktifkan diskaun 5% {code} anda.", "pe.memberLink": "Log masuk atau daftar akaun", "pe.auth": "Log masuk atau daftar akaun untuk guna kod ini", "pe.used": "Anda telah menggunakan kod promo ini pada pesanan terdahulu", "pe.invalid": "Kod promo tidak sah atau telah tamat tempoh", "pe.limit": "Kod promo ini telah mencapai had penggunaan", "pe.min": "Pesanan minimum {amt} belum dicapai", "pe.region": "Kod promo ini tidak tersedia untuk destinasi anda", "pe.check": "Tidak dapat menyemak kod ini. Sila cuba lagi.",
   "header.search": "Cari", "header.searchPlaceholder": "Cari pelekat, jersi, tumbler…", "header.wishlist": "Senarai hajat",
   "header.account": "Akaun", "header.login": "Log masuk", "header.profile": "Profil saya", "header.signOut": "Log keluar",
   "header.openCart": "Buka troli", "header.signedInAs": "Log masuk sebagai",
@@ -444,6 +446,7 @@ const th: Record<MsgKey, string> = {
   "nav.menu": "เมนู", "nav.language": "ภาษา",
   "cat.all": "สินค้าทั้งหมด", "cat.jerseys-t-shirts": "เสื้อเจอร์ซีย์และเสื้อยืด", "cat.stickers": "สติกเกอร์", "cat.tumblers": "แก้วเก็บความเย็น",
   "cat.fridge-magnets": "แม่เหล็กติดตู้เย็น", "cat.patches": "อาร์มติดเสื้อ", "cat.lanyard": "สายคล้องคอ", "cat.other-merch": "สินค้าอื่นๆ",
+  "pe.member": "{link}เพื่อรับส่วนลด 5% จาก {code}", "pe.memberLink": "เข้าสู่ระบบหรือสร้างบัญชี", "pe.auth": "เข้าสู่ระบบหรือสร้างบัญชีเพื่อใช้โค้ดนี้", "pe.used": "คุณเคยใช้โค้ดส่วนลดนี้ในคำสั่งซื้อก่อนหน้าแล้ว", "pe.invalid": "โค้ดส่วนลดไม่ถูกต้องหรือหมดอายุแล้ว", "pe.limit": "โค้ดส่วนลดนี้ครบจำนวนการใช้งานแล้ว", "pe.min": "ยอดสั่งซื้อขั้นต่ำไม่ถึง {amt}", "pe.region": "โค้ดส่วนลดนี้ไม่สามารถใช้ได้กับปลายทางของคุณ", "pe.check": "ไม่สามารถตรวจสอบโค้ดนี้ได้ โปรดลองอีกครั้ง",
   "header.search": "ค้นหา", "header.searchPlaceholder": "ค้นหาสติกเกอร์ เสื้อ แก้ว…", "header.wishlist": "รายการโปรด",
   "header.account": "บัญชี", "header.login": "เข้าสู่ระบบ", "header.profile": "โปรไฟล์ของฉัน", "header.signOut": "ออกจากระบบ",
   "header.openCart": "เปิดตะกร้า", "header.signedInAs": "เข้าสู่ระบบในชื่อ",
@@ -658,3 +661,18 @@ export const DICT: Record<Lang, Record<MsgKey, string>> = { en, ms, th };
 export const isLang = (v: unknown): v is Lang => typeof v === "string" && (LANGS as readonly string[]).includes(v);
 export const fill = (s: string, vars: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ""));
 export const translate = (lang: Lang, key: MsgKey) => DICT[lang][key] ?? en[key];
+
+/** Localized category label; unknown (new) categories fall back to the database name. */
+export const catName = (lang: Lang, slug: string, fallback: string) => {
+  const k = `cat.${slug}` as MsgKey;
+  return k in en ? translate(lang, k) : fallback;
+};
+const PROMO_ERR: [RegExp, MsgKey][] = [[/^Sign in or create/, "pe.auth"], [/already used/, "pe.used"], [/Invalid or expired/, "pe.invalid"], [/usage limit/, "pe.limit"], [/available for your destination/, "pe.region"], [/Could not check/, "pe.check"]];
+/** Maps the server's English promo errors to the active language (server stays locale-agnostic). */
+export const promoError = (lang: Lang, msg: string) => {
+  const m = msg.replace(/^Promo code:\s*/, "");
+  const min = /^Minimum order (.+) not met/.exec(m);
+  if (min) return fill(translate(lang, "pe.min"), { amt: min[1] ?? "" });
+  const hit = PROMO_ERR.find(([re]) => re.test(m));
+  return hit ? translate(lang, hit[1]) : m;
+};

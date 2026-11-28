@@ -1,3 +1,4 @@
+import { catName } from "@/lib/i18n/dictionary";
 import { useI18n } from "@/hooks/use-i18n";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -21,7 +22,7 @@ export function PriceTag({ p, className = "" }: { p: Product; className?: string
 
 export function ProductCard({ p }: { p: Product }) {
   const { add, setOpen } = useCart();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [picking, setPicking] = useState(false);
   const onSale = effectivePrice(p) < p.price || (p.price_thb != null && (effectivePriceThb(p) ?? p.price_thb) < p.price_thb);
 
@@ -40,7 +41,7 @@ export function ProductCard({ p }: { p: Product }) {
         {p.is_featured && !onSale && <img src={bestSellerRibbon.url} alt="Best seller" width={240} height={200} decoding="async" className="pointer-events-none absolute left-1 top-1 h-auto w-20 sm:w-24" />}
       </Link>
       <div className="flex flex-1 flex-col gap-1 p-3">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">{p.category_name}</p>
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">{catName(lang, p.category_slug, p.category_name)}</p>
         <Link to="/product/$slug" params={{ slug: p.slug }} className="font-medium leading-snug hover:text-primary">{p.name}</Link>
         <PriceTag p={p} />
         <div className="mt-auto pt-2">

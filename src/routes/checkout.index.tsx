@@ -1,5 +1,5 @@
 import { useI18n } from "@/hooks/use-i18n";
-import { fill } from "@/lib/i18n/dictionary";
+import { fill, promoError } from "@/lib/i18n/dictionary";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
@@ -46,7 +46,7 @@ const field = "w-full rounded-md border bg-card px-3 py-2.5 focus:outline-none f
 
 function Checkout() {
   const { items, user } = useCart();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { data: products } = useSuspenseQuery(productsQuery);
   const { cancelled } = Route.useSearch();
   const create = useServerFn(submitManualOrder);
@@ -328,8 +328,8 @@ function Checkout() {
                   <Button type="button" variant="outline" disabled={promoBusy || !promoInput.trim()} onClick={() => void applyPromo(promoInput)}>{promoBusy ? "…" : t("co.apply")}</Button>
                 </div>
               )}
-              {!user && pendingPromo && !promo && <p className="text-sm"><Link to="/auth" className="font-semibold underline">Sign in or create an account</Link> to activate your {pendingPromo} 5% discount.</p>}
-              {promoErr && <div id="promo-error" role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-destructive"><p className="font-display text-sm font-bold uppercase">⛔ {t("co.notUsable")}</p><p className="mt-1 text-sm">{promoErr}. {t("co.noDiscount")}</p></div>}
+              {!user && pendingPromo && !promo && <p className="text-sm">{(() => { const [a, b = ""] = fill(t("pe.member"), { code: pendingPromo, link: "{link}" }).split("{link}"); return <>{a}<Link to="/auth" className="font-semibold underline">{t("pe.memberLink")}</Link>{b}</>; })()}</p>}
+              {promoErr && <div id="promo-error" role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-destructive"><p className="font-display text-sm font-bold uppercase">⛔ {t("co.notUsable")}</p><p className="mt-1 text-sm">{promoError(lang, promoErr).replace(/\.$/, "")}. {t("co.noDiscount")}</p></div>}
             </div>
             <div className="flex justify-between"><dt>{t("co.subtotal")}{sale > 0 ? t("co.regular") : ""}</dt><dd>{unavailable ? "—" : money(subtotal + sale)}</dd></div>
             {!unavailable && sale > 0 && <div className="flex justify-between text-primary"><dt>{t("co.sale")}</dt><dd>- {money(sale)}</dd></div>}

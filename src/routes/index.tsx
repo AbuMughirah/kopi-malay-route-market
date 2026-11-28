@@ -1,3 +1,4 @@
+import { catName } from "@/lib/i18n/dictionary";
 import { useI18n } from "@/hooks/use-i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -55,7 +56,7 @@ export const Route = createFileRoute("/")({ staticData: { sitemap: true },
 function Home() {
   const { data: products } = useSuspenseQuery(productsQuery);
   const { data: categories } = useSuspenseQuery(categoriesQuery);
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const arrivals = products.filter((p) => p.is_new_arrival);
   const featured = products.filter((p) => p.is_featured).slice(0, 8);
 
@@ -81,7 +82,7 @@ function Home() {
           {categories.map((c) => (
             <Link key={c.slug} to="/shop/$category" params={{ category: c.slug }} className="group relative aspect-[4/5] overflow-hidden rounded-lg border bg-muted">
               <img src={imageFor(products.find((p) => p.category_slug === c.slug)?.images[0] ?? CAT_IMG[c.slug])} alt={c.name} loading="lazy" decoding="async" className="size-full object-contain transition-transform duration-500 group-hover:scale-105" />
-              <span className="absolute inset-x-2 bottom-2 rounded-sm bg-ink px-2 py-1.5 text-center font-display text-sm font-semibold uppercase text-ink-foreground">{c.name}</span>
+              <span className="absolute inset-x-2 bottom-2 rounded-sm bg-ink px-2 py-1.5 text-center font-display text-sm font-semibold uppercase text-ink-foreground">{catName(lang, c.slug, c.name)}</span>
             </Link>
           ))}
         </div>

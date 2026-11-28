@@ -1,3 +1,5 @@
+import { useI18n } from "@/hooks/use-i18n";
+import { catName } from "@/lib/i18n/dictionary";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { categoriesQuery, productsQuery } from "@/lib/queries";
@@ -17,6 +19,7 @@ export function ShopView({ category, search }: { category?: string; search: Shop
   const { data: products } = useSuspenseQuery(productsQuery);
   const { data: categories } = useSuspenseQuery(categoriesQuery);
   const navigate = useNavigate();
+  const { t, lang } = useI18n();
   const current = categories.find((c) => c.slug === category);
 
   let list = products.filter((p) => !category || p.category_slug === category);
@@ -35,13 +38,13 @@ export function ShopView({ category, search }: { category?: string; search: Shop
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
-      <h1 className="font-display text-3xl font-bold uppercase md:text-5xl">{current?.name ?? "Shop All"}</h1>
+      <h1 className="font-display text-3xl font-bold uppercase md:text-5xl">{current ? catName(lang, current.slug, current.name) : t("cat.all")}</h1>
       {search.q && <p className="mt-2 text-muted-foreground">Results for “{search.q}”</p>}
       <div className="mt-6 flex items-center gap-4">
         <div className="-mx-4 flex flex-1 gap-2 overflow-x-auto px-4 pb-1">
           <Link to="/shop" search={{ q: search.q }} className={`${tab} ${!category ? on : off}`}>All</Link>
           {categories.map((c) => (
-            <Link key={c.slug} to="/shop/$category" params={{ category: c.slug }} search={{ q: search.q }} className={`${tab} ${category === c.slug ? on : off}`}>{c.name}</Link>
+            <Link key={c.slug} to="/shop/$category" params={{ category: c.slug }} search={{ q: search.q }} className={`${tab} ${category === c.slug ? on : off}`}>{catName(lang, c.slug, c.name)}</Link>
           ))}
         </div>
         <select
